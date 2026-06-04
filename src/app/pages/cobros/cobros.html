@@ -1,0 +1,141 @@
+<style>
+  .cobros-section { padding: 36px 16px 56px; }
+  .resumen-card { background:var(--blanco); border-radius:14px; border:1px solid var(--gris-borde); box-shadow:0 2px 12px rgba(0,0,0,0.04); padding:18px 20px; display:flex; align-items:center; gap:14px; }
+  .resumen-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .resumen-icon i { font-size:1.3rem; }
+  .resumen-valor { font-size:1.35rem; font-weight:700; font-family:'Inter',sans-serif; line-height:1.1; }
+  .resumen-label { font-size:0.74rem; color:var(--gris-medio); }
+  .r-verde .resumen-icon { background:var(--verde-suave); } .r-verde .resumen-icon i { color:var(--verde); } .r-verde .resumen-valor { color:var(--verde); }
+  .r-amarillo .resumen-icon { background:var(--amarillo-suave); } .r-amarillo .resumen-icon i { color:var(--amarillo); } .r-amarillo .resumen-valor { color:var(--amarillo); }
+  .r-rojo .resumen-icon { background:var(--rojo-suave); } .r-rojo .resumen-icon i { color:var(--rojo); } .r-rojo .resumen-valor { color:var(--rojo); }
+  .cobro-item { background:var(--blanco); border-radius:12px; border:1px solid var(--gris-borde); padding:16px 18px; display:flex; align-items:center; gap:14px; transition:box-shadow 0.2s; }
+  .cobro-item:hover { box-shadow:0 4px 16px rgba(58,143,196,0.1); }
+  .cobro-num { width:36px; height:36px; border-radius:8px; background:var(--azul-suave); color:var(--azul-principal); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
+  .cobro-info { flex:1; }
+  .cobro-info .fecha { font-size:0.82rem; color:var(--gris-medio); }
+  .cobro-monto { font-size:1rem; font-weight:700; font-family:'Inter',sans-serif; color:var(--gris-texto); }
+  .empty-state { text-align:center; padding:48px 24px; }
+  .empty-state i { font-size:2.5rem; color:var(--gris-borde); }
+</style>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-icon"><i class="bi bi-credit-card"></i></div>
+  <h1>Cobros y Pagos</h1>
+  <p>Historial y estado de sus mensualidades</p>
+</div>
+
+<section class="cobros-section">
+  <div class="container-fluid">
+
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3 text-muted">Cargando cobros...</p>
+      </div>
+    } @else if (cobros().length === 0) {
+
+      <!-- SIN CONTRATO SELECCIONADO -->
+      <div class="info-card mb-4">
+        <div class="card-section-title"><i class="bi bi-info-circle" style="color:var(--azul-principal);"></i> Sin contrato activo</div>
+        <p style="font-size:0.88rem; color:var(--gris-medio); margin:0;">
+          Para ver sus cobros, su perfil de persona debe estar asociado a un contrato.
+          Contacte a su agente si aún no tiene un contrato registrado.
+        </p>
+      </div>
+
+      <!-- MÉTODOS DE PAGO -->
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-wallet2 me-2" style="color:var(--azul-principal);"></i>Métodos de Pago Disponibles</h2>
+        <div class="linea-azul"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="info-card text-center py-3">
+            <div style="width:48px;height:48px;border-radius:12px;background:#e8f6fd;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <i class="bi bi-phone" style="font-size:1.4rem;color:#009EE3;"></i>
+            </div>
+            <div style="font-weight:700;font-size:0.95rem;">Mercado Pago</div>
+            <div style="font-size:0.8rem;color:var(--gris-medio);">Pago en línea o en efectivo</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="info-card text-center py-3">
+            <div style="width:48px;height:48px;border-radius:12px;background:#eaf3fb;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <i class="bi bi-bank" style="font-size:1.4rem;color:var(--azul-principal);"></i>
+            </div>
+            <div style="font-weight:700;font-size:0.95rem;">Transferencia Bancaria</div>
+            <div style="font-size:0.8rem;color:var(--gris-medio);">CLABE o número de cuenta</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4">
+          <div class="info-card text-center py-3">
+            <div style="width:48px;height:48px;border-radius:12px;background:#fef0ef;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <i class="bi bi-shop" style="font-size:1.4rem;color:#DA291C;"></i>
+            </div>
+            <div style="font-weight:700;font-size:0.95rem;">Pago en OXXO</div>
+            <div style="font-size:0.8rem;color:var(--gris-medio);">Con referencia de pago</div>
+          </div>
+        </div>
+      </div>
+
+    } @else {
+
+      <!-- RESUMEN -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-4">
+          <div class="resumen-card r-verde">
+            <div class="resumen-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+              <div class="resumen-valor">{{ totalPagado | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              <div class="resumen-label">Total pagado</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-4">
+          <div class="resumen-card r-amarillo">
+            <div class="resumen-icon"><i class="bi bi-clock"></i></div>
+            <div>
+              <div class="resumen-valor">{{ totalPendiente | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              <div class="resumen-label">Pendiente de pago</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-4">
+          <div class="resumen-card r-rojo">
+            <div class="resumen-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
+            <div>
+              <div class="resumen-valor">{{ cobrosAtrasados.length }}</div>
+              <div class="resumen-label">Cobros vencidos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTADO -->
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-list-ul me-2" style="color:var(--azul-principal);"></i>Historial de Cobros</h2>
+        <div class="linea-azul"></div>
+      </div>
+      <div class="d-flex flex-column gap-2">
+        @for (cobro of cobros(); track cobro.id) {
+          <div class="cobro-item">
+            <div class="cobro-num">{{ cobro.numeroMensualidad }}</div>
+            <div class="cobro-info">
+              <div style="font-size:0.88rem;font-weight:600;">Mensualidad {{ cobro.numeroMensualidad }}</div>
+              <div class="fecha">Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="cobro-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            <div>
+              <span [class]="estadoBadgeClass(cobro.estadoCobro)">
+                <i [class]="'bi ' + estadoIcon(cobro.estadoCobro)"></i>
+                {{ cobro.estadoCobro }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</section>

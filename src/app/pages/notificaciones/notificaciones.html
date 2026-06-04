@@ -1,0 +1,86 @@
+<style>
+  .notif-section { padding: 36px 16px 56px; }
+  .filtros-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .filtro-btn { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:50px; padding:6px 16px; font-size:0.82rem; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s; color:var(--gris-texto); }
+  .filtro-btn.active { background:var(--azul-principal); border-color:var(--azul-principal); color:var(--blanco); }
+  .notif-item { background:var(--blanco); border-radius:12px; border:1px solid var(--gris-borde); padding:14px 16px; display:flex; gap:14px; transition:box-shadow 0.2s; cursor:pointer; }
+  .notif-item.no-leida { border-left:3px solid var(--azul-principal); background:var(--azul-suave); }
+  .notif-item:hover { box-shadow:0 4px 14px rgba(58,143,196,0.12); }
+  .notif-icon-wrap { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(58,143,196,0.1); }
+  .notif-icon-wrap i { font-size:1rem; }
+  .notif-titulo { font-size:0.88rem; font-weight:600; color:var(--gris-texto); }
+  .notif-item.no-leida .notif-titulo { font-weight:700; }
+  .notif-msg { font-size:0.82rem; color:var(--gris-medio); line-height:1.5; margin-top:4px; }
+  .notif-fecha { font-size:0.75rem; color:var(--gris-medio); margin-top:6px; }
+  .punto-azul { width:8px; height:8px; border-radius:50%; background:var(--azul-principal); flex-shrink:0; margin-top:6px; }
+</style>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-icon"><i class="bi bi-bell"></i></div>
+  <h1>Notificaciones</h1>
+  <p>
+    @if (noLeidas() > 0) {
+      <span class="badge-azul">{{ noLeidas() }} sin leer</span>
+    } @else {
+      Todas leídas
+    }
+  </p>
+</div>
+
+<section class="notif-section">
+  <div class="container-fluid">
+
+    @if (errorMsg()) {
+      <div class="alert alert-danger py-2 px-3" style="font-size:0.85rem;border-radius:8px;">
+        <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+      </div>
+    }
+
+    <!-- FILTROS + MARCAR TODAS -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <div class="filtros-bar mb-0">
+        @for (f of filtros; track f.key) {
+          <button class="filtro-btn" [class.active]="filtroActivo() === f.key" (click)="filtroActivo.set(f.key)">
+            <i [class]="'bi ' + f.icon"></i>{{ f.label }}
+          </button>
+        }
+      </div>
+      @if (noLeidas() > 0) {
+        <button class="btn-leer-todas" (click)="marcarTodasLeidas()" style="background:transparent;border:none;color:var(--azul-principal);font-size:0.82rem;font-weight:600;cursor:pointer;">
+          <i class="bi bi-check-all me-1"></i>Marcar todas como leídas
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3 text-muted">Cargando notificaciones...</p>
+      </div>
+    } @else if (filtradas().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-bell-slash" style="font-size:2.5rem;color:var(--gris-borde);"></i>
+        <p class="mt-3" style="color:var(--gris-medio);">No hay notificaciones en esta categoría.</p>
+      </div>
+    } @else {
+      <div class="d-flex flex-column gap-2">
+        @for (n of filtradas(); track n.id) {
+          <div class="notif-item" [class.no-leida]="!n.leida" (click)="marcarLeida(n.id)">
+            <div class="notif-icon-wrap" [style.background]="colorTipo(n.tipo) + '1a'">
+              <i [class]="'bi ' + iconoTipo(n.tipo)" [style.color]="colorTipo(n.tipo)"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="notif-titulo">{{ n.titulo }}</div>
+              <div class="notif-msg">{{ n.mensaje }}</div>
+              <div class="notif-fecha"><i class="bi bi-clock me-1"></i>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+            @if (!n.leida) {
+              <div class="punto-azul"></div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,156 @@
+<style>
+  .reg-hero { min-height: calc(100vh - 130px); display: flex; align-items: flex-start; justify-content: center; padding: 48px 20px; background-image: url('/Index.png'); background-size: cover; background-position: center -110px; background-repeat: no-repeat; background-attachment: fixed; }
+  @media (max-width: 768px) { .reg-hero { background-attachment: scroll; background-position: center top; padding: 28px 16px; } }
+  .reg-card { background: var(--blanco); border-radius: 16px; padding: 44px 48px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); border-top: 3px solid var(--azul-principal); width: 100%; max-width: 600px; }
+  .reg-logo-wrap { width: 72px; height: 72px; border-radius: 50%; background-color: var(--azul-suave); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; padding: 10px; border: 2px solid var(--gris-borde); }
+  .reg-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .reg-card h2 { font-size: 1.25rem; color: var(--gris-texto); text-align: center; margin-bottom: 4px; }
+  .reg-card .subtitulo { font-size: 0.82rem; color: var(--gris-medio); text-align: center; margin-bottom: 28px; }
+  .seccion-titulo-reg { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--azul-principal); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--gris-borde); }
+  .form-label { font-size: 0.82rem; font-weight: 500; color: var(--gris-texto); margin-bottom: 5px; }
+  .form-control, .form-select { border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+  .form-control:focus, .form-select:focus { border-color: var(--azul-principal); box-shadow: 0 0 0 3px rgba(58,143,196,0.15); }
+  .input-group .form-control { border-right: none; border-radius: 8px 0 0 8px; }
+  .input-group .btn-toggle-pass { border: 1px solid var(--gris-borde); border-left: none; border-radius: 0 8px 8px 0; background: var(--blanco); color: var(--gris-medio); padding: 0 14px; }
+  .btn-registrar { width: 100%; background-color: var(--azul-principal); color: var(--blanco); font-size: 0.95rem; font-weight: 600; padding: 13px; border: none; border-radius: 50px; margin-top: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(58,143,196,0.35); transition: background 0.2s, transform 0.15s; }
+  .btn-registrar:hover:not(:disabled) { background-color: var(--azul-medio); transform: translateY(-2px); }
+  .btn-registrar:disabled { opacity: 0.7; cursor: not-allowed; }
+  @media (max-width: 480px) { .reg-card { padding: 32px 20px; } }
+</style>
+
+<a class="header-sh" routerLink="/inicio">
+  <img src="/Logo.png" alt="Logo Sociedad Humanista Santa Martha"/>
+  <div class="brand-text">
+    <strong>Sociedad Humanista</strong>
+    <span>Santa Martha S.A. de C.V.</span>
+  </div>
+</a>
+
+<div class="reg-hero">
+  <div class="reg-card">
+    <div class="reg-logo-wrap">
+      <img src="/Logo.png" alt="Logo"/>
+    </div>
+    <h2>Registrar nuevo usuario</h2>
+    <p class="subtitulo">Complete los datos para crear su cuenta en el portal</p>
+
+    @if (errorMsg()) {
+      <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.85rem;border-radius:8px;">
+        <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- DATOS PERSONALES -->
+      <div class="seccion-titulo-reg mb-3 mt-2">
+        <i class="bi bi-person-badge"></i> Datos Personales
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-12 col-sm-4">
+          <label class="form-label">Nombre(s) *</label>
+          <input type="text" class="form-control" [class.is-invalid]="isInvalid('nombre')" formControlName="nombre" placeholder="Ej. María"/>
+          @if (isInvalid('nombre')) { <div class="invalid-feedback">Requerido (mín. 2 caracteres).</div> }
+        </div>
+        <div class="col-12 col-sm-4">
+          <label class="form-label">Apellido Paterno *</label>
+          <input type="text" class="form-control" [class.is-invalid]="isInvalid('apPaterno')" formControlName="apPaterno" placeholder="Ej. García"/>
+          @if (isInvalid('apPaterno')) { <div class="invalid-feedback">Requerido.</div> }
+        </div>
+        <div class="col-12 col-sm-4">
+          <label class="form-label">Apellido Materno</label>
+          <input type="text" class="form-control" formControlName="apMaterno" placeholder="Ej. López"/>
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Fecha de Nacimiento *</label>
+          <input type="date" class="form-control" [class.is-invalid]="isInvalid('fechaNacimiento')" formControlName="fechaNacimiento"/>
+          @if (isInvalid('fechaNacimiento')) { <div class="invalid-feedback">Requerida.</div> }
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Sexo *</label>
+          <select class="form-select" [class.is-invalid]="isInvalid('sexo')" formControlName="sexo">
+            <option value="">Seleccione...</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+          @if (isInvalid('sexo')) { <div class="invalid-feedback">Seleccione una opción.</div> }
+        </div>
+        <div class="col-12">
+          <label class="form-label">CURP *</label>
+          <input type="text" class="form-control" [class.is-invalid]="isInvalid('curp')" formControlName="curp" placeholder="Ej. GAML900101HMCRPZ01" maxlength="18" style="text-transform:uppercase"/>
+          @if (isInvalid('curp')) { <div class="invalid-feedback">CURP inválido (18 caracteres).</div> }
+        </div>
+      </div>
+
+      <!-- CONTACTO -->
+      <div class="seccion-titulo-reg mb-3 mt-3">
+        <i class="bi bi-telephone"></i> Contacto
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Teléfono (10 dígitos) *</label>
+          <input type="tel" class="form-control" [class.is-invalid]="isInvalid('telefono')" formControlName="telefono" placeholder="Ej. 7821234567" maxlength="10"/>
+          @if (isInvalid('telefono')) { <div class="invalid-feedback">10 dígitos requeridos.</div> }
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Correo electrónico *</label>
+          <input type="email" class="form-control" [class.is-invalid]="isInvalid('correo')" formControlName="correo" placeholder="correo&#64;ejemplo.com"/>
+          @if (isInvalid('correo')) { <div class="invalid-feedback">Correo inválido.</div> }
+        </div>
+      </div>
+
+      <!-- ACCESO -->
+      <div class="seccion-titulo-reg mb-3 mt-3">
+        <i class="bi bi-shield-lock"></i> Datos de Acceso
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <label class="form-label">Nombre de usuario *</label>
+          <input type="text" class="form-control" [class.is-invalid]="isInvalid('username')" formControlName="username" placeholder="Ej. mgarcia"/>
+          @if (isInvalid('username')) { <div class="invalid-feedback">Mínimo 4 caracteres.</div> }
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Contraseña *</label>
+          <div class="input-group">
+            <input [type]="showPassword() ? 'text' : 'password'" class="form-control" [class.is-invalid]="isInvalid('password')" formControlName="password" placeholder="Mínimo 8 caracteres"/>
+            <button type="button" class="btn-toggle-pass" (click)="showPassword.update(v => !v)">
+              <i [class]="showPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+          </div>
+          @if (isInvalid('password')) { <div class="text-danger" style="font-size:0.8rem;margin-top:4px;">Mínimo 8 caracteres.</div> }
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label">Confirmar contraseña *</label>
+          <div class="input-group">
+            <input [type]="showConfirm() ? 'text' : 'password'" class="form-control" [class.is-invalid]="isInvalid('confirmarPassword') || (form.errors?.['noMatch'] && form.get('confirmarPassword')?.touched)" formControlName="confirmarPassword" placeholder="Repita su contraseña"/>
+            <button type="button" class="btn-toggle-pass" (click)="showConfirm.update(v => !v)">
+              <i [class]="showConfirm() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+          </div>
+          @if (form.errors?.['noMatch'] && form.get('confirmarPassword')?.touched) {
+            <div class="text-danger" style="font-size:0.8rem;margin-top:4px;">Las contraseñas no coinciden.</div>
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="btn-registrar" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>Registrando...
+        } @else {
+          <i class="bi bi-person-check me-2"></i>Crear cuenta
+        }
+      </button>
+    </form>
+
+    <div style="text-align:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--gris-borde);">
+      <span style="font-size:0.82rem; color:var(--gris-medio);">¿Ya tiene cuenta?</span>
+      <a routerLink="/login" style="font-size:0.88rem; font-weight:600; color:var(--azul-principal); text-decoration:none; margin-left:6px;">
+        <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar sesión
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer-min">
+  © 2026 Sociedad Humanista Santa Martha S.A. de C.V. — Todos los derechos reservados.
+</footer>

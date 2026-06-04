@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-lg navbar-sh">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" routerLink="/portal/inicio">
+      <img src="/Logo.png" alt="Logo Sociedad Humanista Santa Martha"/>
+      <div class="brand-text">
+        <strong>Sociedad Humanista</strong>
+        <span>Santa Martha S.A. de C.V.</span>
+      </div>
+    </a>
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#menuPortal"
+            aria-controls="menuPortal"
+            aria-expanded="false"
+            aria-label="Abrir menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="menuPortal">
+      <ul class="navbar-nav gap-1 py-2 py-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/mis-datos" routerLinkActive="active">
+            <i class="bi bi-person me-1"></i>Mis datos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/cobros" routerLinkActive="active">
+            <i class="bi bi-credit-card me-1"></i>Cobros
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/plan-funerario" routerLinkActive="active">
+            <i class="bi bi-file-earmark-text me-1"></i>Mi plan funerario
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/informacion" routerLinkActive="active">
+            <i class="bi bi-info-circle me-1"></i>Información
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/notificaciones" routerLinkActive="active">
+            <i class="bi bi-bell me-1"></i>Notificaciones
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/beneficiarios" routerLinkActive="active">
+            <i class="bi bi-people me-1"></i>Beneficiarios
+          </a>
+        </li>
+        @if (auth.isAdmin()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/portal/admin" routerLinkActive="active">
+              <i class="bi bi-bar-chart me-1"></i>Movimientos
+            </a>
+          </li>
+        }
+        <li class="nav-item ms-1">
+          <button class="nav-link nav-link-cerrar border-0 bg-transparent" (click)="logout()">
+            <i class="bi bi-box-arrow-right me-1"></i>Cerrar Sesión
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

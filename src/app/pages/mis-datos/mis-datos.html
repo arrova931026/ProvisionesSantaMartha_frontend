@@ -1,0 +1,160 @@
+<style>
+  .page-header-profile { background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-principal) 60%, #5aaed4 100%); padding: 0; position: relative; overflow: hidden; }
+  .page-header-profile::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/svg%3E"); }
+  .header-inner { position:relative; padding:36px 24px 100px; text-align:center; }
+  .page-header-profile h1 { color:var(--blanco); font-size:clamp(1.15rem,4vw,1.55rem); margin-bottom:4px; }
+  .page-header-profile p { font-size:0.88rem; color:rgba(255,255,255,0.85); margin:0; }
+  .avatar-wrap { position:relative; display:inline-block; margin-bottom:14px; }
+  .avatar-circle { width:88px; height:88px; border-radius:50%; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:var(--blanco); margin:0 auto; }
+  .perfil-card-wrap { margin-top:-72px; position:relative; z-index:10; padding:0 16px; }
+  .datos-section { padding:24px 16px 56px; }
+  .form-label { font-size:0.82rem; font-weight:500; color:var(--gris-texto); margin-bottom:5px; }
+  .form-control { border:1px solid var(--gris-borde); border-radius:8px; padding:10px 14px; font-size:0.9rem; }
+  .form-control:focus { border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
+  .btn-editar { background:var(--azul-suave); color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:50px; padding:7px 20px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background 0.2s; }
+  .btn-editar:hover { background:#d0e9f7; }
+  .btn-guardar { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 28px; font-size:0.88rem; font-weight:600; cursor:pointer; }
+  .btn-guardar:disabled { opacity:0.7; cursor:not-allowed; }
+  .btn-cancelar { background:var(--blanco); color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:50px; padding:9px 20px; font-size:0.88rem; cursor:pointer; }
+</style>
+
+<!-- HEADER CON AVATAR -->
+<div class="page-header-profile">
+  <div class="header-inner">
+    <div class="avatar-wrap">
+      <div class="avatar-circle">{{ iniciales() }}</div>
+    </div>
+    <h1>Mis Datos</h1>
+    <p>Información de su cuenta y perfil</p>
+  </div>
+</div>
+
+<!-- ALERTS -->
+<div class="container-fluid px-3 mt-3">
+  @if (successMsg()) {
+    <div class="alert alert-success py-2 px-3" style="font-size:0.85rem;border-radius:8px;">
+      <i class="bi bi-check-circle me-2"></i>{{ successMsg() }}
+    </div>
+  }
+  @if (errorMsg()) {
+    <div class="alert alert-danger py-2 px-3" style="font-size:0.85rem;border-radius:8px;">
+      <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+    </div>
+  }
+</div>
+
+<section class="datos-section">
+  <div class="container-fluid">
+    <div class="row g-3">
+
+      <!-- DATOS DE ACCESO -->
+      <div class="col-12">
+        <div class="info-card">
+          <div class="card-section-title">
+            <i class="bi bi-shield-lock" style="color:var(--azul-principal);"></i>
+            Datos de acceso
+          </div>
+          <div class="dato-fila">
+            <div class="df-label"><i class="bi bi-person"></i>Usuario</div>
+            <div class="df-valor">{{ auth.currentUser()?.username }}</div>
+          </div>
+          <div class="dato-fila">
+            <div class="df-label"><i class="bi bi-person-badge"></i>Perfil</div>
+            <div class="df-valor">{{ auth.currentUser()?.role }}</div>
+          </div>
+        </div>
+      </div>
+
+      @if (persona()) {
+        <!-- DATOS PERSONALES -->
+        <div class="col-12 col-lg-6">
+          <div class="info-card">
+            <div class="card-section-title d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-person me-2" style="color:var(--azul-principal);"></i>Datos Personales</span>
+              @if (!editando()) {
+                <button class="btn-editar" (click)="toggleEditar()">
+                  <i class="bi bi-pencil me-1"></i>Editar
+                </button>
+              }
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-person-lines-fill"></i>Nombre completo</div>
+              <div class="df-valor">{{ persona()!.nombreCompleto }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-calendar3"></i>Fecha de nacimiento</div>
+              <div class="df-valor">{{ persona()!.fechaNacimiento || '—' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-gender-ambiguous"></i>Sexo</div>
+              <div class="df-valor">{{ persona()!.sexo === 'M' ? 'Masculino' : persona()!.sexo === 'F' ? 'Femenino' : '—' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-credit-card-2-front"></i>CURP</div>
+              <div class="df-valor">{{ persona()!.curp || '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTACTO (editable) -->
+        <div class="col-12 col-lg-6">
+          <div class="info-card">
+            <div class="card-section-title">
+              <i class="bi bi-telephone me-2" style="color:var(--azul-principal);"></i>Contacto
+            </div>
+            @if (!editando()) {
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-telephone"></i>Teléfono</div>
+                <div class="df-valor">{{ persona()!.telefono || '—' }}</div>
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-telephone-plus"></i>Tel. alternativo</div>
+                <div class="df-valor">{{ persona()!.telefonoAlt || '—' }}</div>
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-envelope"></i>Correo</div>
+                <div class="df-valor">{{ persona()!.correo || '—' }}</div>
+              </div>
+            } @else {
+              <form [formGroup]="form" (ngSubmit)="guardar()">
+                <div class="mb-2">
+                  <label class="form-label">Teléfono (10 dígitos)</label>
+                  <input type="tel" class="form-control" formControlName="telefono" maxlength="10"/>
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Tel. alternativo</label>
+                  <input type="tel" class="form-control" formControlName="telefonoAlt" maxlength="10"/>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Correo electrónico</label>
+                  <input type="email" class="form-control" formControlName="correo"/>
+                </div>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn-guardar" [disabled]="saving()">
+                    @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Guardar
+                  </button>
+                  <button type="button" class="btn-cancelar" (click)="toggleEditar()">Cancelar</button>
+                </div>
+              </form>
+            }
+          </div>
+        </div>
+
+      } @else {
+        <div class="col-12">
+          <div class="info-card text-center py-5">
+            @if (loading()) {
+              <div class="spinner-border text-primary"></div>
+              <p class="mt-3 text-muted">Cargando datos...</p>
+            } @else {
+              <i class="bi bi-person-x" style="font-size:2rem;color:var(--gris-medio);"></i>
+              <p class="mt-3" style="color:var(--gris-medio);">No se encontró información de perfil.</p>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</section>

@@ -1,1 +1,157 @@
-/* You can add global styles to this file, and also import other style files */
+/* ══════════════════════════════════════
+   PALETA GLOBAL
+══════════════════════════════════════ */
+:root {
+  --azul-principal: #3A8FC4;
+  --azul-suave:     #EBF4FB;
+  --azul-medio:     #2574A9;
+  --gris-texto:     #3D3D3D;
+  --gris-medio:     #7A8A99;
+  --gris-borde:     #D9E2EA;
+  --gris-fondo:     #F7F9FB;
+  --blanco:         #FFFFFF;
+  --verde:          #1e8449;
+  --verde-suave:    #eafaf1;
+  --amarillo:       #b7950b;
+  --amarillo-suave: #fef9e7;
+  --rojo:           #c0392b;
+  --rojo-suave:     #fdecea;
+  --naranja:        #d35400;
+  --naranja-suave:  #fef0e6;
+  --morado:         #7d3c98;
+  --morado-suave:   #f5eef8;
+  --sombra-card:    0 4px 24px rgba(0,0,0,0.06);
+  --sombra-suave:   0 2px 16px rgba(58,143,196,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--gris-fondo);
+  color: var(--gris-texto);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════
+   NAVBAR SHARED
+══════════════════════════════════════ */
+.navbar-sh {
+  background-color: var(--blanco);
+  border-bottom: 1px solid var(--gris-borde);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 0.6rem 1.5rem;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+}
+.navbar-sh .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.navbar-sh .navbar-brand img { height: 42px; }
+.navbar-sh .brand-text { line-height: 1.2; }
+.navbar-sh .brand-text strong { display: block; font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); letter-spacing: 0.5px; text-transform: uppercase; }
+.navbar-sh .brand-text span { font-size: 0.72rem; color: var(--gris-medio); }
+.navbar-sh .nav-link { color: var(--gris-texto) !important; font-size: 0.75rem; font-weight: 500; padding: 0.4rem 0.55rem !important; border-radius: 6px; transition: background 0.2s, color 0.2s; }
+.navbar-sh .nav-link:hover { background-color: var(--azul-suave); color: var(--azul-principal) !important; }
+.navbar-sh .nav-link.active { color: var(--azul-principal) !important; background-color: var(--azul-suave); }
+.navbar-sh .nav-link-cerrar { color: #c0392b !important; border: 1px solid #e74c3c; border-radius: 6px; }
+.navbar-sh .nav-link-cerrar:hover { background-color: #fdf0ef !important; color: #c0392b !important; border-color: #c0392b; }
+.navbar-toggler { border: 1px solid var(--gris-borde); padding: 5px 9px; }
+.navbar-toggler:focus { box-shadow: none; }
+.navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(58,143,196,1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
+@media (max-width: 576px) { .navbar-sh .brand-text { display: none; } }
+
+/* ══════════════════════════════════════
+   HEADER SIMPLE (LOGIN / REGISTRO)
+══════════════════════════════════════ */
+.header-sh {
+  background-color: var(--blanco);
+  border-bottom: 1px solid var(--gris-borde);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.header-sh img { height: 42px; }
+.header-sh .brand-text { line-height: 1.2; }
+.header-sh .brand-text strong { display: block; font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); letter-spacing: 0.5px; text-transform: uppercase; }
+.header-sh .brand-text span { font-size: 0.72rem; color: var(--gris-medio); }
+@media (max-width: 576px) { .header-sh .brand-text { display: none; } }
+
+/* ══════════════════════════════════════
+   PAGE HEADER (BANNER DEGRADADO)
+══════════════════════════════════════ */
+.page-header {
+  background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-principal) 60%, #5aaed4 100%);
+  padding: 40px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/svg%3E");
+}
+.page-header .header-icon { width: 64px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 2px solid rgba(255,255,255,0.25); position: relative; }
+.page-header .header-icon i { font-size: 1.7rem; color: var(--blanco); }
+.page-header h1 { color: var(--blanco); font-size: clamp(1.15rem, 4vw, 1.55rem); margin-bottom: 6px; position: relative; }
+.page-header p { font-size: 0.88rem; color: rgba(255,255,255,0.85); margin: 0; position: relative; }
+
+/* ══════════════════════════════════════
+   SECCIÓN TÍTULOS
+══════════════════════════════════════ */
+.seccion-titulo { margin-bottom: 20px; }
+.seccion-titulo h2 { font-size: clamp(1rem, 3vw, 1.15rem); color: var(--gris-texto); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.seccion-titulo p { font-size: 0.85rem; color: var(--gris-medio); }
+.linea-azul { width: 36px; height: 3px; background-color: var(--azul-principal); border-radius: 2px; margin: 8px 0 0; }
+
+/* ══════════════════════════════════════
+   INFO CARD
+══════════════════════════════════════ */
+.info-card {
+  background: var(--blanco);
+  border-radius: 14px;
+  border: 1px solid var(--gris-borde);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  padding: 24px;
+}
+.card-section-title { font-size: 0.88rem; font-weight: 700; color: var(--gris-texto); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--gris-borde); }
+
+/* ══════════════════════════════════════
+   DATO FILA
+══════════════════════════════════════ */
+.dato-fila { display: flex; justify-content: space-between; align-items: flex-start; padding: 13px 0; border-bottom: 1px solid var(--gris-borde); gap: 8px; flex-wrap: wrap; }
+.dato-fila:last-child { border-bottom: none; }
+.df-label { font-size: 0.78rem; color: var(--gris-medio); display: flex; align-items: center; gap: 7px; flex-shrink: 0; width: 100%; min-width: 130px; }
+.df-label i { color: var(--azul-principal); font-size: 0.9rem; }
+.df-valor { font-size: 0.88rem; font-weight: 600; color: var(--gris-texto); flex: 1; word-break: break-word; min-width: 0; }
+@media (min-width: 480px) { .df-label { width: auto; } }
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+.footer-sh { background-color: var(--blanco); border-top: 1px solid var(--gris-borde); padding: 28px 20px; text-align: center; }
+.footer-sh p { font-size: 0.82rem; color: var(--gris-medio); margin-bottom: 4px; }
+.footer-sh a { color: var(--azul-principal); text-decoration: none; }
+.footer-sh a:hover { text-decoration: underline; }
+.footer-min { background-color: var(--blanco); border-top: 1px solid var(--gris-borde); padding: 14px 20px; text-align: center; font-size: 0.78rem; color: var(--gris-medio); }
+
+/* ══════════════════════════════════════
+   BADGES
+══════════════════════════════════════ */
+.badge-verde { background-color: var(--verde-suave); color: var(--verde); border: 1px solid #a9dfbf; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.badge-amarillo { background-color: var(--amarillo-suave); color: var(--amarillo); border: 1px solid #f9e79f; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.badge-rojo { background-color: var(--rojo-suave); color: var(--rojo); border: 1px solid #f1948a; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.badge-azul { background-color: var(--azul-suave); color: var(--azul-principal); border: 1px solid #85c1e9; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+

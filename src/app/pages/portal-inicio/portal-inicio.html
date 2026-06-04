@@ -1,0 +1,102 @@
+<style>
+  .hero-portal { padding: 56px 20px 48px; text-align: center; border-bottom: 1px solid var(--gris-borde); background-image: url('/Index.png'); background-size: cover; background-position: center -220px; background-repeat: no-repeat; background-attachment: fixed; }
+  @media (max-width: 768px) { .hero-portal { background-attachment: scroll; background-position: center top; } }
+  .hero-logo-wrap { width: 100px; height: 100px; border-radius: 50%; background-color: var(--azul-suave); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; padding: 14px; border: 2px solid var(--gris-borde); }
+  .hero-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .hero-portal h1 { font-size: 1.4rem; color: var(--gris-texto); margin-bottom: 4px; }
+  .hero-portal .subtitulo { font-size: 0.88rem; color: var(--gris-medio); }
+  .cta-section { padding: 36px 20px; text-align: center; }
+  .btn-asistencia { background-color: var(--azul-principal); color: var(--blanco); font-size: 0.97rem; font-weight: 600; padding: 14px 44px; border: none; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.15s; box-shadow: 0 4px 16px rgba(58,143,196,0.35); }
+  .btn-asistencia:hover { background-color: var(--azul-medio); transform: translateY(-2px); color: var(--blanco); }
+  .bienvenida-section { padding: 24px 20px 48px; }
+  .bienvenida-inner { background: var(--blanco); border-radius: 12px; padding: 36px 40px; box-shadow: var(--sombra-card); border-top: 3px solid var(--azul-principal); }
+  .bienvenida-inner .saludo { font-family: 'Lora', serif; font-size: 1.2rem; color: var(--azul-principal); font-weight: 500; margin-bottom: 12px; }
+  .valores-section { background-color: var(--azul-suave); padding: 48px 20px; border-top: 1px solid var(--gris-borde); }
+  .valor-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+  .valor-item .v-icon { min-width: 44px; height: 44px; border-radius: 10px; background-color: var(--blanco); display: flex; align-items: center; justify-content: center; box-shadow: var(--sombra-suave); }
+  .valor-item .v-icon i { font-size: 1.25rem; color: var(--azul-principal); }
+  .valor-item .v-texto strong { display: block; font-size: 0.92rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 2px; }
+  .valor-item .v-texto span { font-size: 0.83rem; color: var(--gris-medio); }
+  @media (max-width: 768px) { .bienvenida-inner { padding: 24px 18px; } }
+</style>
+
+<!-- HERO -->
+<section class="hero-portal">
+  <div class="hero-logo-wrap">
+    <img src="/Logo.png" alt="Logo"/>
+  </div>
+  <h1>Sociedad Humanista</h1>
+  <p class="subtitulo">Santa Martha S.A. de C.V.</p>
+</section>
+
+<!-- CTA WHATSAPP -->
+<section class="cta-section">
+  <a href="https://api.whatsapp.com/send?phone=5217821574801&text=Necesito%20servicios%20funerarios"
+     target="_blank" rel="noopener noreferrer" class="btn-asistencia">
+    <i class="bi bi-whatsapp"></i>
+    Necesito Asistencia Inmediata
+  </a>
+  <p class="mt-3" style="font-size:0.8rem; color:var(--gris-medio);">
+    Atención disponible las 24 horas, los 365 días del año
+  </p>
+</section>
+
+<!-- BIENVENIDA -->
+<section class="bienvenida-section">
+  <div class="bienvenida-inner">
+    <p class="saludo">Bienvenido, {{ auth.currentUser()?.username }}</p>
+    <p>
+      En Santa Martha entendemos la importancia de brindar tranquilidad y respaldo
+      a las familias en cada etapa de la vida. Por eso, ponemos a su disposición
+      nuestros servicios de previsión funeraria, diseñados para ayudarle a tomar
+      decisiones con anticipación, cuidado y confianza.
+    </p>
+    <p>
+      Nuestro compromiso es ofrecer atención humana, orientación profesional y planes
+      accesibles que le permitan proteger a sus seres queridos y asegurar su bienestar
+      en los momentos más difíciles. Estamos aquí para acompañarle con respeto,
+      sensibilidad y responsabilidad.
+    </p>
+  </div>
+</section>
+
+<!-- VALORES -->
+<section class="valores-section">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 style="font-size:1.25rem; color:var(--gris-texto);">Lo que nos define</h2>
+      <p style="font-size:0.88rem; color:var(--gris-medio);">Los valores que guían cada uno de nuestros servicios</p>
+      <div class="linea-azul mx-auto mt-2"></div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div class="row g-2">
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-heart"></i></div>
+              <div class="v-texto"><strong>Atención Humana</strong><span>Personas que le acompañan con empatía y calidez.</span></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-peace"></i></div>
+              <div class="v-texto"><strong>Dignidad y Respeto</strong><span>Cada servicio brindado con la solemnidad que su familia merece.</span></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-grid-1x2"></i></div>
+              <div class="v-texto"><strong>Organización</strong><span>Todo en orden, a un clic de distancia.</span></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-shield-check"></i></div>
+              <div class="v-texto"><strong>Compromiso Familiar</strong><span>Acompañamos a su familia en cada etapa del proceso.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

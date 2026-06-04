@@ -1,0 +1,113 @@
+<style>
+  .plan-section { padding: 36px 16px 56px; }
+  .servicio-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--gris-borde); }
+  .servicio-item:last-child { border-bottom:none; }
+  .servicio-icon { width:38px; height:38px; border-radius:8px; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .servicio-icon i { font-size:1rem; color:var(--azul-principal); }
+</style>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-icon"><i class="bi bi-file-earmark-text"></i></div>
+  <h1>Mi Plan Funerario</h1>
+  <p>Detalles de su cobertura y contrato</p>
+</div>
+
+<section class="plan-section">
+  <div class="container-fluid">
+
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3 text-muted">Cargando plan...</p>
+      </div>
+    } @else if (!contrato()) {
+      <div class="info-card text-center py-5">
+        <i class="bi bi-file-earmark-x" style="font-size:2.5rem;color:var(--gris-borde);"></i>
+        <p class="mt-3" style="color:var(--gris-medio);">No se encontró un plan funerario activo.</p>
+        <p style="font-size:0.85rem;color:var(--gris-medio);">Contacte a su agente para contratar un plan.</p>
+      </div>
+    } @else {
+
+      <!-- INFO DEL CONTRATO -->
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="info-card">
+            <div class="card-section-title d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal);"></i>Información del Contrato</span>
+              <span [class]="estadoBadgeClass()">
+                <i class="bi bi-dot"></i>{{ contrato()!.estadoContrato }}
+              </span>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-hash"></i>Número de contrato</div>
+              <div class="df-valor">{{ contrato()!.numeroContrato }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-shield-check"></i>Plan</div>
+              <div class="df-valor">{{ contrato()!.planFunerarioNombre || '—' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-calendar3"></i>Fecha de inicio</div>
+              <div class="df-valor">{{ contrato()!.fechaInicio | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-calendar-x"></i>Vencimiento</div>
+              <div class="df-valor">{{ contrato()!.fechaVencimiento ? (contrato()!.fechaVencimiento! | date:'dd/MM/yyyy') : 'Sin vencimiento' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-cash"></i>Cuota mensual</div>
+              <div class="df-valor">{{ contrato()!.montoCuota | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-repeat"></i>Periodicidad</div>
+              <div class="df-valor">{{ contrato()!.periodicidad || '—' }}</div>
+            </div>
+            <div class="dato-fila">
+              <div class="df-label"><i class="bi bi-wallet2"></i>Saldo pendiente</div>
+              <div class="df-valor">{{ contrato()!.saldoPendiente | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    }
+
+    <!-- SERVICIOS INCLUIDOS (Estáticos – representativos) -->
+    <div class="seccion-titulo">
+      <h2><i class="bi bi-list-check me-2" style="color:var(--azul-principal);"></i>Servicios Incluidos</h2>
+      <div class="linea-azul"></div>
+    </div>
+    <div class="info-card">
+      <div class="servicio-item">
+        <div class="servicio-icon"><i class="bi bi-house-heart"></i></div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:600;">Velación</div>
+          <div style="font-size:0.8rem;color:var(--gris-medio);">Sala de velación hasta 24 horas</div>
+        </div>
+      </div>
+      <div class="servicio-item">
+        <div class="servicio-icon"><i class="bi bi-truck"></i></div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:600;">Traslado</div>
+          <div style="font-size:0.8rem;color:var(--gris-medio);">Traslado local del fallecido</div>
+        </div>
+      </div>
+      <div class="servicio-item">
+        <div class="servicio-icon"><i class="bi bi-flower1"></i></div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:600;">Arreglo Floral</div>
+          <div style="font-size:0.8rem;color:var(--gris-medio);">Arreglo floral básico</div>
+        </div>
+      </div>
+      <div class="servicio-item">
+        <div class="servicio-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:600;">Trámites</div>
+          <div style="font-size:0.8rem;color:var(--gris-medio);">Gestión de acta de defunción y trámites legales</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

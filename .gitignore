@@ -42,3 +42,25 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# ...existing code...
+
+# Variables de entorno de producción (agregar esto)
+src/environments/environment.prod.ts
+*.env
+.env
+.env.local
+.env.production
+
+# Logs adicionales (agregar esto)
+*.log
+logs/
+pnpm-debug.log*
+
+# Build cache adicional (agregar esto)
+.cache/
+.parcel-cache/
+
+# Archivos de pruebas generados (agregar esto)
+/test-results/
+/playwright-report/

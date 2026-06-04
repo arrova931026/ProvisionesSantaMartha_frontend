@@ -1,0 +1,159 @@
+<style>
+  .hero-section { padding: 56px 20px 48px; text-align: center; border-bottom: 1px solid var(--gris-borde); background-image: url('/Index.png'); background-size: cover; background-position: center -220px; background-repeat: no-repeat; background-attachment: fixed; }
+  @media (max-width: 768px) { .hero-section { background-attachment: scroll; background-position: center top; } }
+  .hero-logo-wrap { width: 120px; height: 120px; border-radius: 50%; background-color: var(--azul-suave); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; padding: 16px; border: 2px solid var(--gris-borde); }
+  .hero-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .hero-section h1 { font-size: 1.55rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .hero-section .subtitulo { font-size: 0.9rem; color: var(--gris-medio); margin-bottom: 0; }
+  .cta-section { padding: 36px 20px 48px; text-align: center; }
+  .btn-asistencia { background-color: var(--azul-principal); color: var(--blanco); font-size: 0.97rem; font-weight: 600; padding: 14px 44px; border: none; border-radius: 50px; letter-spacing: 0.4px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(58,143,196,0.35); }
+  .btn-asistencia:hover { background-color: var(--azul-medio); transform: translateY(-2px); color: var(--blanco); }
+  .bienvenida-section { padding: 48px 20px 24px; }
+  .bienvenida-inner { max-width: 100%; margin: 0 24px; background: var(--blanco); border-radius: 12px; padding: 40px 44px; box-shadow: var(--sombra-card); border-top: 3px solid var(--azul-principal); }
+  .bienvenida-inner .saludo { font-family: 'Lora', serif; font-size: 1.25rem; color: var(--azul-principal); font-weight: 500; margin-bottom: 16px; }
+  .valores-section { background-color: var(--azul-suave); padding: 48px 20px; border-top: 1px solid var(--gris-borde); border-bottom: 1px solid var(--gris-borde); }
+  .seccion-titulo-hero { text-align: center; margin-bottom: 36px; }
+  .seccion-titulo-hero h2 { font-size: 1.25rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 6px; }
+  .seccion-titulo-hero p { font-size: 0.88rem; color: var(--gris-medio); }
+  .valor-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+  .valor-item .v-icon { min-width: 44px; height: 44px; border-radius: 10px; background-color: var(--blanco); display: flex; align-items: center; justify-content: center; box-shadow: var(--sombra-suave); }
+  .valor-item .v-icon i { font-size: 1.25rem; color: var(--azul-principal); }
+  .valor-item .v-texto strong { display: block; font-size: 0.92rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 2px; }
+  .valor-item .v-texto span { font-size: 0.83rem; color: var(--gris-medio); }
+  @media (max-width: 768px) { .bienvenida-inner { margin: 0; padding: 28px 22px; } }
+</style>
+
+<!-- NAVBAR PÚBLICO -->
+<nav class="navbar navbar-expand-lg navbar-sh">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/inicio">
+      <img src="/Logo.png" alt="Logo"/>
+      <div class="brand-text">
+        <strong>Sociedad Humanista</strong>
+        <span>Santa Martha S.A. de C.V.</span>
+      </div>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPublico">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="menuPublico">
+      <ul class="navbar-nav gap-1 py-2 py-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/login">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/registro">
+            <i class="bi bi-person-plus me-1"></i>Registrarse
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-section">
+  <div class="hero-logo-wrap">
+    <img src="/Logo.png" alt="Logo"/>
+  </div>
+  <h1>Sociedad Humanista</h1>
+  <p class="subtitulo">Santa Martha S.A. de C.V.</p>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <a href="https://api.whatsapp.com/send?phone=5217821574801&text=Necesito%20servicios%20funerarios"
+     target="_blank" rel="noopener noreferrer" class="btn-asistencia">
+    <i class="bi bi-whatsapp"></i>
+    Necesito Asistencia Inmediata
+  </a>
+  <p class="mt-3" style="font-size:0.8rem; color:var(--gris-medio);">
+    Atención disponible las 24 horas, los 365 días del año
+  </p>
+</section>
+
+<!-- BIENVENIDA -->
+<section class="bienvenida-section">
+  <div class="bienvenida-inner">
+    <p class="saludo">Bienvenido a su portal de previsión</p>
+    <p>
+      En Santa Martha entendemos la importancia de brindar tranquilidad y respaldo
+      a las familias en cada etapa de la vida. Por eso, ponemos a su disposición
+      nuestros servicios de previsión funeraria, diseñados para ayudarle a tomar
+      decisiones con anticipación, cuidado y confianza.
+    </p>
+    <p>
+      Nuestro compromiso es ofrecer atención humana, orientación profesional y planes
+      accesibles que le permitan proteger a sus seres queridos y asegurar su bienestar
+      en los momentos más difíciles. Estamos aquí para acompañarle con respeto,
+      sensibilidad y responsabilidad.
+    </p>
+  </div>
+</section>
+
+<!-- VALORES -->
+<section class="valores-section">
+  <div class="container">
+    <div class="seccion-titulo-hero">
+      <h2>Lo que nos define</h2>
+      <p>Los valores que guían cada uno de nuestros servicios</p>
+      <div class="linea-azul mx-auto mt-2"></div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8">
+        <div class="row g-2">
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-heart"></i></div>
+              <div class="v-texto">
+                <strong>Atención Humana</strong>
+                <span>Personas que le acompañan con empatía y calidez.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-peace"></i></div>
+              <div class="v-texto">
+                <strong>Dignidad y Respeto</strong>
+                <span>Cada servicio brindado con la solemnidad que su familia merece.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-grid-1x2"></i></div>
+              <div class="v-texto">
+                <strong>Organización</strong>
+                <span>Todo en orden, a un clic de distancia.</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6">
+            <div class="valor-item">
+              <div class="v-icon"><i class="bi bi-shield-check"></i></div>
+              <div class="v-texto">
+                <strong>Compromiso Familiar</strong>
+                <span>Acompañamos a su familia en cada etapa del proceso.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer-sh">
+  <p>
+    <a href="https://api.whatsapp.com/send?phone=5217821574801" target="_blank" rel="noopener">
+      <i class="bi bi-whatsapp me-1"></i>782 157 4801
+    </a>
+    &nbsp;·&nbsp;
+    <a href="mailto:contacto@shsantamartha.mx">contacto&#64;shsantamartha.mx</a>
+  </p>
+  <p>© 2026 Sociedad Humanista Santa Martha S.A. de C.V. — Todos los derechos reservados.</p>
+</footer>
