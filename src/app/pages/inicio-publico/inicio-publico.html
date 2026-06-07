@@ -5,10 +5,10 @@
   .hero-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
   .hero-section h1 { font-size: 1.55rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px; }
   .hero-section .subtitulo { font-size: 0.9rem; color: var(--gris-medio); margin-bottom: 0; }
-  .cta-section { padding: 36px 20px 48px; text-align: center; }
+  .cta-section { padding: 36px 20px 12px; text-align: center; }
   .btn-asistencia { background-color: var(--azul-principal); color: var(--blanco); font-size: 0.97rem; font-weight: 600; padding: 14px 44px; border: none; border-radius: 50px; letter-spacing: 0.4px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(58,143,196,0.35); }
   .btn-asistencia:hover { background-color: var(--azul-medio); transform: translateY(-2px); color: var(--blanco); }
-  .bienvenida-section { padding: 48px 20px 24px; }
+  .bienvenida-section { padding: 12px 20px 24px; }
   .bienvenida-inner { max-width: 100%; margin: 0 24px; background: var(--blanco); border-radius: 12px; padding: 40px 44px; box-shadow: var(--sombra-card); border-top: 3px solid var(--azul-principal); }
   .bienvenida-inner .saludo { font-family: 'Lora', serif; font-size: 1.25rem; color: var(--azul-principal); font-weight: 500; margin-bottom: 16px; }
   .valores-section { background-color: var(--azul-suave); padding: 48px 20px; border-top: 1px solid var(--gris-borde); border-bottom: 1px solid var(--gris-borde); }
@@ -21,6 +21,17 @@
   .valor-item .v-texto strong { display: block; font-size: 0.92rem; color: var(--gris-texto); font-weight: 600; margin-bottom: 2px; }
   .valor-item .v-texto span { font-size: 0.83rem; color: var(--gris-medio); }
   @media (max-width: 768px) { .bienvenida-inner { margin: 0; padding: 28px 22px; } }
+  /* --- Modales de asistencia --- */
+  .modal-asistencia-content { border-radius: 16px; border: none; }
+  .modal-asistencia-content .modal-title { font-size: 1rem; font-weight: 600; color: var(--gris-texto); }
+  .btn-canal { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px; background: var(--azul-suave); border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: border-color 0.2s, transform 0.15s, background 0.2s; }
+  .btn-canal:hover { border-color: var(--azul-principal); transform: translateY(-2px); background: var(--blanco); }
+  .btn-canal span { font-size: 0.85rem; font-weight: 600; color: var(--gris-texto); }
+  .canal-icon { font-size: 2.2rem; }
+  .canal-wa { color: #25D366; }
+  .canal-tel { color: var(--azul-principal); }
+  .numero-display { font-size: 1.6rem; font-weight: 700; color: var(--gris-texto); letter-spacing: 1.5px; }
+  
 </style>
 
 <!-- NAVBAR PÚBLICO -->
@@ -64,11 +75,10 @@
 
 <!-- CTA -->
 <section class="cta-section">
-  <a href="https://api.whatsapp.com/send?phone=5217821574801&text=Necesito%20servicios%20funerarios"
-     target="_blank" rel="noopener noreferrer" class="btn-asistencia">
-    <i class="bi bi-whatsapp"></i>
+  <button class="btn-asistencia" (click)="abrirModalAsistencia()">
+    <i class="bi bi-headset"></i>
     Necesito Asistencia Inmediata
-  </a>
+  </button>
   <p class="mt-3" style="font-size:0.8rem; color:var(--gris-medio);">
     Atención disponible las 24 horas, los 365 días del año
   </p>
@@ -77,18 +87,12 @@
 <!-- BIENVENIDA -->
 <section class="bienvenida-section">
   <div class="bienvenida-inner">
-    <p class="saludo">Bienvenido a su portal de previsión</p>
+    <p class="saludo">Bienvenido a Provisiones Santa Martha</p>
     <p>
       En Santa Martha entendemos la importancia de brindar tranquilidad y respaldo
       a las familias en cada etapa de la vida. Por eso, ponemos a su disposición
       nuestros servicios de previsión funeraria, diseñados para ayudarle a tomar
       decisiones con anticipación, cuidado y confianza.
-    </p>
-    <p>
-      Nuestro compromiso es ofrecer atención humana, orientación profesional y planes
-      accesibles que le permitan proteger a sus seres queridos y asegurar su bienestar
-      en los momentos más difíciles. Estamos aquí para acompañarle con respeto,
-      sensibilidad y responsabilidad.
     </p>
   </div>
 </section>
@@ -145,6 +149,59 @@
     </div>
   </div>
 </section>
+
+<!-- MODAL: ELEGIR CANAL DE ATENCIÓN -->
+<div class="modal fade" id="modalAsistencia" tabindex="-1" aria-labelledby="modalAsistenciaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-asistencia-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="modalAsistenciaLabel">
+          <i class="bi bi-headset me-2" style="color:var(--azul-principal)"></i>
+          ¿Cómo desea recibir atención?
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body py-4">
+        <p class="text-center text-muted mb-4" style="font-size:0.85rem;">
+          Seleccione el canal de contacto de su preferencia
+        </p>
+        <div class="row g-3 justify-content-center">
+          <div class="col-5">
+            <button class="btn-canal" (click)="contactarWhatsApp()">
+              <i class="bi bi-whatsapp canal-icon canal-wa"></i>
+              <span>WhatsApp</span>
+            </button>
+          </div>
+          <div class="col-5">
+            <button class="btn-canal" (click)="contactarLlamada()">
+              <i class="bi bi-telephone-fill canal-icon canal-tel"></i>
+              <span>Llamada directa</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NÚMERO DE CONTACTO (ESCRITORIO) -->
+<div class="modal fade" id="modalNumero" tabindex="-1" aria-labelledby="modalNumeroLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content modal-asistencia-content text-center">
+      <div class="modal-header border-0 pb-0 justify-content-center">
+        <h5 class="modal-title" id="modalNumeroLabel">Número de contacto</h5>
+        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body py-4">
+        <div class="numero-display">
+          <i class="bi bi-telephone-fill me-2" style="color:var(--azul-principal)"></i>
+          782 157 4801
+        </div>
+        <p class="mt-3 text-muted" style="font-size:0.8rem;">Marque este número desde su teléfono</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- FOOTER -->
 <footer class="footer-sh">

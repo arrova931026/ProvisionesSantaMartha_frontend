@@ -64,8 +64,14 @@
       <img src="/Logo.png" alt="Logo"/>
     </div>
 
-    <h2>Bienvenido de regreso</h2>
+    <h2>Iniciar Sesión</h2>
     <p class="subtitulo">Ingrese sus credenciales para acceder a su portal</p>
+
+    @if (successMsg()) {
+      <div class="alert alert-success py-2 px-3 mb-3" style="font-size:0.85rem; border-radius:8px;">
+        <i class="bi bi-check-circle me-2"></i>{{ successMsg() }}
+      </div>
+    }
 
     @if (errorMsg()) {
       <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.85rem; border-radius:8px;">

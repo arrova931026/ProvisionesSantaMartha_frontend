@@ -166,7 +166,7 @@
     </div>
     <div class="mod-tabs">
       @for (t of tabs; track t.key) {
-        <button class="mod-tab" [class.activo]="tabActivo() === t.key" (click)="tabActivo.set(t.key)">
+        <button class="mod-tab" [class.activo]="tabActivo() === t.key" (click)="onTabChange(t.key)">
           <i [class]="'bi ' + t.icon"></i>{{ t.label }}
         </button>
       }
@@ -343,6 +343,117 @@
               <i class="bi bi-download"></i>Descargar
             </div>
           </div>
+        }
+      </div>
+    }
+
+    <!-- TAB: BAJA DE SOCIOS -->
+    @if (tabActivo() === 'baja') {
+      <div class="info-card">
+        <div class="card-section-title"><i class="bi bi-person-dash me-2" style="color:var(--rojo);"></i>Baja de Socios</div>
+        <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:20px;">Busque un socio por nombre o usuario y dé clic en <strong>Dar de Baja</strong> para desactivar su cuenta.</p>
+
+        @if (bajaMsg()) {
+          <div [class]="'alert alert-' + bajaMsgTipo() + ' py-2 px-3 mb-3'" style="font-size:0.85rem;border-radius:8px;">
+            <i [class]="bajaMsgTipo() === 'success' ? 'bi bi-check-circle me-2' : 'bi bi-exclamation-circle me-2'"></i>{{ bajaMsg() }}
+          </div>
+        }
+
+        <!-- Buscador -->
+        <div class="row g-3 mb-3">
+          <div class="col-12 col-md-6">
+            <div style="position:relative;">
+              <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-size:0.9rem;"></i>
+              <input
+                type="text"
+                class="form-control"
+                style="padding-left:36px;"
+                placeholder="Filtrar por nombre, apellido o usuario..."
+                [(ngModel)]="filtroNombre"
+                (ngModelChange)="onFiltroChange()"
+              />
+            </div>
+          </div>
+          <div class="col-12 col-md-3 d-flex align-items-end">
+            <button class="btn-sh-primary" style="background:var(--gris-claro,#f4f6f8);color:var(--gris-texto);border:1px solid var(--gris-borde);" (click)="cargarSocios()">
+              <i class="bi bi-arrow-clockwise"></i>Actualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- Spinner búsqueda -->
+        @if (bajaBuscando()) {
+          <div style="text-align:center;padding:24px 0;color:var(--gris-medio);font-size:0.85rem;">
+            <span class="spinner-border spinner-border-sm me-2"></span>Buscando socios...
+          </div>
+        }
+
+        <!-- Lista -->
+        @if (!bajaBuscando()) {
+          @if (socios().length === 0) {
+            <div style="text-align:center;padding:40px 0;color:var(--gris-medio);">
+              <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+              <span style="font-size:0.88rem;">No se encontraron socios registrados.</span>
+            </div>
+          } @else {
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--gris-borde);">
+                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Socio</th>
+                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Usuario</th>
+                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Correo</th>
+                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Rol</th>
+                    <th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (s of socios(); track s.id) {
+                    <tr style="border-bottom:1px solid var(--gris-borde);transition:background 0.15s;" [style.background]="confirmandoId() === s.id ? 'rgba(220,53,69,0.05)' : ''">
+                      <td style="padding:12px 12px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                          <div style="width:36px;height:36px;border-radius:50%;background:var(--azul-suave);color:var(--azul-principal);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">{{ iniciales(s.nombreCompleto) }}</div>
+                          <span style="font-weight:600;">{{ s.nombreCompleto }}</span>
+                        </div>
+                      </td>
+                      <td style="padding:12px 12px;color:var(--gris-medio);">{{ s.username }}</td>
+                      <td style="padding:12px 12px;color:var(--gris-medio);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.correo }}</td>
+                      <td style="padding:12px 12px;">
+                        <span [class]="s.rol === 'ADMIN' ? 'badge-azul' : s.rol === 'AGENTE' ? 'badge-morado' : 'badge-verde'" style="font-size:0.72rem;">{{ s.rol }}</span>
+                      </td>
+                      <td style="padding:12px 12px;text-align:center;">
+                        @if (confirmandoId() !== s.id) {
+                          <button
+                            class="btn-sh-primary"
+                            style="background:var(--rojo-suave);color:var(--rojo);border:1px solid var(--rojo);padding:6px 14px;font-size:0.78rem;"
+                            [disabled]="loadingBaja()"
+                            (click)="solicitarBaja(s.id)">
+                            <i class="bi bi-person-x"></i>Dar de Baja
+                          </button>
+                        } @else {
+                          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+                            <button
+                              class="btn-sh-primary"
+                              style="background:var(--rojo);color:var(--blanco);padding:6px 14px;font-size:0.78rem;"
+                              [disabled]="loadingBaja()"
+                              (click)="confirmarBaja(s.id)">
+                              @if (loadingBaja()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Confirmar }
+                            </button>
+                            <button
+                              class="btn-sh-primary"
+                              style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);padding:6px 14px;font-size:0.78rem;"
+                              (click)="cancelarBaja()">
+                              <i class="bi bi-x-lg"></i>Cancelar
+                            </button>
+                          </div>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         }
       </div>
     }

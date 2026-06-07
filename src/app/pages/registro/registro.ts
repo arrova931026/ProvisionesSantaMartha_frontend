@@ -63,11 +63,12 @@ export class RegistroComponent {
 
     this.http.post(`${environment.apiUrl}/auth/registro`, payload).subscribe({
       next: () => {
-        this.router.navigate(['/login'], { queryParams: { registered: '1' } });
+        this.router.navigate(['/login'], { queryParams: { registered: '1', username: v.username } });
       },
       error: (err) => {
         this.loading.set(false);
         this.errorMsg.set(err.error?.message ?? 'Error al registrar. Intente más tarde.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
   }

@@ -18,6 +18,8 @@ export class AuthService {
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null && !!this.getToken());
   readonly isAdmin = computed(() => this._currentUser()?.role === 'ADMIN');
+  readonly isAgente = computed(() => this._currentUser()?.role === 'AGENTE');
+  readonly isAdminOrAgente = computed(() => this._currentUser()?.role === 'ADMIN' || this._currentUser()?.role === 'AGENTE');
 
   login(credentials: LoginRequest) {
     return this.http

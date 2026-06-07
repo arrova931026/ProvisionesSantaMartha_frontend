@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.html'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -17,11 +17,23 @@ export class LoginComponent {
   readonly showPassword = signal(false);
   readonly loading = signal(false);
   readonly errorMsg = signal('');
+  readonly successMsg = signal('');
 
   readonly form = this.fb.group({
     username: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
+
+  ngOnInit() {
+    const snap = this.route.snapshot.queryParamMap;
+    if (snap.get('registered') === '1') {
+      this.successMsg.set('Usuario creado exitosamente');
+      const username = snap.get('username');
+      if (username) {
+        this.form.patchValue({ username });
+      }
+    }
+  }
 
   togglePassword() {
     this.showPassword.update(v => !v);
