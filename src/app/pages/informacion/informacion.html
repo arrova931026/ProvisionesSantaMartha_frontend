@@ -1,5 +1,6 @@
 <style>
   .info-section { padding: 36px 16px 56px; }
+
   .faq-item { background:var(--blanco); border-radius:10px; border:1px solid var(--gris-borde); padding:18px 20px; margin-bottom:10px; }
   .faq-item .pregunta { font-size:0.9rem; font-weight:600; color:var(--gris-texto); margin-bottom:8px; display:flex; align-items:flex-start; gap:8px; }
   .faq-item .pregunta i { color:var(--azul-principal); flex-shrink:0; margin-top:2px; }
@@ -13,6 +14,42 @@
   .btn-descargar { background:var(--azul-suave); color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:50px; padding:5px 14px; font-size:0.78rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
   .btn-descargar:hover { background:#d0e9f7; color:var(--azul-principal); }
 </style>
+
+@if (isPublic) {
+  <nav class="navbar navbar-expand-lg navbar-sh">
+    <div class="container-fluid">
+      <a class="navbar-brand" routerLink="/inicio">
+        <img src="/Logo.png" alt="Logo"/>
+        <div class="brand-text">
+          <strong>Sociedad Humanista</strong>
+          <span>Santa Martha S.A. de C.V.</span>
+        </div>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPublicoInfo">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="menuPublicoInfo">
+        <ul class="navbar-nav gap-1 py-2 py-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/login" (click)="cerrarMenu()">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/registro" (click)="cerrarMenu()">
+              <i class="bi bi-person-plus me-1"></i>Registrarse
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" routerLink="/informacion" (click)="cerrarMenu()">
+              <i class="bi bi-info-circle me-1"></i>Información
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+}
 
 <!-- HEADER -->
 <div class="page-header">

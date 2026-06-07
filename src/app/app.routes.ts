@@ -6,6 +6,7 @@ export const routes: Routes = [
   { path: 'inicio', loadComponent: () => import('./pages/inicio-publico/inicio-publico').then(m => m.InicioPublicoComponent) },
   { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent) },
   { path: 'registro', loadComponent: () => import('./pages/registro/registro').then(m => m.RegistroComponent) },
+  { path: 'informacion', loadComponent: () => import('./pages/informacion/informacion').then(m => m.InformacionComponent) },
   {
     path: 'portal',
     loadComponent: () => import('./layout/portal-layout/portal-layout').then(m => m.PortalLayoutComponent),

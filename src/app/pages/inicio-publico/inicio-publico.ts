@@ -12,6 +12,13 @@ declare const bootstrap: any;
 export class InicioPublicoComponent {
   private document = inject(DOCUMENT);
 
+  cerrarMenu(): void {
+    const menu = this.document.getElementById('menuPublico');
+    if (menu?.classList.contains('show')) {
+      bootstrap.Collapse.getInstance(menu)?.hide();
+    }
+  }
+
   abrirModalAsistencia(): void {
     const el = this.document.getElementById('modalAsistencia');
     if (el) new bootstrap.Modal(el).show();

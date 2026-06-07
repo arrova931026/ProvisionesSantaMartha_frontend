@@ -1,10 +1,29 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+
+declare const bootstrap: any;
 
 @Component({
   selector: 'app-informacion',
+  imports: [RouterLink],
   templateUrl: './informacion.html'
 })
 export class InformacionComponent {
+  private router = inject(Router);
+  private document = inject(DOCUMENT);
+
+  get isPublic(): boolean {
+    return !this.router.url.startsWith('/portal');
+  }
+
+  cerrarMenu(): void {
+    const menu = this.document.getElementById('menuPublicoInfo');
+    if (menu?.classList.contains('show')) {
+      bootstrap.Collapse.getInstance(menu)?.hide();
+    }
+  }
+
   readonly faqs = [
     {
       q: '¿Cómo puedo actualizar mis datos de contacto?',

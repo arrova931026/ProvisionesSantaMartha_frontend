@@ -50,13 +50,18 @@
     <div class="collapse navbar-collapse justify-content-end" id="menuPublico">
       <ul class="navbar-nav gap-1 py-2 py-lg-0">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/login">
+          <a class="nav-link" routerLink="/login" (click)="cerrarMenu()">
             <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/registro">
+          <a class="nav-link" routerLink="/registro" (click)="cerrarMenu()">
             <i class="bi bi-person-plus me-1"></i>Registrarse
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/informacion" (click)="cerrarMenu()">
+            <i class="bi bi-info-circle me-1"></i>Información
           </a>
         </li>
       </ul>
