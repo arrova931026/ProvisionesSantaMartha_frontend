@@ -26,6 +26,20 @@ export class PersonaService {
     return this.http.put<PersonaResponse>(`${this.base}/${id}`, data);
   }
 
+  actualizarMiPerfil(data: PersonaRequest) {
+    return this.http.put<PersonaResponse>(`${this.base}/me`, data);
+  }
+
+  subirFoto(file: File) {
+    const form = new FormData();
+    form.append('foto', file);
+    return this.http.post<{ url: string }>(`${this.base}/me/foto`, form);
+  }
+
+  obtenerUrlFoto() {
+    return this.http.get<{ url: string }>(`${this.base}/me/foto`);
+  }
+
   eliminar(id: number) {
     return this.http.delete<void>(`${this.base}/${id}`);
   }

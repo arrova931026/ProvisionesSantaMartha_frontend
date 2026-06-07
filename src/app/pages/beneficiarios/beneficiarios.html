@@ -67,7 +67,7 @@
       <div class="d-flex flex-column gap-2">
         @for (b of beneficiarios(); track b.id) {
           <div class="benef-card">
-            <div class="benef-avatar">{{ b.nombre[0] }}{{ b.apPaterno[0] }}</div>
+            <div class="benef-avatar">{{ b.nombreCompleto[0] }}{{ b.nombreCompleto.split(' ')[1]?.[0] }}</div>
             <div class="flex-grow-1">
               <div class="benef-nombre">{{ b.nombreCompleto }}</div>
               <div class="benef-detalle">

@@ -2,13 +2,13 @@ export interface Beneficiario {
   id: number;
   contratoId: number;
   personaId: number;
-  nombre: string;
-  apPaterno: string;
+  nombre?: string;
+  apPaterno?: string;
   apMaterno?: string;
   nombreCompleto: string;
   parentesco?: string;
   porcentajeCobertura?: number;
-  fechaNacimiento?: string;
+  esTitular?: boolean;
   telefono?: string;
   correo?: string;
 }

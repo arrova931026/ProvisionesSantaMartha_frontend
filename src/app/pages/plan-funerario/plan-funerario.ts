@@ -21,7 +21,7 @@ export class PlanFunerarioComponent implements OnInit {
   }
 
   estadoBadgeClass(): string {
-    const estado = this.contrato()?.estadoContrato;
+    const estado = this.contrato()?.estadoClave;
     const map: Record<string, string> = {
       'ACTIVO': 'badge-verde',
       'PENDIENTE': 'badge-amarillo',

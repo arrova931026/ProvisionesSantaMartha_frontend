@@ -10,6 +10,7 @@ export interface LoginResponse {
   expiresIn: number;
   username: string;
   role: string;
+  personaId: number;
 }
 
 export interface RefreshTokenRequest {
@@ -19,4 +20,5 @@ export interface RefreshTokenRequest {
 export interface CurrentUser {
   username: string;
   role: string;
+  personaId: number;
 }

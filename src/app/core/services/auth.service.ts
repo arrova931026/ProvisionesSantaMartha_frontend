@@ -28,7 +28,7 @@ export class AuthService {
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.accessToken);
           localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
-          const user: CurrentUser = { username: res.username, role: res.role };
+          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId };
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this._currentUser.set(user);
         })

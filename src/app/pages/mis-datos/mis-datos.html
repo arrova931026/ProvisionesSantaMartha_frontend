@@ -7,25 +7,194 @@
   .avatar-wrap { position:relative; display:inline-block; margin-bottom:14px; }
   .avatar-circle { width:88px; height:88px; border-radius:50%; background:rgba(255,255,255,0.2); border:3px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:700; color:var(--blanco); margin:0 auto; }
   .perfil-card-wrap { margin-top:-72px; position:relative; z-index:10; padding:0 16px; }
+  .contrato-hero { background:linear-gradient(135deg,var(--azul-medio) 0%,var(--azul-principal) 100%); border-radius:14px; padding:22px 24px; display:flex; align-items:center; gap:18px; }
+  .ch-icon { width:52px; height:52px; border-radius:12px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ch-icon i { font-size:1.5rem; color:var(--blanco); }
+  .ch-info { flex:1; min-width:0; }
+  .ch-label { font-size:0.74rem; color:rgba(255,255,255,0.75); margin-bottom:2px; }
+  .ch-numero { font-size:1.1rem; font-weight:700; color:var(--blanco); letter-spacing:0.5px; }
+  .ch-plan { font-size:0.76rem; color:rgba(255,255,255,0.8); margin-top:2px; }
+  .badge-activo-c { background:rgba(255,255,255,0.2); color:var(--blanco); font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:50px; border:1px solid rgba(255,255,255,0.3); white-space:nowrap; }
+  .badge-sin-contrato { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.75); font-size:0.78rem; font-style:italic; padding:8px 16px; border-radius:10px; border:1px dashed rgba(255,255,255,0.3); }
   .datos-section { padding:24px 16px 56px; }
-  .form-label { font-size:0.82rem; font-weight:500; color:var(--gris-texto); margin-bottom:5px; }
-  .form-control { border:1px solid var(--gris-borde); border-radius:8px; padding:10px 14px; font-size:0.9rem; }
-  .form-control:focus { border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
-  .btn-editar { background:var(--azul-suave); color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:50px; padding:7px 20px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background 0.2s; }
-  .btn-editar:hover { background:#d0e9f7; }
+  .seccion-titulo { margin-bottom:20px; }
+  .seccion-titulo h2 { font-size:clamp(1rem,3vw,1.15rem); color:var(--gris-texto); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .linea-azul { width:36px; height:3px; background-color:var(--azul-principal); border-radius:2px; margin:8px 0 0; }
+  .dato-fila { display:flex; justify-content:space-between; align-items:flex-start; padding:13px 0; border-bottom:1px solid var(--gris-borde); gap:8px; flex-wrap:wrap; }
+  .dato-fila:last-child { border-bottom:none; }
+  .df-label { font-size:0.78rem; color:var(--gris-medio); display:flex; align-items:center; gap:7px; flex-shrink:0; width:100%; min-width:130px; }
+  .df-label i { color:var(--azul-principal); font-size:0.9rem; }
+  .df-valor { font-size:0.88rem; font-weight:600; color:var(--gris-texto); flex:1; word-break:break-word; min-width:0; }
+  .df-valor.sin-dato { color:var(--gris-medio); font-weight:400; font-style:italic; }
+  .df-editar { font-size:0.75rem; color:var(--azul-principal); background:var(--azul-suave); border:none; border-radius:50px; padding:4px 12px; cursor:pointer; font-weight:600; transition:background 0.2s; flex-shrink:0; display:inline-flex; align-items:center; gap:4px; align-self:flex-end; margin-top:2px; }
+  .df-editar:hover { background:#d0e9f7; }
+  @media (min-width:480px) { .df-label { width:auto; min-width:150px; } .dato-fila { align-items:center; flex-wrap:nowrap; } .df-editar { align-self:center; margin-top:0; } }
+  .seg-item { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--gris-borde); }
+  .seg-item:last-child { border-bottom:none; }
+  .seg-icon { width:38px; height:38px; border-radius:10px; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .seg-icon i { font-size:1rem; color:var(--azul-principal); }
+  .seg-info { flex:1; min-width:0; }
+  .seg-nombre { font-size:0.86rem; font-weight:600; color:var(--gris-texto); }
+  .seg-detalle { font-size:0.74rem; color:var(--gris-medio); }
+  .benef-mini { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--gris-borde); }
+  .benef-mini:last-child { border-bottom:none; }
+  .bm-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; flex-shrink:0; }
+  .bm-info { flex:1; min-width:0; }
+  .bm-nombre { font-size:0.86rem; font-weight:600; color:var(--gris-texto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bm-parent { font-size:0.74rem; color:var(--gris-medio); }
+  .bm-pct { font-size:0.82rem; font-weight:700; color:var(--azul-principal); white-space:nowrap; }
+  .btn-sh-primary { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:8px 20px; font-size:0.84rem; font-weight:600; cursor:pointer; transition:background 0.2s,transform 0.15s; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .btn-sh-primary:hover { background:var(--azul-medio); color:var(--blanco); }
+  .btn-sh-outline { background:var(--blanco); color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:50px; padding:7px 16px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.2s; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .btn-sh-outline:hover { background:var(--azul-suave); }
+  .form-label-sh { font-size:0.8rem; font-weight:600; color:var(--gris-texto); margin-bottom:4px; display:block; }
+  .form-control-sh { width:100%; border:1px solid var(--gris-borde); border-radius:8px; padding:10px 14px; font-size:0.9rem; background:var(--blanco); transition:border-color 0.2s,box-shadow 0.2s; }
+  .form-control-sh:focus { outline:none; border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
   .btn-guardar { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 28px; font-size:0.88rem; font-weight:600; cursor:pointer; }
   .btn-guardar:disabled { opacity:0.7; cursor:not-allowed; }
   .btn-cancelar { background:var(--blanco); color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:50px; padding:9px 20px; font-size:0.88rem; cursor:pointer; }
+  /* Inline editing */
+  .df-edit-input { flex:1; min-width:0; border:1px solid var(--azul-principal); border-radius:8px; padding:6px 10px; font-size:0.86rem; background:var(--blanco); outline:none; box-shadow:0 0 0 3px rgba(58,143,196,0.12); }
+  .df-edit-input:focus { box-shadow:0 0 0 4px rgba(58,143,196,0.22); }
+  .df-edit-btns { display:flex; gap:6px; flex-shrink:0; align-items:center; }
+  .btn-save-sm { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:6px; padding:5px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+  .btn-save-sm:hover { background:var(--azul-medio); }
+  .btn-save-sm:disabled { opacity:0.7; cursor:not-allowed; }
+  .btn-cancel-sm { background:var(--blanco); color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:6px; padding:5px 10px; font-size:0.78rem; cursor:pointer; display:inline-flex; align-items:center; gap:4px; }
+  .btn-cancel-sm:hover { background:var(--gris-fondo); }
+  .edit-group { flex:1; min-width:0; }
+  .domicilio-panel { background:var(--azul-suave); border:1px solid rgba(58,143,196,0.2); border-radius:12px; padding:20px; margin:4px 0 8px; }
+
+  /* ── Foto de perfil ── */
+  .avatar-circle { overflow:hidden; }
+  .avatar-circle img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+  .avatar-cam-btn {
+    position:absolute; bottom:2px; right:2px;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--azul-principal); border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background 0.2s; z-index:5; padding:0;
+  }
+  .avatar-cam-btn:hover { background:var(--azul-medio); }
+  .avatar-cam-btn i { font-size:0.7rem; color:#fff; }
+
+  /* ── Modal foto ── */
+  .foto-modal-backdrop {
+    position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    z-index:1050; display:flex; align-items:center; justify-content:center; padding:16px;
+  }
+  .foto-modal {
+    background:#fff; border-radius:18px; width:100%; max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;
+  }
+  .foto-modal-header {
+    padding:16px 20px 14px; border-bottom:1px solid var(--gris-borde);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .foto-modal-header h5 { margin:0; font-size:0.98rem; color:var(--gris-texto); font-weight:700; }
+  .foto-modal-close { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--gris-medio); line-height:1; padding:4px; }
+  .foto-modal-close:hover { color:var(--gris-texto); }
+  .foto-modal-body { padding:20px; }
+
+  .foto-opcion-btn {
+    width:100%; display:flex; align-items:center; gap:14px;
+    background:var(--azul-suave); border:1px solid rgba(58,143,196,0.2);
+    border-radius:12px; padding:14px 16px; cursor:pointer;
+    transition:background 0.2s,border-color 0.2s; margin-bottom:10px; text-align:left;
+  }
+  .foto-opcion-btn:last-of-type { margin-bottom:0; }
+  .foto-opcion-btn:hover { background:#d0e9f7; border-color:var(--azul-principal); }
+  .foto-opcion-icon { width:42px; height:42px; border-radius:10px; background:var(--azul-principal); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .foto-opcion-icon i { font-size:1.15rem; color:#fff; }
+  .foto-opcion-txt strong { display:block; font-size:0.88rem; color:var(--gris-texto); }
+  .foto-opcion-txt span { font-size:0.74rem; color:var(--gris-medio); }
+
+  .camara-wrap { position:relative; background:#000; border-radius:12px; overflow:hidden; }
+  .camara-wrap video { width:100%; display:block; max-height:280px; object-fit:cover; }
+  .camara-btns { display:flex; gap:10px; margin-top:14px; justify-content:center; align-items:center; }
+  .btn-capturar { width:58px; height:58px; border-radius:50%; background:#fff; border:4px solid var(--azul-principal); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+  .btn-capturar:hover { background:var(--azul-suave); }
+  .btn-capturar i { font-size:1.35rem; color:var(--azul-principal); }
+
+  .foto-preview-wrap { text-align:center; }
+  .foto-preview-wrap img { width:130px; height:130px; border-radius:50%; object-fit:cover; border:3px solid var(--azul-principal); margin-bottom:14px; }
+  .foto-preview-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  .btn-foto-prim { background:var(--azul-principal); color:#fff; border:none; border-radius:50px; padding:9px 22px; font-size:0.86rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .btn-foto-prim:hover:not(:disabled) { background:var(--azul-medio); }
+  .btn-foto-prim:disabled { opacity:0.7; cursor:not-allowed; }
+  .btn-foto-sec { background:#fff; color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:50px; padding:9px 18px; font-size:0.86rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .btn-foto-sec:hover { background:var(--gris-fondo,#f8f8f8); }
 </style>
 
 <!-- HEADER CON AVATAR -->
 <div class="page-header-profile">
   <div class="header-inner">
     <div class="avatar-wrap">
-      <div class="avatar-circle">{{ iniciales() }}</div>
+      <!-- Círculo: muestra foto si existe, iniciales si no -->
+      <div class="avatar-circle">
+        @if (fotoUrl()) {
+          <img [src]="fotoUrl()!" alt="Foto de perfil"/>
+        } @else {
+          {{ iniciales() }}
+        }
+      </div>
+      <!-- Botón cámara esquina inferior derecha -->
+      <button type="button" class="avatar-cam-btn" (click)="abrirModalFoto()" title="Cambiar foto de perfil">
+        <i class="bi bi-camera-fill"></i>
+      </button>
     </div>
-    <h1>Mis Datos</h1>
-    <p>Información de su cuenta y perfil</p>
+    @if (persona()) {
+      <h1>{{ persona()!.nombreCompleto }}</h1>
+      <p>Socia/Socio activo — {{ auth.currentUser()?.username }}</p>
+    } @else {
+      <h1>Mis Datos</h1>
+      <p>Información de su cuenta y perfil</p>
+    }
+  </div>
+</div>
+
+<!-- CONTRATO HERO FLOTANTE -->
+<div class="perfil-card-wrap">
+  <div class="container-lg">
+    @if (contrato()) {
+      <div class="contrato-hero">
+        <div class="ch-icon"><i class="bi bi-file-earmark-check"></i></div>
+        <div class="ch-info">
+          <div class="ch-label">Número de Contrato</div>
+          <div class="ch-numero">{{ contrato()!.numeroContrato }}</div>
+          <div class="ch-plan">
+            @if (contrato()!.planNombre) {
+              {{ contrato()!.planNombre }} —
+            } @else {
+              <span style="font-style:italic;opacity:0.75;">Todavía no hay un plan funerario activo</span>
+            }
+            @if (contrato()!.mensualidadPactada) {
+              ${{ contrato()!.mensualidadPactada | number:'1.2-2' }} / mes
+            }
+          </div>
+        </div>
+        <span class="badge-activo-c">
+          <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i>
+          {{ contrato()!.estadoNombre ?? contrato()!.estadoClave ?? 'Activo' }}
+        </span>
+      </div>
+    } @else if (!loading()) {
+      <div class="contrato-hero" style="justify-content:center;">
+        <div class="ch-icon"><i class="bi bi-file-earmark-x"></i></div>
+        <div class="ch-info">
+          <div class="ch-label">Contrato</div>
+          <div class="ch-numero" style="font-size:0.95rem;font-weight:500;font-style:italic;opacity:0.9;">
+            Todavía no existe un contrato asignado
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="contrato-hero" style="justify-content:center;">
+        <span class="spinner-border spinner-border-sm text-light me-2"></span>
+        <span style="color:rgba(255,255,255,0.8);font-size:0.85rem;">Cargando contrato...</span>
+      </div>
+    }
   </div>
 </div>
 
@@ -44,117 +213,553 @@
 </div>
 
 <section class="datos-section">
-  <div class="container-fluid">
-    <div class="row g-3">
+  <div class="container-lg">
 
-      <!-- DATOS DE ACCESO -->
-      <div class="col-12">
-        <div class="info-card">
-          <div class="card-section-title">
-            <i class="bi bi-shield-lock" style="color:var(--azul-principal);"></i>
-            Datos de acceso
+    @if (loading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3 text-muted">Cargando información...</p>
+      </div>
+    } @else {
+
+      <div class="row g-4">
+
+        <!-- ── COLUMNA IZQUIERDA ── -->
+        <div class="col-12 col-lg-7 d-flex flex-column gap-4">
+
+          <!-- ① DATOS PERSONALES -->
+          <div>
+            <div class="seccion-titulo">
+              <h2><i class="bi bi-person-circle" style="color:var(--azul-principal)"></i> Datos Personales</h2>
+              <div class="linea-azul"></div>
+            </div>
+            <div class="info-card">
+              @if (persona()) {
+
+                <!-- Nombre completo -->
+                <div class="dato-fila" [class.align-items-start]="campoEditando() === 'nombre'">
+                  <div class="df-label"><i class="bi bi-person"></i> Nombre completo</div>
+                  @if (campoEditando() === 'nombre') {
+                    <div class="edit-group">
+                      <div class="row g-2 mb-2">
+                        <div class="col-12 col-sm-4">
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.nombre" placeholder="Nombre *"/>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.apPaterno" placeholder="Ap. Paterno *"/>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.apMaterno" placeholder="Ap. Materno"/>
+                        </div>
+                      </div>
+                      <div class="df-edit-btns">
+                        <button type="button" class="btn-save-sm" (click)="guardarCampo('nombre')" [disabled]="saving()">
+                          @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                          Guardar
+                        </button>
+                        <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i> Cancelar</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="df-valor">{{ persona()!.nombreCompleto }}</div>
+                    <button class="df-editar" (click)="abrirEditar('nombre')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+
+                <!-- CURP -->
+                <div class="dato-fila">
+                  <div class="df-label"><i class="bi bi-card-text"></i> CURP</div>
+                  @if (campoEditando() === 'curp') {
+                    <input type="text" class="df-edit-input" [formControl]="form.controls.curp"
+                           placeholder="18 caracteres" maxlength="18" style="text-transform:uppercase;"/>
+                    <div class="df-edit-btns">
+                      <button type="button" class="btn-save-sm" (click)="guardarCampo('curp')" [disabled]="saving()">
+                        @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                        Guardar
+                      </button>
+                      <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                    </div>
+                  } @else {
+                    @if (persona()!.curp) {
+                      <div class="df-valor">{{ persona()!.curp }}</div>
+                    } @else {
+                      <div class="df-valor sin-dato">Sin CURP registrado</div>
+                    }
+                    <button class="df-editar" (click)="abrirEditar('curp')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+
+                <!-- RFC -->
+                <div class="dato-fila">
+                  <div class="df-label"><i class="bi bi-person-badge"></i> RFC</div>
+                  @if (campoEditando() === 'rfc') {
+                    <input type="text" class="df-edit-input" [formControl]="form.controls.rfc"
+                           placeholder="12-13 caracteres" maxlength="13" style="text-transform:uppercase;"/>
+                    <div class="df-edit-btns">
+                      <button type="button" class="btn-save-sm" (click)="guardarCampo('rfc')" [disabled]="saving()">
+                        @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                        Guardar
+                      </button>
+                      <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                    </div>
+                  } @else {
+                    @if (persona()!.rfc) {
+                      <div class="df-valor">{{ persona()!.rfc }}</div>
+                    } @else {
+                      <div class="df-valor sin-dato">Sin RFC registrado</div>
+                    }
+                    <button class="df-editar" (click)="abrirEditar('rfc')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+
+                <!-- Fecha de nacimiento -->
+                <div class="dato-fila">
+                  <div class="df-label"><i class="bi bi-calendar3"></i> Fecha de nacimiento</div>
+                  @if (campoEditando() === 'fechaNacimiento') {
+                    <input type="date" class="df-edit-input" [formControl]="form.controls.fechaNacimiento"/>
+                    <div class="df-edit-btns">
+                      <button type="button" class="btn-save-sm" (click)="guardarCampo('fechaNacimiento')" [disabled]="saving()">
+                        @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                        Guardar
+                      </button>
+                      <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                    </div>
+                  } @else {
+                    @if (persona()!.fechaNacimiento) {
+                      <div class="df-valor">{{ formatFecha(persona()!.fechaNacimiento) }}</div>
+                    } @else {
+                      <div class="df-valor sin-dato">Sin fecha de nacimiento</div>
+                    }
+                    <button class="df-editar" (click)="abrirEditar('fechaNacimiento')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+
+                <!-- Sexo -->
+                <div class="dato-fila">
+                  <div class="df-label"><i class="bi bi-gender-ambiguous"></i> Sexo</div>
+                  @if (campoEditando() === 'sexo') {
+                    <select class="df-edit-input" [formControl]="form.controls.sexo">
+                      <option value="">-- Seleccionar --</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                      <option value="O">Otro</option>
+                    </select>
+                    <div class="df-edit-btns">
+                      <button type="button" class="btn-save-sm" (click)="guardarCampo('sexo')" [disabled]="saving()">
+                        @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                        Guardar
+                      </button>
+                      <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                    </div>
+                  } @else {
+                    <div class="df-valor">
+                      @if (persona()!.sexo === 'M') { Masculino }
+                      @else if (persona()!.sexo === 'F') { Femenino }
+                      @else if (persona()!.sexo === 'O') { Otro }
+                      @else { <span class="sin-dato">No especificado</span> }
+                    </div>
+                    <button class="df-editar" (click)="abrirEditar('sexo')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+
+                <!-- Domicilio -->
+                <div class="dato-fila">
+                  <div class="df-label"><i class="bi bi-geo-alt"></i> Domicilio</div>
+                  @if (domicilioCompleto()) {
+                    <div class="df-valor">{{ domicilioCompleto() }}</div>
+                  } @else {
+                    <div class="df-valor sin-dato">Sin domicilio registrado</div>
+                  }
+                  @if (campoEditando() !== 'domicilio') {
+                    <button class="df-editar" (click)="abrirEditar('domicilio')"><i class="bi bi-pencil"></i> Editar</button>
+                  }
+                </div>
+                @if (campoEditando() === 'domicilio') {
+                  <div class="domicilio-panel">
+                    <div class="row g-2 mb-3">
+                      <div class="col-12 col-sm-7">
+                        <label class="form-label-sh">Calle *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.calle" placeholder="Nombre de la calle"/>
+                      </div>
+                      <div class="col-6 col-sm-3">
+                        <label class="form-label-sh">Núm. Ext. *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroExt"/>
+                      </div>
+                      <div class="col-6 col-sm-2">
+                        <label class="form-label-sh">Núm. Int. <span style="font-weight:400;color:var(--gris-medio)">(opcional)</span></label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroInt"/>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <label class="form-label-sh">Colonia *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.colonia"/>
+                      </div>
+                      <div class="col-12 col-sm-4">
+                        <label class="form-label-sh">Municipio *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.municipio"/>
+                      </div>
+                      <div class="col-8 col-sm-3">
+                        <label class="form-label-sh">Estado *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.estado"/>
+                      </div>
+                      <div class="col-4 col-sm-1">
+                        <label class="form-label-sh">CP *</label>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.codigoPostal" maxlength="5"/>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button type="button" class="btn-save-sm" (click)="guardarCampo('domicilio')" [disabled]="saving()">
+                        @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        <i class="bi bi-check2"></i> Guardar domicilio
+                      </button>
+                      <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i> Cancelar</button>
+                    </div>
+                  </div>
+                }
+
+              } @else {
+                <p class="text-muted text-center py-3" style="font-size:0.85rem;">No se encontró información personal.</p>
+              }
+            </div>
           </div>
-          <div class="dato-fila">
-            <div class="df-label"><i class="bi bi-person"></i>Usuario</div>
-            <div class="df-valor">{{ auth.currentUser()?.username }}</div>
+
+          <!-- ② CONTACTO -->
+          <div>
+            <div class="seccion-titulo">
+              <h2><i class="bi bi-telephone" style="color:var(--azul-principal)"></i> Información de Contacto</h2>
+              <div class="linea-azul"></div>
+            </div>
+            <div class="info-card">
+
+              <!-- Teléfono -->
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-telephone"></i> Teléfono</div>
+                @if (campoEditando() === 'telefono') {
+                  <input type="tel" class="df-edit-input" [formControl]="form.controls.telefono"
+                         placeholder="10 dígitos" maxlength="10"/>
+                  <div class="df-edit-btns">
+                    <button type="button" class="btn-save-sm" (click)="guardarCampo('telefono')" [disabled]="saving()">
+                      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                      Guardar
+                    </button>
+                    <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                  </div>
+                } @else {
+                  @if (persona()?.telefono) {
+                    <div class="df-valor">{{ persona()!.telefono }}</div>
+                  } @else {
+                    <div class="df-valor sin-dato">No registrado</div>
+                  }
+                  <button class="df-editar" (click)="abrirEditar('telefono')">
+                    @if (persona()?.telefono) { <i class="bi bi-pencil"></i> Editar } @else { <i class="bi bi-plus"></i> Agregar }
+                  </button>
+                }
+              </div>
+
+              <!-- Teléfono alt. -->
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-telephone-plus"></i> Teléfono alt.</div>
+                @if (campoEditando() === 'telefonoAlt') {
+                  <input type="tel" class="df-edit-input" [formControl]="form.controls.telefonoAlt"
+                         placeholder="10 dígitos" maxlength="10"/>
+                  <div class="df-edit-btns">
+                    <button type="button" class="btn-save-sm" (click)="guardarCampo('telefonoAlt')" [disabled]="saving()">
+                      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                      Guardar
+                    </button>
+                    <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                  </div>
+                } @else {
+                  @if (persona()?.telefonoAlt) {
+                    <div class="df-valor">{{ persona()!.telefonoAlt }}</div>
+                  } @else {
+                    <div class="df-valor sin-dato">No registrado</div>
+                  }
+                  <button class="df-editar" (click)="abrirEditar('telefonoAlt')">
+                    @if (persona()?.telefonoAlt) { <i class="bi bi-pencil"></i> Editar } @else { <i class="bi bi-plus"></i> Agregar }
+                  </button>
+                }
+              </div>
+
+              <!-- Correo electrónico -->
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-envelope"></i> Correo electrónico</div>
+                @if (campoEditando() === 'correo') {
+                  <input type="email" class="df-edit-input" [formControl]="form.controls.correo"
+                         placeholder="correo@ejemplo.com"/>
+                  <div class="df-edit-btns">
+                    <button type="button" class="btn-save-sm" (click)="guardarCampo('correo')" [disabled]="saving()">
+                      @if (saving()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check2"></i> }
+                      Guardar
+                    </button>
+                    <button type="button" class="btn-cancel-sm" (click)="cerrarEditar()"><i class="bi bi-x"></i></button>
+                  </div>
+                } @else {
+                  @if (persona()?.correo) {
+                    <div class="df-valor">{{ persona()!.correo }}</div>
+                  } @else {
+                    <div class="df-valor sin-dato">No registrado</div>
+                  }
+                  <button class="df-editar" (click)="abrirEditar('correo')">
+                    @if (persona()?.correo) { <i class="bi bi-pencil"></i> Editar } @else { <i class="bi bi-plus"></i> Agregar }
+                  </button>
+                }
+              </div>
+
+            </div>
           </div>
-          <div class="dato-fila">
-            <div class="df-label"><i class="bi bi-person-badge"></i>Perfil</div>
-            <div class="df-valor">{{ auth.currentUser()?.role }}</div>
+
+          <!-- ③ SEGURIDAD -->
+          <div>
+            <div class="seccion-titulo">
+              <h2><i class="bi bi-shield-lock" style="color:var(--azul-principal)"></i> Seguridad de la Cuenta</h2>
+              <div class="linea-azul"></div>
+            </div>
+            <div class="info-card">
+              <div class="seg-item">
+                <div class="seg-icon"><i class="bi bi-person"></i></div>
+                <div class="seg-info">
+                  <div class="seg-nombre">Usuario</div>
+                  <div class="seg-detalle">{{ auth.currentUser()?.username }}</div>
+                </div>
+              </div>
+              <div class="seg-item">
+                <div class="seg-icon"><i class="bi bi-shield-check" style="color:var(--verde);"></i></div>
+                <div class="seg-info">
+                  <div class="seg-nombre">Perfil / Rol</div>
+                  <div class="seg-detalle">{{ auth.currentUser()?.role }}</div>
+                </div>
+                <span style="font-size:0.74rem;font-weight:700;color:var(--verde);background:var(--verde-suave);padding:3px 10px;border-radius:50px;">Activo</span>
+              </div>
+              <div class="seg-item">
+                <div class="seg-icon"><i class="bi bi-lock"></i></div>
+                <div class="seg-info">
+                  <div class="seg-nombre">Contraseña</div>
+                  <div class="seg-detalle">Cambie su contraseña periódicamente</div>
+                </div>
+              </div>
+            </div>
           </div>
+
+        </div>
+
+        <!-- ── COLUMNA DERECHA ── -->
+        <div class="col-12 col-lg-5 d-flex flex-column gap-4">
+
+          <!-- ④ RESUMEN CONTRATO -->
+          <div>
+            <div class="seccion-titulo">
+              <h2><i class="bi bi-file-earmark-text" style="color:var(--azul-principal)"></i> Mi Contrato</h2>
+              <div class="linea-azul"></div>
+            </div>
+            <div class="info-card">
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-hash"></i> No. contrato</div>
+                @if (contrato()?.numeroContrato) {
+                  <div class="df-valor">{{ contrato()!.numeroContrato }}</div>
+                } @else {
+                  <div class="df-valor sin-dato">Todavía no existe un contrato asignado</div>
+                }
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-file-earmark-heart"></i> Plan</div>
+                @if (contrato()?.planNombre) {
+                  <div class="df-valor">{{ contrato()!.planNombre }}</div>
+                } @else {
+                  <div class="df-valor sin-dato">Todavía no hay un plan funerario activo</div>
+                }
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-calendar-check"></i> Fecha de alta</div>
+                @if (contrato()?.fechaInicio) {
+                  <div class="df-valor">{{ formatFecha(contrato()!.fechaInicio) }}</div>
+                } @else {
+                  <div class="df-valor sin-dato">Sin fecha de alta aún</div>
+                }
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-calendar-x"></i> Vigencia</div>
+                @if (contrato()?.fechaVencimiento) {
+                  <div class="df-valor">{{ formatFecha(contrato()!.fechaVencimiento) }}</div>
+                } @else {
+                  <div class="df-valor sin-dato">Sin vigencia aún</div>
+                }
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-currency-dollar"></i> Mensualidad</div>
+                @if (contrato()?.mensualidadPactada) {
+                  <div class="df-valor">${{ contrato()!.mensualidadPactada | number:'1.2-2' }} MXN</div>
+                } @else {
+                  <div class="df-valor sin-dato">Sin monto asignado</div>
+                }
+              </div>
+              <div class="dato-fila">
+                <div class="df-label"><i class="bi bi-circle-fill" style="font-size:0.6rem;"></i> Estado</div>
+                @if (contrato()?.estadoNombre) {
+                  <div class="df-valor">{{ contrato()!.estadoNombre }}</div>
+                } @else {
+                  <div class="df-valor sin-dato">Sin estado</div>
+                }
+              </div>
+              @if (contrato()) {
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+                  <a routerLink="/portal/plan-funerario" class="btn-sh-outline" style="font-size:0.8rem;padding:7px 14px;">
+                    <i class="bi bi-eye"></i> Ver plan completo
+                  </a>
+                  <a routerLink="/portal/cobros" class="btn-sh-outline" style="font-size:0.8rem;padding:7px 14px;">
+                    <i class="bi bi-credit-card"></i> Ver cobros
+                  </a>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- ⑤ BENEFICIARIOS -->
+          <div>
+            <div class="seccion-titulo d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div>
+                <h2><i class="bi bi-people" style="color:var(--azul-principal)"></i> Mis Beneficiarios</h2>
+                <div class="linea-azul"></div>
+              </div>
+              @if (contrato()) {
+                <a routerLink="/portal/beneficiarios" class="btn-sh-outline" style="font-size:0.78rem;padding:6px 14px;">
+                  <i class="bi bi-arrow-right"></i> Gestionar
+                </a>
+              }
+            </div>
+            <div class="info-card">
+              @if (beneficiarios().length > 0) {
+                @for (b of beneficiarios(); track b.id; let i = $index) {
+                  <div class="benef-mini">
+                    <div class="bm-avatar"
+                         [style.background]="avatarColor(i).bg"
+                         [style.color]="avatarColor(i).color">
+                      {{ inicialesBenef(b.nombreCompleto) }}
+                    </div>
+                    <div class="bm-info">
+                      <div class="bm-nombre">{{ b.nombreCompleto }}</div>
+                      <div class="bm-parent">
+                        @if (b.parentesco) { {{ b.parentesco }} · }
+                        @if (b.esTitular) {
+                          <span style="color:var(--azul-principal);font-weight:700;">Principal</span>
+                        } @else {
+                          Secundario
+                        }
+                      </div>
+                    </div>
+                    @if (b.porcentajeCobertura != null) {
+                      <div class="bm-pct">{{ b.porcentajeCobertura }}%</div>
+                    }
+                  </div>
+                }
+                <div class="mt-3 pt-2 d-flex justify-content-between align-items-center"
+                     style="border-top:1px solid var(--gris-borde);">
+                  <span style="font-size:0.76rem;color:var(--gris-medio);">
+                    {{ beneficiarios().length }} beneficiario{{ beneficiarios().length !== 1 ? 's' : '' }} registrado{{ beneficiarios().length !== 1 ? 's' : '' }}
+                  </span>
+                  <a routerLink="/portal/beneficiarios" class="btn-sh-primary" style="font-size:0.78rem;padding:6px 14px;">
+                    <i class="bi bi-person-plus"></i> Agregar
+                  </a>
+                </div>
+              } @else if (contrato()) {
+                <div class="text-center py-4">
+                  <i class="bi bi-people" style="font-size:1.8rem;color:var(--gris-medio);"></i>
+                  <p class="mt-2 mb-3" style="font-size:0.85rem;color:var(--gris-medio);font-style:italic;">
+                    Aún no existen beneficiarios asignados
+                  </p>
+                  <a routerLink="/portal/beneficiarios" class="btn-sh-primary" style="font-size:0.82rem;">
+                    <i class="bi bi-person-plus"></i> Agregar beneficiario
+                  </a>
+                </div>
+              } @else {
+                <p class="text-center py-3" style="font-size:0.84rem;color:var(--gris-medio);font-style:italic;">
+                  Los beneficiarios se mostrarán cuando tenga un contrato activo
+                </p>
+              }
+            </div>
+          </div>
+
         </div>
       </div>
 
-      @if (persona()) {
-        <!-- DATOS PERSONALES -->
-        <div class="col-12 col-lg-6">
-          <div class="info-card">
-            <div class="card-section-title d-flex justify-content-between align-items-center">
-              <span><i class="bi bi-person me-2" style="color:var(--azul-principal);"></i>Datos Personales</span>
-              @if (!editando()) {
-                <button class="btn-editar" (click)="toggleEditar()">
-                  <i class="bi bi-pencil me-1"></i>Editar
-                </button>
-              }
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-person-lines-fill"></i>Nombre completo</div>
-              <div class="df-valor">{{ persona()!.nombreCompleto }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-calendar3"></i>Fecha de nacimiento</div>
-              <div class="df-valor">{{ persona()!.fechaNacimiento || '—' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-gender-ambiguous"></i>Sexo</div>
-              <div class="df-valor">{{ persona()!.sexo === 'M' ? 'Masculino' : persona()!.sexo === 'F' ? 'Femenino' : '—' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-credit-card-2-front"></i>CURP</div>
-              <div class="df-valor">{{ persona()!.curp || '—' }}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CONTACTO (editable) -->
-        <div class="col-12 col-lg-6">
-          <div class="info-card">
-            <div class="card-section-title">
-              <i class="bi bi-telephone me-2" style="color:var(--azul-principal);"></i>Contacto
-            </div>
-            @if (!editando()) {
-              <div class="dato-fila">
-                <div class="df-label"><i class="bi bi-telephone"></i>Teléfono</div>
-                <div class="df-valor">{{ persona()!.telefono || '—' }}</div>
-              </div>
-              <div class="dato-fila">
-                <div class="df-label"><i class="bi bi-telephone-plus"></i>Tel. alternativo</div>
-                <div class="df-valor">{{ persona()!.telefonoAlt || '—' }}</div>
-              </div>
-              <div class="dato-fila">
-                <div class="df-label"><i class="bi bi-envelope"></i>Correo</div>
-                <div class="df-valor">{{ persona()!.correo || '—' }}</div>
-              </div>
-            } @else {
-              <form [formGroup]="form" (ngSubmit)="guardar()">
-                <div class="mb-2">
-                  <label class="form-label">Teléfono (10 dígitos)</label>
-                  <input type="tel" class="form-control" formControlName="telefono" maxlength="10"/>
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Tel. alternativo</label>
-                  <input type="tel" class="form-control" formControlName="telefonoAlt" maxlength="10"/>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Correo electrónico</label>
-                  <input type="email" class="form-control" formControlName="correo"/>
-                </div>
-                <div class="d-flex gap-2">
-                  <button type="submit" class="btn-guardar" [disabled]="saving()">
-                    @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                    Guardar
-                  </button>
-                  <button type="button" class="btn-cancelar" (click)="toggleEditar()">Cancelar</button>
-                </div>
-              </form>
-            }
-          </div>
-        </div>
-
-      } @else {
-        <div class="col-12">
-          <div class="info-card text-center py-5">
-            @if (loading()) {
-              <div class="spinner-border text-primary"></div>
-              <p class="mt-3 text-muted">Cargando datos...</p>
-            } @else {
-              <i class="bi bi-person-x" style="font-size:2rem;color:var(--gris-medio);"></i>
-              <p class="mt-3" style="color:var(--gris-medio);">No se encontró información de perfil.</p>
-            }
-          </div>
-        </div>
-      }
-
-    </div>
+    }
   </div>
 </section>
+
+<!-- ══ MODAL FOTO DE PERFIL ══ -->
+@if (mostrarModalFoto()) {
+  <div class="foto-modal-backdrop" (click)="cerrarModalFoto()">
+    <div class="foto-modal" (click)="$event.stopPropagation()">
+
+      <div class="foto-modal-header">
+        <h5><i class="bi bi-person-circle me-2" style="color:var(--azul-principal)"></i>Foto de perfil</h5>
+        <button type="button" class="foto-modal-close" (click)="cerrarModalFoto()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="foto-modal-body">
+
+        @if (errorFoto()) {
+          <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.82rem;border-radius:8px;">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ errorFoto() }}
+          </div>
+        }
+
+        <!-- OPCIONES -->
+        @if (modoModal() === 'opciones') {
+          <label class="foto-opcion-btn">
+            <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>{{ isMobile ? 'Elegir de la galería' : 'Examinar archivo' }}</strong>
+              <span>{{ isMobile ? 'Selecciona una foto de tu galería' : 'Selecciona una imagen JPG o PNG' }}</span>
+            </div>
+            <input type="file" accept=".jpg,.jpeg,.png" style="display:none" (change)="seleccionarArchivo($event)"/>
+          </label>
+          <button type="button" class="foto-opcion-btn" (click)="iniciarCamara()">
+            <div class="foto-opcion-icon" style="background:#28a745"><i class="bi bi-camera-video-fill"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>{{ isMobile ? 'Tomar foto' : 'Usar cámara' }}</strong>
+              <span>{{ isMobile ? 'Tómate una foto con la cámara frontal' : 'Captura con tu webcam' }}</span>
+            </div>
+          </button>
+        }
+
+        <!-- CÁMARA -->
+        @if (modoModal() === 'camara') {
+          <div class="camara-wrap">
+            <video #videoEl autoplay playsinline muted></video>
+            <canvas #canvasEl style="display:none"></canvas>
+          </div>
+          <div class="camara-btns">
+            <button type="button" class="btn-foto-sec" (click)="detenerCamara(); modoModal.set('opciones')">
+              <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <button type="button" class="btn-capturar" (click)="capturarFoto()" title="Capturar">
+              <i class="bi bi-camera-fill"></i>
+            </button>
+          </div>
+        }
+
+        <!-- PREVIEW -->
+        @if (modoModal() === 'preview') {
+          <div class="foto-preview-wrap">
+            <p style="font-size:0.8rem;color:var(--gris-medio);margin-bottom:10px;">Vista previa</p>
+            <img [src]="fotoPreviewUrl()!" alt="Vista previa"/>
+            <div class="foto-preview-btns">
+              <button type="button" class="btn-foto-sec" (click)="modoModal.set('opciones')">
+                <i class="bi bi-arrow-left"></i> Elegir otra
+              </button>
+              <button type="button" class="btn-foto-prim" (click)="subirFoto()" [disabled]="subiendoFoto()">
+                @if (subiendoFoto()) {
+                  <span class="spinner-border spinner-border-sm"></span> Subiendo...
+                } @else {
+                  <i class="bi bi-cloud-upload"></i> Guardar foto
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}
+

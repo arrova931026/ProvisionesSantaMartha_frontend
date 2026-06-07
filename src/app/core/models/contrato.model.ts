@@ -2,15 +2,18 @@ export interface ContratoResponse {
   id: number;
   numeroContrato: string;
   personaId: number;
-  personaNombreCompleto?: string;
-  planFunerarioId?: number;
-  planFunerarioNombre?: string;
-  estadoContrato?: string;
+  titularNombre?: string;
+  planId?: number;
+  planNombre?: string;
+  sucursalId?: number;
+  estadoClave?: string;
+  estadoNombre?: string;
   fechaInicio?: string;
   fechaVencimiento?: string;
-  montoCuota?: number;
-  periodicidad?: string;
-  saldoPendiente?: number;
+  precioContratado?: number;
+  mensualidadPactada?: number;
+  notas?: string;
+  activo?: boolean;
   createdAt?: string;
 }
 

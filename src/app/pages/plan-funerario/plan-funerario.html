@@ -36,7 +36,7 @@
             <div class="card-section-title d-flex justify-content-between align-items-center flex-wrap gap-2">
               <span><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal);"></i>Información del Contrato</span>
               <span [class]="estadoBadgeClass()">
-                <i class="bi bi-dot"></i>{{ contrato()!.estadoContrato }}
+                <i class="bi bi-dot"></i>{{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
               </span>
             </div>
             <div class="dato-fila">
@@ -45,7 +45,7 @@
             </div>
             <div class="dato-fila">
               <div class="df-label"><i class="bi bi-shield-check"></i>Plan</div>
-              <div class="df-valor">{{ contrato()!.planFunerarioNombre || '—' }}</div>
+              <div class="df-valor">{{ contrato()!.planNombre || '—' }}</div>
             </div>
             <div class="dato-fila">
               <div class="df-label"><i class="bi bi-calendar3"></i>Fecha de inicio</div>
@@ -57,15 +57,11 @@
             </div>
             <div class="dato-fila">
               <div class="df-label"><i class="bi bi-cash"></i>Cuota mensual</div>
-              <div class="df-valor">{{ contrato()!.montoCuota | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              <div class="df-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
             </div>
             <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-repeat"></i>Periodicidad</div>
-              <div class="df-valor">{{ contrato()!.periodicidad || '—' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-wallet2"></i>Saldo pendiente</div>
-              <div class="df-valor">{{ contrato()!.saldoPendiente | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              <div class="df-label"><i class="bi bi-wallet2"></i>Notas</div>
+              <div class="df-valor">{{ contrato()!.notas || '—' }}</div>
             </div>
           </div>
         </div>
