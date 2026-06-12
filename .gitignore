@@ -46,7 +46,6 @@ Thumbs.db
 # ...existing code...
 
 # Variables de entorno de producción (agregar esto)
-src/environments/environment.prod.ts
 *.env
 .env
 .env.local
