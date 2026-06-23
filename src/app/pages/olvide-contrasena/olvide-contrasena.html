@@ -1,0 +1,109 @@
+<style>
+  .auth-hero {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 48px 20px;
+    background-image: url('/Index.png');
+    background-size: cover; background-position: center -110px;
+    background-repeat: no-repeat; background-attachment: fixed;
+    min-height: calc(100vh - 130px);
+  }
+  @media (max-width: 768px) {
+    .auth-hero { background-attachment: scroll; background-position: center top; }
+  }
+  .auth-card {
+    background: var(--blanco); border-radius: 16px; padding: 44px 48px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    border-top: 3px solid var(--azul-principal);
+    width: 100%; max-width: 420px;
+  }
+  .auth-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--azul-suave); display: flex; align-items: center;
+    justify-content: center; margin: 0 auto 20px;
+    border: 2px solid var(--gris-borde); font-size: 1.6rem; color: var(--azul-principal);
+  }
+  .auth-card h2 { font-size: 1.2rem; color: var(--gris-texto); text-align: center; margin-bottom: 4px; }
+  .auth-card .subtitulo { font-size: 0.82rem; color: var(--gris-medio); text-align: center; margin-bottom: 24px; }
+  .form-label { font-size: 0.82rem; font-weight: 500; color: var(--gris-texto); margin-bottom: 5px; }
+  .form-control { border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+  .form-control:focus { border-color: var(--azul-principal); box-shadow: 0 0 0 3px rgba(58,143,196,0.15); }
+  .btn-submit {
+    width: 100%; background-color: var(--azul-principal); color: var(--blanco);
+    font-size: 0.95rem; font-weight: 600; padding: 12px; border: none;
+    border-radius: 50px; margin-top: 20px; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(58,143,196,0.35);
+  }
+  .btn-submit:hover:not(:disabled) { background-color: var(--azul-medio); transform: translateY(-2px); }
+  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+  @media (max-width: 480px) { .auth-card { padding: 32px 24px; } }
+</style>
+
+<a class="header-sh" routerLink="/inicio">
+  <img src="/Logo.png" alt="Logo"/>
+  <div class="brand-text">
+    <strong>Sociedad Humanista</strong>
+    <span>Santa Martha S.A. de C.V.</span>
+  </div>
+</a>
+
+<div class="auth-hero">
+  <div class="auth-card">
+    <div class="auth-icon"><i class="bi bi-envelope-at"></i></div>
+    <h2>Recuperar contraseña</h2>
+    <p class="subtitulo">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña</p>
+
+    @if (enviado()) {
+      <div class="alert alert-success py-3 px-3" style="border-radius:10px; font-size:0.88rem;">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>¡Listo!</strong> Si ese correo está registrado, recibirás un enlace en los próximos minutos.
+        Revisa también tu carpeta de spam.
+      </div>
+      <div style="text-align:center; margin-top:20px;">
+        <a routerLink="/login" style="font-size:0.88rem; color:var(--azul-principal);">
+          <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
+        </a>
+      </div>
+    } @else {
+      @if (errorMsg()) {
+        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.85rem; border-radius:8px;">
+          <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="mb-3">
+          <label for="correo" class="form-label">
+            <i class="bi bi-envelope me-1"></i>Correo electrónico
+          </label>
+          <input
+            type="email"
+            id="correo"
+            class="form-control"
+            [class.is-invalid]="isInvalid('correo')"
+            formControlName="correo"
+            placeholder="tucorreo@ejemplo.com"
+            autocomplete="email"
+          />
+          @if (isInvalid('correo')) {
+            <div class="invalid-feedback">Ingresa un correo electrónico válido.</div>
+          }
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-2"></span>Enviando...
+          } @else {
+            <i class="bi bi-send me-2"></i>Enviar enlace de recuperación
+          }
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:20px;">
+        <a routerLink="/login" style="font-size:0.82rem; color:var(--azul-principal);">
+          <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
+        </a>
+      </div>
+    }
+  </div>
+</div>

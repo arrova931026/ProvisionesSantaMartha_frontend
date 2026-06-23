@@ -49,6 +49,14 @@ export class AuthService {
       );
   }
 
+  forgotPassword(correo: string) {
+    return this.http.post<void>(`${environment.apiUrl}/auth/forgot-password`, { correo });
+  }
+
+  resetPassword(token: string, nuevaPassword: string) {
+    return this.http.post<void>(`${environment.apiUrl}/auth/reset-password`, { token, nuevaPassword });
+  }
+
   logout() {
     const refreshToken = localStorage.getItem(this.REFRESH_KEY);
     if (refreshToken) {

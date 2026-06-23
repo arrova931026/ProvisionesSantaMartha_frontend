@@ -6,6 +6,8 @@ export const routes: Routes = [
   { path: 'inicio', loadComponent: () => import('./pages/inicio-publico/inicio-publico').then(m => m.InicioPublicoComponent) },
   { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent) },
   { path: 'registro', loadComponent: () => import('./pages/registro/registro').then(m => m.RegistroComponent) },
+  { path: 'olvide-contrasena', loadComponent: () => import('./pages/olvide-contrasena/olvide-contrasena').then(m => m.OlvideContrasenaComponent) },
+  { path: 'restablecer-contrasena', loadComponent: () => import('./pages/restablecer-contrasena/restablecer-contrasena').then(m => m.RestablecerContrasenaComponent) },
   { path: 'informacion', loadComponent: () => import('./pages/informacion/informacion').then(m => m.InformacionComponent) },
   {
     path: 'portal',
