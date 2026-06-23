@@ -45,6 +45,10 @@
   .btn-ingresar { width: 100%; background-color: var(--azul-principal); color: var(--blanco); font-size: 0.95rem; font-weight: 600; padding: 12px; border: none; border-radius: 50px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 16px rgba(58,143,196,0.35); margin-top: 24px; cursor: pointer; }
   .btn-ingresar:hover:not(:disabled) { background-color: var(--azul-medio); transform: translateY(-2px); }
   .btn-ingresar:disabled { opacity: 0.7; cursor: not-allowed; }
+  .google-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; }
+  .google-divider::before, .google-divider::after { content: ''; flex: 1; height: 1px; background: var(--gris-borde); }
+  .google-divider span { font-size: 0.8rem; color: var(--gris-medio); white-space: nowrap; }
+  .google-btn-container { display: flex; justify-content: center; min-height: 44px; }
   @media (max-width: 480px) { .login-card { padding: 32px 24px; } }
 </style>
 
@@ -125,7 +129,7 @@
 
       <a href="#" class="link-olvide">¿Olvidó su contraseña?</a>
 
-      <button type="submit" class="btn-ingresar" [disabled]="loading()">
+      <button type="submit" class="btn-ingresar" [disabled]="loading() || googleLoading()">
         @if (loading()) {
           <span class="spinner-border spinner-border-sm me-2"></span>Ingresando...
         } @else {
@@ -133,6 +137,17 @@
         }
       </button>
     </form>
+
+    <!-- SEPARADOR -->
+    <div class="google-divider"><span>o continúa con</span></div>
+
+    <!-- BOTÓN GOOGLE: el div siempre está en el DOM para que GIS no pierda la referencia -->
+    <div class="google-btn-container">
+      @if (googleLoading()) {
+        <span class="spinner-border spinner-border-sm text-secondary"></span>
+      }
+      <div #googleBtn [style.display]="googleLoading() ? 'none' : 'block'"></div>
+    </div>
 
     <!-- REGISTRO -->
     <div style="text-align:center; margin-top:22px; padding-top:18px; border-top:1px solid var(--gris-borde);">

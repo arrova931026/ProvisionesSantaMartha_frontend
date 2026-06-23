@@ -35,6 +35,20 @@ export class AuthService {
       );
   }
 
+  loginWithGoogle(idToken: string) {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/auth/google`, { idToken })
+      .pipe(
+        tap(res => {
+          localStorage.setItem(this.TOKEN_KEY, res.accessToken);
+          localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
+          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId };
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+          this._currentUser.set(user);
+        })
+      );
+  }
+
   logout() {
     const refreshToken = localStorage.getItem(this.REFRESH_KEY);
     if (refreshToken) {
