@@ -30,6 +30,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
   });
 
   ngOnInit() {
+    // Si ya tiene sesión activa, redirigir al portal
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/portal/inicio']);
+      return;
+    }
     const snap = this.route.snapshot.queryParamMap;
     if (snap.get('registered') === '1') {
       this.successMsg.set('Usuario creado exitosamente');

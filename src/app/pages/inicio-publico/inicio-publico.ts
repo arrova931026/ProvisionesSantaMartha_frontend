@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, OnInit } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
+import { AuthService } from '../../core/services/auth.service';
 
 declare const bootstrap: any;
 
@@ -9,8 +10,17 @@ declare const bootstrap: any;
   imports: [RouterLink],
   templateUrl: './inicio-publico.html'
 })
-export class InicioPublicoComponent {
+export class InicioPublicoComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private document = inject(DOCUMENT);
+
+  ngOnInit() {
+    // Si el usuario ya tiene sesión activa, redirigir al portal
+    if (this.auth.isAuthenticated()) {
+      this.router.navigate(['/portal/inicio']);
+    }
+  }
 
   cerrarMenu(): void {
     const menu = this.document.getElementById('menuPublico');
