@@ -249,6 +249,12 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       default:
         this.form.patchValue({ [campo]: (p as unknown as Record<string, unknown>)[campo] ?? '' });
     }
+    // Seleccionar el texto del input tras el renderizado de Angular
+    setTimeout(() => {
+      const input = document.querySelector<HTMLInputElement>('.df-edit-input, .form-control-sh');
+      input?.focus();
+      input?.select();
+    }, 0);
   }
 
   cerrarEditar() {

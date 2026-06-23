@@ -28,7 +28,7 @@ export class AuthService {
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.accessToken);
           localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
-          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId };
+          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId, nombre: res.nombre };
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this._currentUser.set(user);
         })
@@ -42,7 +42,7 @@ export class AuthService {
         tap(res => {
           localStorage.setItem(this.TOKEN_KEY, res.accessToken);
           localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
-          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId };
+          const user: CurrentUser = { username: res.username, role: res.role, personaId: res.personaId, nombre: res.nombre };
           localStorage.setItem(this.USER_KEY, JSON.stringify(user));
           this._currentUser.set(user);
         })
@@ -55,6 +55,10 @@ export class AuthService {
 
   resetPassword(token: string, nuevaPassword: string) {
     return this.http.post<void>(`${environment.apiUrl}/auth/reset-password`, { token, nuevaPassword });
+  }
+
+  changePassword(passwordActual: string, nuevaPassword: string) {
+    return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, { passwordActual, nuevaPassword });
   }
 
   logout() {

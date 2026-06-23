@@ -243,13 +243,13 @@
                     <div class="edit-group">
                       <div class="row g-2 mb-2">
                         <div class="col-12 col-sm-4">
-                          <input type="text" class="form-control-sh" [formControl]="form.controls.nombre" placeholder="Nombre *"/>
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.nombre" placeholder="Nombre *" (focus)="$any($event.target).select()"/>
                         </div>
                         <div class="col-12 col-sm-4">
-                          <input type="text" class="form-control-sh" [formControl]="form.controls.apPaterno" placeholder="Ap. Paterno *"/>
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.apPaterno" placeholder="Ap. Paterno *" (focus)="$any($event.target).select()"/>
                         </div>
                         <div class="col-12 col-sm-4">
-                          <input type="text" class="form-control-sh" [formControl]="form.controls.apMaterno" placeholder="Ap. Materno"/>
+                          <input type="text" class="form-control-sh" [formControl]="form.controls.apMaterno" placeholder="Ap. Materno" (focus)="$any($event.target).select()"/>
                         </div>
                       </div>
                       <div class="df-edit-btns">
@@ -379,31 +379,31 @@
                     <div class="row g-2 mb-3">
                       <div class="col-12 col-sm-7">
                         <label class="form-label-sh">Calle *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.calle" placeholder="Nombre de la calle"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.calle" placeholder="Nombre de la calle" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-6 col-sm-3">
                         <label class="form-label-sh">Núm. Ext. *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroExt"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroExt" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-6 col-sm-2">
                         <label class="form-label-sh">Núm. Int. <span style="font-weight:400;color:var(--gris-medio)">(opcional)</span></label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroInt"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.numeroInt" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-12 col-sm-4">
                         <label class="form-label-sh">Colonia *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.colonia"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.colonia" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-12 col-sm-4">
                         <label class="form-label-sh">Municipio *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.municipio"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.municipio" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-8 col-sm-3">
                         <label class="form-label-sh">Estado *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.estado"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.estado" (focus)="$any($event.target).select()"/>
                       </div>
                       <div class="col-4 col-sm-1">
                         <label class="form-label-sh">CP *</label>
-                        <input type="text" class="form-control-sh" [formControl]="form.controls.codigoPostal" maxlength="5"/>
+                        <input type="text" class="form-control-sh" [formControl]="form.controls.codigoPostal" maxlength="5" (focus)="$any($event.target).select()"/>
                       </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -536,6 +536,9 @@
                   <div class="seg-nombre">Contraseña</div>
                   <div class="seg-detalle">Cambie su contraseña periódicamente</div>
                 </div>
+                <a routerLink="/portal/cambiar-contrasena" class="df-editar">
+                  <i class="bi bi-key"></i> Cambiar
+                </a>
               </div>
             </div>
           </div>

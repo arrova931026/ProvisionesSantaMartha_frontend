@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'informacion', loadComponent: () => import('./pages/informacion/informacion').then(m => m.InformacionComponent) },
       { path: 'notificaciones', loadComponent: () => import('./pages/notificaciones/notificaciones').then(m => m.NotificacionesComponent) },
       { path: 'beneficiarios', loadComponent: () => import('./pages/beneficiarios/beneficiarios').then(m => m.BeneficiariosComponent) },
+      { path: 'cambiar-contrasena', loadComponent: () => import('./pages/cambiar-contrasena/cambiar-contrasena').then(m => m.CambiarContrasenaComponent) },
       { path: 'admin', loadComponent: () => import('./pages/panel-admin/panel-admin').then(m => m.PanelAdminComponent), canActivate: [adminGuard] }
     ]
   },

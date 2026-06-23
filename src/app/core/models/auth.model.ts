@@ -11,6 +11,7 @@ export interface LoginResponse {
   username: string;
   role: string;
   personaId: number;
+  nombre: string;
 }
 
 export interface RefreshTokenRequest {
@@ -21,4 +22,5 @@ export interface CurrentUser {
   username: string;
   role: string;
   personaId: number;
+  nombre: string;
 }
