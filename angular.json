@@ -31,6 +31,8 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/ProvisionesSantaMartha/browser/",
+              "prerender": false,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

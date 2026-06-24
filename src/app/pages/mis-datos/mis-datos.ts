@@ -271,8 +271,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       nombre:       campo === 'nombre' ? (v.nombre ?? p.nombre)       : p.nombre,
       apPaterno:    campo === 'nombre' ? (v.apPaterno ?? p.apPaterno)  : p.apPaterno,
       apMaterno:    campo === 'nombre' ? (v.apMaterno ?? undefined)    : p.apMaterno,
-      curp:         campo === 'curp'   ? (v.curp || undefined)         : p.curp,
-      rfc:          campo === 'rfc'    ? (v.rfc || undefined)          : p.rfc,
+      curp:         campo === 'curp'   ? (v.curp?.toUpperCase() || undefined)  : p.curp,
+      rfc:          campo === 'rfc'    ? (v.rfc?.toUpperCase() || undefined)   : p.rfc,
       fechaNacimiento: campo === 'fechaNacimiento' ? (v.fechaNacimiento || undefined) : p.fechaNacimiento,
       sexo:         campo === 'sexo'   ? (v.sexo || undefined)         : p.sexo,
       telefono:     campo === 'telefono'    ? (v.telefono || undefined)    : p.telefono,
@@ -295,10 +295,12 @@ export class MisDatosComponent implements OnInit, OnDestroy {
         this.successMsg.set('Dato actualizado correctamente.');
         setTimeout(() => this.successMsg.set(''), 4000);
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.errorMsg.set('Error al guardar los cambios.');
-        setTimeout(() => this.errorMsg.set(''), 4000);
+        const details = err?.error?.details as string[] | undefined;
+        const msg = details?.join(', ') ?? err?.error?.message ?? 'Error al guardar los cambios.';
+        this.errorMsg.set(msg);
+        setTimeout(() => this.errorMsg.set(''), 6000);
       }
     });
   }
