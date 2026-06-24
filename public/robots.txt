@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /inicio
+Allow: /informacion
+Allow: /login
+Allow: /registro
+Allow: /olvide-contrasena
+
+Disallow: /portal/
+
+Sitemap: https://provisionessantamartha-frontend.onrender.com/sitemap.xml
