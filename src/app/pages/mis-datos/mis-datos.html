@@ -125,6 +125,92 @@
   .btn-foto-prim:disabled { opacity:0.7; cursor:not-allowed; }
   .btn-foto-sec { background:#fff; color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:50px; padding:9px 18px; font-size:0.86rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
   .btn-foto-sec:hover { background:var(--gris-fondo,#f8f8f8); }
+
+  /* ── OCR Hint Bar ── */
+  .ocr-hint-bar {
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    background:linear-gradient(90deg, var(--azul-suave), #e8f5fb);
+    border:1px dashed rgba(58,143,196,0.4); border-radius:10px;
+    padding:9px 14px; margin-top:10px;
+  }
+  .ocr-hint-bar span { font-size:0.76rem; color:var(--gris-medio); flex:1; min-width:0; }
+  .ocr-hint-btn {
+    background:var(--azul-principal); color:#fff; border:none; border-radius:50px;
+    padding:5px 14px; font-size:0.76rem; font-weight:700; cursor:pointer;
+    display:inline-flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;
+    transition:background 0.2s;
+  }
+  .ocr-hint-btn:hover { background:var(--azul-medio); }
+
+  /* ── OCR Modal ── */
+  .ocr-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1060; display:flex; align-items:center; justify-content:center; padding:16px; }
+  .ocr-modal { background:#fff; border-radius:18px; width:100%; max-width:500px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.3); overflow:hidden; }
+  .ocr-modal-header { padding:15px 20px 13px; border-bottom:1px solid var(--gris-borde); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .ocr-modal-header h5 { margin:0; font-size:0.95rem; color:var(--gris-texto); font-weight:700; }
+  .ocr-modal-close { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--gris-medio); line-height:1; padding:4px; }
+  .ocr-modal-close:hover { color:var(--gris-texto); }
+  .ocr-modal-body { padding:20px; overflow-y:auto; flex:1; }
+
+  /* Stepper */
+  .ocr-stepper { display:flex; align-items:center; justify-content:center; gap:4px; margin-bottom:18px; }
+  .ocr-step-dot { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; border:2px solid var(--gris-borde); background:#fff; color:var(--gris-medio); flex-shrink:0; transition:all 0.2s; }
+  .ocr-step-dot.active { border-color:var(--azul-principal); background:var(--azul-principal); color:#fff; }
+  .ocr-step-dot.done { border-color:#27ae60; background:#27ae60; color:#fff; }
+  .ocr-step-dot.done::after { content:'\2713'; font-size:0.7rem; }
+  .ocr-step-line { flex:1; max-width:40px; height:2px; background:var(--gris-borde); border-radius:1px; }
+  .ocr-step-line.done { background:#27ae60; }
+  .ocr-step-label { font-size:0.66rem; color:var(--gris-medio); text-align:center; margin-top:3px; }
+
+  /* Step headers */
+  .ocr-badge { display:inline-block; background:var(--azul-suave); color:var(--azul-principal); font-size:0.68rem; font-weight:700; padding:3px 10px; border-radius:50px; letter-spacing:0.3px; margin-bottom:6px; }
+  .ocr-step-desc { font-size:0.8rem; color:var(--gris-medio); margin-bottom:16px; line-height:1.5; }
+  .ocr-back-btn { background:none; border:none; color:var(--gris-medio); font-size:0.76rem; cursor:pointer; padding:0 0 10px; display:inline-flex; align-items:center; gap:4px; }
+  .ocr-back-btn:hover { color:var(--gris-texto); }
+
+  /* Intro doc list */
+  .ocr-intro-icon { text-align:center; font-size:2.4rem; color:var(--azul-principal); margin-bottom:10px; }
+  .ocr-doc-list { border:1px solid var(--gris-borde); border-radius:10px; overflow:hidden; margin-bottom:14px; }
+  .ocr-doc-item { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--gris-borde); }
+  .ocr-doc-item:last-child { border-bottom:none; }
+  .ocr-doc-num { width:28px; height:28px; border-radius:50%; background:var(--azul-principal); color:#fff; font-size:0.78rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ocr-doc-item strong { display:block; font-size:0.84rem; color:var(--gris-texto); }
+  .ocr-doc-item small { font-size:0.74rem; color:var(--gris-medio); }
+  .ocr-nota { font-size:0.74rem; color:var(--gris-medio); background:var(--gris-fondo,#f8f9fa); border-radius:8px; padding:8px 12px; margin-bottom:16px; }
+
+  /* Camera */
+  .ocr-camara-wrap { position:relative; background:#000; border-radius:12px; overflow:hidden; margin-bottom:12px; }
+  .ocr-camara-wrap video { width:100%; display:block; max-height:260px; object-fit:cover; }
+  .ocr-camara-guide { position:absolute; inset:8px; border:2px dashed rgba(255,255,255,0.6); border-radius:8px; pointer-events:none; }
+
+  /* Preview */
+  .ocr-preview-img { width:100%; max-height:220px; object-fit:contain; border-radius:8px; border:1px solid var(--gris-borde); margin-bottom:12px; display:block; }
+  .ocr-pdf-block { text-align:center; padding:24px 16px; background:var(--azul-suave); border-radius:10px; margin-bottom:14px; }
+  .ocr-pdf-block i { font-size:2.8rem; color:var(--azul-principal); display:block; margin-bottom:6px; }
+  .ocr-pdf-block span { font-size:0.78rem; color:var(--gris-medio); }
+
+  /* Progress */
+  .ocr-procesando { text-align:center; padding:20px 0; }
+  .ocr-spin { font-size:2.2rem; color:var(--azul-principal); margin-bottom:12px; display:block; animation:spin 1.2s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .ocr-progress-bar { height:7px; background:var(--gris-borde); border-radius:4px; overflow:hidden; margin:10px 0 6px; }
+  .ocr-progress-fill { height:100%; background:var(--azul-principal); border-radius:4px; transition:width 0.4s ease; }
+
+  /* Result table */
+  .ocr-result-title { font-size:0.86rem; font-weight:700; color:var(--gris-texto); margin-bottom:12px; }
+  .ocr-result-table { border:1px solid var(--gris-borde); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+  .ocr-result-row { display:flex; align-items:baseline; gap:8px; padding:8px 14px; border-bottom:1px solid var(--gris-borde); font-size:0.8rem; }
+  .ocr-result-row:last-child { border-bottom:none; }
+  .ocr-result-label { color:var(--gris-medio); flex-shrink:0; width:140px; }
+  .ocr-result-val { color:var(--gris-texto); font-weight:600; flex:1; word-break:break-all; }
+  .ocr-result-val.empty { color:var(--gris-medio); font-weight:400; font-style:italic; }
+  .ocr-check { color:#27ae60; margin-right:4px; }
+  .ocr-dash { color:var(--gris-borde); margin-right:4px; }
+
+  /* Skip link */
+  .ocr-skip { text-align:center; margin-top:10px; }
+  .ocr-skip button { background:none; border:none; color:var(--gris-medio); text-decoration:underline; cursor:pointer; font-size:0.74rem; padding:4px; }
+  .ocr-skip button:hover { color:var(--gris-texto); }
+  canvas[hidden] { display:none; }
 </style>
 
 <!-- HEADER CON AVATAR -->
@@ -232,6 +318,12 @@
             <div class="seccion-titulo">
               <h2><i class="bi bi-person-circle" style="color:var(--azul-principal)"></i> Datos Personales</h2>
               <div class="linea-azul"></div>
+              <div class="ocr-hint-bar">
+                <span><i class="bi bi-stars me-1"></i>Completa tus datos automáticamente escaneando tus documentos oficiales.</span>
+                <button type="button" class="ocr-hint-btn" (click)="abrirModalOcr()">
+                  <i class="bi bi-magic"></i> Autocompletar
+                </button>
+              </div>
             </div>
             <div class="info-card">
               @if (persona()) {
@@ -766,3 +858,329 @@
   </div>
 }
 
+<!-- ══ MODAL OCR AUTOCOMPLETAR ══ -->
+@if (mostrarModalOcr()) {
+  <div class="ocr-modal-backdrop" (click)="cerrarModalOcr()">
+    <div class="ocr-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="ocr-modal-header">
+        <h5><i class="bi bi-magic me-2" style="color:var(--azul-principal)"></i>Autocompletar datos</h5>
+        <button type="button" class="ocr-modal-close" (click)="cerrarModalOcr()"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="ocr-modal-body">
+
+        <!-- Error global -->
+        @if (ocrErrorMsg()) {
+          <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.8rem;border-radius:8px;">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ ocrErrorMsg() }}
+          </div>
+        }
+
+        <!-- Stepper (visible en pasos de captura) -->
+        @if (ocrPaso() !== 'intro' && ocrPaso() !== 'procesando' && ocrPaso() !== 'resultado') {
+          <div class="ocr-stepper">
+            <div>
+              <div class="ocr-step-dot"
+                [class.active]="['ine-frente','ine-frente-camara','ine-frente-preview','ine-reverso','ine-reverso-camara','ine-reverso-preview'].includes(ocrPaso())"
+                [class.done]="['acta','acta-camara','acta-preview'].includes(ocrPaso())">
+                @if (['acta','acta-camara','acta-preview'].includes(ocrPaso())) { &#10003; } @else { 1 }
+              </div>
+              <div class="ocr-step-label">INE</div>
+            </div>
+            <div class="ocr-step-line" [class.done]="['acta','acta-camara','acta-preview'].includes(ocrPaso())"></div>
+            <div>
+              <div class="ocr-step-dot" [class.active]="['acta','acta-camara','acta-preview'].includes(ocrPaso())">2</div>
+              <div class="ocr-step-label">Acta Fiscal</div>
+            </div>
+            <div class="ocr-step-line"></div>
+            <div>
+              <div class="ocr-step-dot">3</div>
+              <div class="ocr-step-label">Listo</div>
+            </div>
+          </div>
+        }
+
+        <!-- ─── PASO: INTRO ─── -->
+        @if (ocrPaso() === 'intro') {
+          <div class="ocr-intro-icon"><i class="bi bi-magic"></i></div>
+          <h6 style="font-size:0.95rem;font-weight:700;color:var(--gris-texto);margin-bottom:6px;">Llena tus datos en segundos</h6>
+          <p style="font-size:0.8rem;color:var(--gris-medio);margin-bottom:14px;">
+            Vamos a escanear tus documentos con reconocimiento óptico de caracteres (OCR) para extraer tus datos automáticamente.
+          </p>
+          <div class="ocr-doc-list">
+            <div class="ocr-doc-item">
+              <div class="ocr-doc-num">1</div>
+              <div>
+                <strong>INE / Credencial para votar</strong>
+                <small>Frente y reverso (ambas caras)</small>
+              </div>
+            </div>
+            <div class="ocr-doc-item">
+              <div class="ocr-doc-num">2</div>
+              <div>
+                <strong>Acta de Situación Fiscal (SAT)</strong>
+                <small>Foto, imagen JPG/PNG o archivo PDF</small>
+              </div>
+            </div>
+          </div>
+          <p class="ocr-nota"><i class="bi bi-shield-check me-1"></i>Tus documentos se procesan en tu dispositivo. Puedes omitir cualquier paso.</p>
+          <button type="button" class="btn-foto-prim w-100" (click)="ocrPaso.set('ine-frente')">
+            <i class="bi bi-arrow-right-circle"></i> Comenzar
+          </button>
+        }
+
+        <!-- ─── PASO: INE FRENTE OPCIONES ─── -->
+        @if (ocrPaso() === 'ine-frente') {
+          <span class="ocr-badge">Paso 1 — INE Frente</span>
+          <p class="ocr-step-desc">Captura o selecciona la <strong>cara frontal</strong> de tu credencial para votar.</p>
+          @if (ocrIneFrenteUrl()) {
+            <img [src]="ocrIneFrenteUrl()!" alt="INE Frente" class="ocr-preview-img" style="margin-bottom:10px;"/>
+          }
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-frente')">
+            <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>Tomar foto</strong>
+              <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
+            </div>
+          </button>
+          <label class="foto-opcion-btn">
+            <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>{{ isMobile ? 'Elegir de la galería' : 'Seleccionar archivo' }}</strong>
+              <span>JPG, PNG</span>
+            </div>
+            <input type="file" hidden accept="image/*" (change)="ocrSeleccionarImagen($event, 'ine-frente')"/>
+          </label>
+          <div class="ocr-skip">
+            <button type="button" (click)="ocrPaso.set('ine-reverso')">
+              <i class="bi bi-skip-forward me-1"></i>Omitir INE completo
+            </button>
+          </div>
+        }
+
+        <!-- ─── PASO: INE FRENTE CÁMARA ─── -->
+        @if (ocrPaso() === 'ine-frente-camara') {
+          <span class="ocr-badge">INE Frente — Cámara</span>
+          <div class="ocr-camara-wrap">
+            <video #ocrVideoEl autoplay playsinline muted></video>
+            <div class="ocr-camara-guide"></div>
+          </div>
+          <canvas #ocrCanvasEl hidden></canvas>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+            <button type="button" class="btn-capturar" (click)="ocrCapturar('ine-frente')" title="Capturar"><i class="bi bi-camera-fill"></i></button>
+            <button type="button" class="btn-foto-sec" (click)="ocrPaso.set('ine-frente')"><i class="bi bi-x"></i> Cancelar</button>
+          </div>
+        }
+
+        <!-- ─── PASO: INE FRENTE PREVIEW ─── -->
+        @if (ocrPaso() === 'ine-frente-preview') {
+          <button type="button" class="ocr-back-btn" (click)="ocrPaso.set('ine-frente')"><i class="bi bi-arrow-left"></i> Volver</button>
+          <span class="ocr-badge">INE Frente — Vista previa</span>
+          <img [src]="ocrIneFrenteUrl()!" alt="INE Frente" class="ocr-preview-img"/>
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-foto-sec flex-fill" (click)="ocrPaso.set('ine-frente')"><i class="bi bi-arrow-counterclockwise"></i> Repetir</button>
+            <button type="button" class="btn-foto-prim flex-fill" (click)="ocrPaso.set('ine-reverso')"><i class="bi bi-check2"></i> Usar esta →</button>
+          </div>
+        }
+
+        <!-- ─── PASO: INE REVERSO OPCIONES ─── -->
+        @if (ocrPaso() === 'ine-reverso') {
+          <span class="ocr-badge">Paso 1 — INE Reverso</span>
+          <p class="ocr-step-desc">Ahora fotografía la <strong>cara trasera</strong> de tu credencial.</p>
+          @if (ocrIneReversoUrl()) {
+            <img [src]="ocrIneReversoUrl()!" alt="INE Reverso" class="ocr-preview-img" style="margin-bottom:10px;"/>
+          }
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-reverso')">
+            <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>Tomar foto</strong>
+              <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
+            </div>
+          </button>
+          <label class="foto-opcion-btn">
+            <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
+            <div class="foto-opcion-txt">
+              <strong>{{ isMobile ? 'Elegir de la galería' : 'Seleccionar archivo' }}</strong>
+              <span>JPG, PNG</span>
+            </div>
+            <input type="file" hidden accept="image/*" (change)="ocrSeleccionarImagen($event, 'ine-reverso')"/>
+          </label>
+          <div class="ocr-skip">
+            <button type="button" (click)="ocrPaso.set('acta')"><i class="bi bi-skip-forward me-1"></i>Omitir reverso</button>
+          </div>
+        }
+
+        <!-- ─── PASO: INE REVERSO CÁMARA ─── -->
+        @if (ocrPaso() === 'ine-reverso-camara') {
+          <span class="ocr-badge">INE Reverso — Cámara</span>
+          <div class="ocr-camara-wrap">
+            <video #ocrVideoEl autoplay playsinline muted></video>
+            <div class="ocr-camara-guide"></div>
+          </div>
+          <canvas #ocrCanvasEl hidden></canvas>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+            <button type="button" class="btn-capturar" (click)="ocrCapturar('ine-reverso')" title="Capturar"><i class="bi bi-camera-fill"></i></button>
+            <button type="button" class="btn-foto-sec" (click)="ocrPaso.set('ine-reverso')"><i class="bi bi-x"></i> Cancelar</button>
+          </div>
+        }
+
+        <!-- ─── PASO: INE REVERSO PREVIEW ─── -->
+        @if (ocrPaso() === 'ine-reverso-preview') {
+          <button type="button" class="ocr-back-btn" (click)="ocrPaso.set('ine-reverso')"><i class="bi bi-arrow-left"></i> Volver</button>
+          <span class="ocr-badge">INE Reverso — Vista previa</span>
+          <img [src]="ocrIneReversoUrl()!" alt="INE Reverso" class="ocr-preview-img"/>
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-foto-sec flex-fill" (click)="ocrPaso.set('ine-reverso')"><i class="bi bi-arrow-counterclockwise"></i> Repetir</button>
+            <button type="button" class="btn-foto-prim flex-fill" (click)="ocrPaso.set('acta')"><i class="bi bi-check2"></i> Usar esta →</button>
+          </div>
+        }
+
+        <!-- ─── PASO: ACTA FISCAL OPCIONES ─── -->
+        @if (ocrPaso() === 'acta') {
+          <span class="ocr-badge">Paso 2 — Acta de Situación Fiscal</span>
+          <p class="ocr-step-desc">Selecciona o fotografía tu <strong>constancia del SAT</strong>. Acepta imagen o PDF.</p>
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('acta')">
+            <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
+            <div class="foto-opcion-txt"><strong>Tomar foto</strong><span>Fotografía el documento impreso o en pantalla</span></div>
+          </button>
+          <label class="foto-opcion-btn">
+            <div class="foto-opcion-icon"><i class="bi bi-file-earmark-image"></i></div>
+            <div class="foto-opcion-txt"><strong>Seleccionar imagen</strong><span>JPG, PNG</span></div>
+            <input type="file" hidden accept="image/*" (change)="ocrSeleccionarActa($event)"/>
+          </label>
+          <label class="foto-opcion-btn">
+            <div class="foto-opcion-icon" style="background:#dc3545"><i class="bi bi-file-earmark-pdf"></i></div>
+            <div class="foto-opcion-txt"><strong>Subir PDF</strong><span>Constancia en formato PDF</span></div>
+            <input type="file" hidden accept="application/pdf" (change)="ocrSeleccionarActa($event)"/>
+          </label>
+          <div class="ocr-skip">
+            <button type="button" (click)="ocrProcesar()">
+              <i class="bi bi-lightning me-1"></i>Procesar sin Acta Fiscal
+            </button>
+          </div>
+        }
+
+        <!-- ─── PASO: ACTA CÁMARA ─── -->
+        @if (ocrPaso() === 'acta-camara') {
+          <span class="ocr-badge">Acta Fiscal — Cámara</span>
+          <div class="ocr-camara-wrap">
+            <video #ocrVideoEl autoplay playsinline muted></video>
+            <div class="ocr-camara-guide"></div>
+          </div>
+          <canvas #ocrCanvasEl hidden></canvas>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+            <button type="button" class="btn-capturar" (click)="ocrCapturar('acta')" title="Capturar"><i class="bi bi-camera-fill"></i></button>
+            <button type="button" class="btn-foto-sec" (click)="ocrPaso.set('acta')"><i class="bi bi-x"></i> Cancelar</button>
+          </div>
+        }
+
+        <!-- ─── PASO: ACTA PREVIEW ─── -->
+        @if (ocrPaso() === 'acta-preview') {
+          <button type="button" class="ocr-back-btn" (click)="ocrPaso.set('acta')"><i class="bi bi-arrow-left"></i> Volver</button>
+          <span class="ocr-badge">Acta Fiscal — Vista previa</span>
+          @if (ocrActaEsPdf()) {
+            <div class="ocr-pdf-block">
+              <i class="bi bi-file-earmark-pdf-fill" style="color:#dc3545"></i>
+              <span>Archivo PDF listo para procesar</span>
+            </div>
+          } @else {
+            <img [src]="ocrActaUrl()!" alt="Acta Fiscal" class="ocr-preview-img"/>
+          }
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-foto-sec flex-fill" (click)="ocrPaso.set('acta')"><i class="bi bi-arrow-counterclockwise"></i> Cambiar</button>
+            <button type="button" class="btn-foto-prim flex-fill" (click)="ocrProcesar()">
+              <i class="bi bi-cpu"></i> Procesar documentos
+            </button>
+          </div>
+        }
+
+        <!-- ─── PASO: PROCESANDO ─── -->
+        @if (ocrPaso() === 'procesando') {
+          <div class="ocr-procesando">
+            <i class="bi bi-cpu-fill ocr-spin"></i>
+            <p style="font-size:0.88rem;font-weight:600;color:var(--gris-texto);margin-bottom:8px;">
+              {{ ocrProgresoMsg() || 'Procesando documentos...' }}
+            </p>
+            <div class="ocr-progress-bar">
+              <div class="ocr-progress-fill" [style.width]="ocrProgreso() + '%'"></div>
+            </div>
+            <small style="font-size:0.74rem;color:var(--gris-medio);">
+              {{ ocrProgreso() }}% — Por favor, no cierres esta ventana
+            </small>
+          </div>
+        }
+
+        <!-- ─── PASO: RESULTADO ─── -->
+        @if (ocrPaso() === 'resultado') {
+          <p class="ocr-result-title">
+            <i class="bi bi-check-circle-fill me-1" style="color:#27ae60"></i>Datos extraídos
+          </p>
+          <div class="ocr-result-table">
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">Nombre(s)</span>
+              @if (ocrDatos()['nombre']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ ocrDatos()['nombre'] }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">Ap. Paterno</span>
+              @if (ocrDatos()['apPaterno']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ ocrDatos()['apPaterno'] }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">Ap. Materno</span>
+              @if (ocrDatos()['apMaterno']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ ocrDatos()['apMaterno'] }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">CURP</span>
+              @if (ocrDatos()['curp']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ ocrDatos()['curp'] }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">RFC</span>
+              @if (ocrDatos()['rfc']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ ocrDatos()['rfc'] }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">Fecha nacimiento</span>
+              @if (ocrDatos()['fechaNacimiento']) { <span class="ocr-check">✓</span><span class="ocr-result-val">{{ formatFecha(ocrDatos()['fechaNacimiento']) }}</span> }
+              @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            <div class="ocr-result-row">
+              <span class="ocr-result-label">Sexo</span>
+              @if (ocrDatos()['sexo']) {
+                <span class="ocr-check">✓</span>
+                <span class="ocr-result-val">
+                  @if (ocrDatos()['sexo'] === 'M') { Masculino }
+                  @else if (ocrDatos()['sexo'] === 'F') { Femenino }
+                  @else { {{ ocrDatos()['sexo'] }} }
+                </span>
+              } @else { <span class="ocr-dash">—</span><span class="ocr-result-val empty">No detectado</span> }
+            </div>
+            @if (ocrDatos()['calle'] || ocrDatos()['colonia'] || ocrDatos()['codigoPostal']) {
+              <div class="ocr-result-row">
+                <span class="ocr-result-label">Domicilio</span>
+                <span class="ocr-check">✓</span>
+                <span class="ocr-result-val" style="font-size:0.76rem;">
+                  {{ [ocrDatos()['calle'], ocrDatos()['numeroExt'] ? '#'+ocrDatos()['numeroExt'] : null,
+                      ocrDatos()['colonia'], ocrDatos()['municipio'], ocrDatos()['estado'],
+                      ocrDatos()['codigoPostal']].filter(v => !!v).join(', ') }}
+                </span>
+              </div>
+            }
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-foto-sec flex-fill" (click)="cerrarModalOcr()"><i class="bi bi-x"></i> Cancelar</button>
+            <button type="button" class="btn-foto-prim flex-fill" (click)="ocrAplicarDatos()" [disabled]="saving()">
+              @if (saving()) { <span class="spinner-border spinner-border-sm"></span> Guardando... }
+              @else { <i class="bi bi-cloud-check"></i> Aplicar y guardar }
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -12,6 +12,11 @@ import { AuthService } from '../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+
+type OcrStep =
+  'intro' | 'ine-frente' | 'ine-frente-camara' | 'ine-frente-preview' |
+  'ine-reverso' | 'ine-reverso-camara' | 'ine-reverso-preview' |
+  'acta' | 'acta-camara' | 'acta-preview' | 'procesando' | 'resultado';
 
 @Component({
   selector: 'app-mis-datos',
@@ -27,6 +32,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
   @ViewChild('videoEl') videoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasEl') canvasEl?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('ocrVideoEl') ocrVideoEl?: ElementRef<HTMLVideoElement>;
+  @ViewChild('ocrCanvasEl') ocrCanvasEl?: ElementRef<HTMLCanvasElement>;
 
   readonly persona = signal<PersonaResponse | null>(null);
   readonly contrato = signal<ContratoResponse | null>(null);
@@ -49,6 +56,23 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private archivoSeleccionado: File | null = null;
   // environment.apiUrl = 'http://host:8081/api' → las fotos se sirven en /api/profile_pictures/**
   readonly apiBase = environment.apiUrl;
+
+  // ── OCR AUTOCOMPLETAR ──
+  private readonly ngZone = inject(NgZone);
+  readonly mostrarModalOcr = signal(false);
+  readonly ocrPaso = signal<OcrStep>('intro');
+  readonly ocrIneFrenteUrl = signal<string | null>(null);
+  readonly ocrIneReversoUrl = signal<string | null>(null);
+  readonly ocrActaUrl = signal<string | null>(null);
+  readonly ocrActaEsPdf = signal(false);
+  readonly ocrProgreso = signal(0);
+  readonly ocrProgresoMsg = signal('');
+  readonly ocrDatos = signal<Record<string, string>>({});
+  readonly ocrErrorMsg = signal('');
+  private ocrStream: MediaStream | null = null;
+  private ocrIneFrente: File | null = null;
+  private ocrIneReverso: File | null = null;
+  private ocrActaFile: File | null = null;
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -103,6 +127,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.detenerCamara();
+    this.ocrDetenerCamara();
   }
 
   private cargarFoto() {
@@ -206,6 +231,275 @@ export class MisDatosComponent implements OnInit, OnDestroy {
         this.errorFoto.set(msg);
       }
     });
+  }
+
+  // ── OCR AUTOCOMPLETAR ──
+
+  abrirModalOcr(): void {
+    this.ocrPaso.set('intro');
+    this.ocrIneFrenteUrl.set(null);
+    this.ocrIneReversoUrl.set(null);
+    this.ocrActaUrl.set(null);
+    this.ocrActaEsPdf.set(false);
+    this.ocrProgreso.set(0);
+    this.ocrProgresoMsg.set('');
+    this.ocrDatos.set({});
+    this.ocrErrorMsg.set('');
+    this.ocrIneFrente = null;
+    this.ocrIneReverso = null;
+    this.ocrActaFile = null;
+    this.mostrarModalOcr.set(true);
+  }
+
+  cerrarModalOcr(): void {
+    this.ocrDetenerCamara();
+    this.mostrarModalOcr.set(false);
+  }
+
+  ocrIniciarCamara(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
+    this.ocrPaso.set((destino + '-camara') as OcrStep);
+    this.ocrErrorMsg.set('');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        this.ocrStream = stream;
+        setTimeout(() => {
+          if (this.ocrVideoEl?.nativeElement) {
+            this.ocrVideoEl.nativeElement.srcObject = stream;
+          }
+        }, 150);
+      })
+      .catch(() => {
+        this.ocrErrorMsg.set('No se pudo acceder a la cámara. Verifica los permisos del navegador.');
+        this.ocrPaso.set(destino as OcrStep);
+      });
+  }
+
+  ocrDetenerCamara(): void {
+    if (this.ocrStream) {
+      this.ocrStream.getTracks().forEach(t => t.stop());
+      this.ocrStream = null;
+    }
+  }
+
+  ocrCapturar(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
+    const video = this.ocrVideoEl?.nativeElement;
+    const canvas = this.ocrCanvasEl?.nativeElement;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')!.drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const file = new File([blob], `${destino}.jpg`, { type: 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      this.ocrDetenerCamara();
+      this._ocrSetFile(destino, file, url, false);
+      this.ocrPaso.set((destino + '-preview') as OcrStep);
+    }, 'image/jpeg', 0.92);
+  }
+
+  ocrSeleccionarImagen(event: Event, destino: 'ine-frente' | 'ine-reverso'): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this._ocrSetFile(destino, file, URL.createObjectURL(file), false);
+    this.ocrPaso.set((destino + '-preview') as OcrStep);
+  }
+
+  ocrSeleccionarActa(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const esPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    this.ocrActaFile = file;
+    this.ocrActaEsPdf.set(esPdf);
+    this.ocrActaUrl.set(esPdf ? null : URL.createObjectURL(file));
+    this.ocrPaso.set('acta-preview');
+  }
+
+  private _ocrSetFile(destino: 'ine-frente' | 'ine-reverso' | 'acta', file: File, url: string, esPdf: boolean): void {
+    if (destino === 'ine-frente')    { this.ocrIneFrente = file; this.ocrIneFrenteUrl.set(url); }
+    else if (destino === 'ine-reverso') { this.ocrIneReverso = file; this.ocrIneReversoUrl.set(url); }
+    else { this.ocrActaFile = file; this.ocrActaUrl.set(url); this.ocrActaEsPdf.set(esPdf); }
+  }
+
+  async ocrProcesar(): Promise<void> {
+    this.ocrPaso.set('procesando');
+    this.ocrErrorMsg.set('');
+    this.ocrProgreso.set(0);
+    try {
+      const { createWorker } = await import('tesseract.js');
+      const datos: Record<string, string> = {};
+      const worker = await createWorker('spa', 1, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        logger: (m: any) => {
+          const pct = m.status === 'recognizing text' ? Math.round(m.progress * 100) : 0;
+          this.ngZone.run(() => {
+            if (m.status === 'loading tesseract core')    this.ocrProgresoMsg.set('Cargando motor OCR...');
+            else if (m.status === 'initializing tesseract') this.ocrProgresoMsg.set('Inicializando OCR...');
+            else if (m.status === 'loading language traineddata') this.ocrProgresoMsg.set('Cargando diccionario de idioma...');
+            else if (m.status === 'recognizing text') {
+              this.ocrProgresoMsg.set('Reconociendo texto...');
+              this.ocrProgreso.set(pct);
+            }
+          });
+        }
+      });
+
+      if (this.ocrIneFrente) {
+        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo INE (frente)...'); this.ocrProgreso.set(0); });
+        const { data: { text } } = await worker.recognize(this.ocrIneFrente);
+        Object.assign(datos, this._parseIne(text));
+      }
+      if (this.ocrIneReverso) {
+        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo INE (reverso)...'); this.ocrProgreso.set(0); });
+        const { data: { text } } = await worker.recognize(this.ocrIneReverso);
+        const parsed = this._parseIne(text);
+        Object.entries(parsed).forEach(([k, v]) => { if (!datos[k]) datos[k] = v; });
+      }
+      if (this.ocrActaFile) {
+        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo Acta de Situación Fiscal...'); this.ocrProgreso.set(0); });
+        let src: File | Blob = this.ocrActaFile;
+        if (this.ocrActaEsPdf()) src = await this._pdfToImage(this.ocrActaFile);
+        const { data: { text } } = await worker.recognize(src as File);
+        const parsed = this._parseActaFiscal(text);
+        Object.entries(parsed).forEach(([k, v]) => { if (!datos[k]) datos[k] = v; });
+      }
+
+      await worker.terminate();
+      this.ngZone.run(() => { this.ocrProgresoMsg.set(''); this.ocrDatos.set(datos); this.ocrPaso.set('resultado'); });
+    } catch {
+      this.ngZone.run(() => {
+        this.ocrErrorMsg.set('Error al procesar los documentos. Verifica que las imágenes sean legibles e inténtalo de nuevo.');
+        this.ocrPaso.set('acta-preview');
+      });
+    }
+  }
+
+  ocrAplicarDatos(): void {
+    const d = this.ocrDatos();
+    const p = this.persona();
+    if (!p) { this.cerrarModalOcr(); return; }
+    this.saving.set(true);
+    const req: PersonaRequest = {
+      nombre:          d['nombre']          || p.nombre,
+      apPaterno:       d['apPaterno']       || p.apPaterno,
+      apMaterno:       d['apMaterno']       ?? p.apMaterno,
+      curp:            d['curp']            || p.curp,
+      rfc:             d['rfc']             || p.rfc,
+      fechaNacimiento: d['fechaNacimiento'] || p.fechaNacimiento,
+      sexo:            d['sexo']            || p.sexo,
+      telefono:        p.telefono,
+      telefonoAlt:     p.telefonoAlt,
+      correo:          p.correo,
+      calle:           d['calle']           || p.calle,
+      numeroExt:       d['numeroExt']       || p.numeroExt,
+      numeroInt:       p.numeroInt,
+      colonia:         d['colonia']         || p.colonia,
+      municipio:       d['municipio']       || p.municipio,
+      estado:          d['estado']          || p.estado,
+      codigoPostal:    d['codigoPostal']    || p.codigoPostal,
+    };
+    this.personaService.actualizarMiPerfil(req).subscribe({
+      next: updated => {
+        this.persona.set(updated);
+        this.saving.set(false);
+        this.cerrarModalOcr();
+        this.successMsg.set('¡Datos personales actualizados automáticamente con tus documentos!');
+        setTimeout(() => this.successMsg.set(''), 6000);
+      },
+      error: (err) => {
+        this.saving.set(false);
+        const details = err?.error?.details as string[] | undefined;
+        const msg = details?.join(', ') ?? err?.error?.message ?? 'Error al guardar los datos extraídos.';
+        this.ocrErrorMsg.set(msg);
+      }
+    });
+  }
+
+  private _parseIne(text: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+
+    // CURP — 18 caracteres
+    const curpM = text.match(/\b([A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d)\b/i);
+    if (curpM) {
+      result['curp'] = curpM[1].toUpperCase();
+      const sc = result['curp'][10];
+      if (sc === 'H') result['sexo'] = 'M';
+      else if (sc === 'M') result['sexo'] = 'F';
+    }
+
+    // Fecha de nacimiento
+    const MESES: Record<string, string> = {
+      ENE:'01',FEB:'02',MAR:'03',ABR:'04',MAY:'05',JUN:'06',
+      JUL:'07',AGO:'08',SEP:'09',OCT:'10',NOV:'11',DIC:'12'
+    };
+    const fechaM = text.match(/(\d{2})[\/ \-]([A-Z]{3}|\d{2})[\/ \-](\d{4})/i);
+    if (fechaM) {
+      const mes = MESES[fechaM[2].toUpperCase()] ?? fechaM[2].padStart(2, '0');
+      result['fechaNacimiento'] = `${fechaM[3]}-${mes}-${fechaM[1]}`;
+    }
+
+    // Campos etiquetados
+    for (let i = 0; i < lines.length - 1; i++) {
+      const u = lines[i].toUpperCase();
+      if (/^APELLIDO\s*PATERNO/.test(u))  result['apPaterno']  ??= lines[i + 1].trim();
+      if (/^APELLIDO\s*MATERNO/.test(u))  result['apMaterno']  ??= lines[i + 1].trim();
+      if (/^NOMBRE\(?S?\)?$/.test(u))     result['nombre']     ??= lines[i + 1].trim();
+      if (/^DOMICILIO$/.test(u)) {
+        const ln = lines[i + 1];
+        const numM = ln?.match(/^(.+?)\s+(?:NO\.?|NÚM\.?|NUM\.?|#)\s*(\S+)/i);
+        if (numM) { result['calle'] ??= numM[1].trim(); result['numeroExt'] ??= numM[2].trim(); }
+        else result['calle'] ??= ln?.trim();
+      }
+    }
+    for (const line of lines) {
+      if (/^COL\.?\s|^COLONIA\s/i.test(line)) result['colonia'] ??= line.replace(/^COL\.?\s+|^COLONIA\s+/gi, '').trim();
+      const cpM = line.match(/\b(\d{5})\b/);
+      if (cpM) result['codigoPostal'] ??= cpM[1];
+    }
+    return result;
+  }
+
+  private _parseActaFiscal(text: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    const rfcM = text.match(/\b([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})\b/i);
+    if (rfcM) result['rfc'] = rfcM[1].toUpperCase();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+    for (let i = 0; i < lines.length - 1; i++) {
+      const u = lines[i].toUpperCase();
+      if (u.includes('NOMBRE') || u.includes('DENOMINACI')) {
+        const pts = lines[i + 1].trim().split(/\s+/);
+        if (pts.length >= 3) {
+          result['apPaterno'] ??= pts[0];
+          result['apMaterno'] ??= pts[1];
+          result['nombre']    ??= pts.slice(2).join(' ');
+        } else if (pts.length === 2) {
+          result['apPaterno'] ??= pts[0];
+          result['nombre']    ??= pts[1];
+        }
+      }
+    }
+    for (const line of lines) {
+      const cpM = line.match(/\b(\d{5})\b/);
+      if (cpM) result['codigoPostal'] ??= cpM[1];
+    }
+    return result;
+  }
+
+  private async _pdfToImage(file: File): Promise<Blob> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfjsLib = await import('pdfjs-dist') as any;
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const page = await pdf.getPage(1);
+    const vp = page.getViewport({ scale: 2.5 });
+    const canvas = document.createElement('canvas');
+    canvas.width = vp.width;
+    canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    return new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'));
   }
 
   // ── DATOS PERSONALES ──
