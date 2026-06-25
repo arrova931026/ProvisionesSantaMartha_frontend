@@ -971,13 +971,14 @@
           @if (ocrIneFrenteUrl()) {
             <img [src]="ocrIneFrenteUrl()!" alt="INE Frente" class="ocr-preview-img" style="margin-bottom:10px;"/>
           }
-          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-frente')">
+          <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt">
               <strong>Tomar foto</strong>
               <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
             </div>
-          </button>
+            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarImagen($event, 'ine-frente')"/>
+          </label>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
             <div class="foto-opcion-txt">
@@ -1038,13 +1039,14 @@
           @if (ocrIneReversoUrl()) {
             <img [src]="ocrIneReversoUrl()!" alt="INE Reverso" class="ocr-preview-img" style="margin-bottom:10px;"/>
           }
-          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-reverso')">
+          <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt">
               <strong>Tomar foto</strong>
               <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
             </div>
-          </button>
+            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarImagen($event, 'ine-reverso')"/>
+          </label>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
             <div class="foto-opcion-txt">
@@ -1100,10 +1102,11 @@
         @if (ocrPaso() === 'acta') {
           <span class="ocr-badge">Paso 2 — Acta de Situación Fiscal</span>
           <p class="ocr-step-desc">Selecciona o fotografía tu <strong>constancia del SAT</strong>. Acepta imagen o PDF.</p>
-          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('acta')">
+          <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt"><strong>Tomar foto</strong><span>Fotografía el documento impreso o en pantalla</span></div>
-          </button>
+            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarActa($event)"/>
+          </label>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-file-earmark-image"></i></div>
             <div class="foto-opcion-txt"><strong>Seleccionar imagen</strong><span>JPG, PNG</span></div>
