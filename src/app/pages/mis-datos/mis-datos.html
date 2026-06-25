@@ -178,7 +178,7 @@
   .ocr-nota { font-size:0.74rem; color:var(--gris-medio); background:var(--gris-fondo,#f8f9fa); border-radius:8px; padding:8px 12px; margin-bottom:16px; }
 
   /* Camera */
-  .ocr-camara-wrap { position:relative; background:#000; border-radius:12px; overflow:hidden; margin-bottom:12px; }
+  .ocr-camara-wrap { position:relative; background:#000; border-radius:12px; overflow:hidden; margin-bottom:12px; cursor:pointer; }
   .ocr-camara-wrap video { width:100%; display:block; max-height:260px; object-fit:cover; }
   .ocr-camara-guide {
     /* Ratio exacto tarjeta ID-1 / INE: 85.6 × 54 mm, centrado en el visor */
@@ -994,7 +994,7 @@
         <!-- ─── PASO: INE FRENTE CÁMARA ─── -->
         @if (ocrPaso() === 'ine-frente-camara') {
           <span class="ocr-badge">INE Frente — Cámara</span>
-          <div class="ocr-camara-wrap">
+          <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
             <div class="ocr-camara-guide"
               [class.listo]="ocrEncuadreEstado() === 'listo'"
@@ -1059,7 +1059,7 @@
         <!-- ─── PASO: INE REVERSO CÁMARA ─── -->
         @if (ocrPaso() === 'ine-reverso-camara') {
           <span class="ocr-badge">INE Reverso — Cámara</span>
-          <div class="ocr-camara-wrap">
+          <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
             <div class="ocr-camara-guide"
               [class.listo]="ocrEncuadreEstado() === 'listo'"
@@ -1122,7 +1122,7 @@
         <!-- ─── PASO: ACTA CÁMARA ─── -->
         @if (ocrPaso() === 'acta-camara') {
           <span class="ocr-badge">Acta Fiscal — Cámara</span>
-          <div class="ocr-camara-wrap">
+          <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
             <div class="ocr-camara-guide"
               [class.listo]="ocrEncuadreEstado() === 'listo'"

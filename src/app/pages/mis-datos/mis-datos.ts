@@ -75,6 +75,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private ocrIneReverso: File | null = null;
   private ocrActaFile: File | null = null;
   private ocrSharpnessTimer: ReturnType<typeof setInterval> | null = null;
+  private ocrRefocusTimer:   ReturnType<typeof setInterval> | null = null;
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -263,17 +264,16 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     this.ocrErrorMsg.set('');
     this.ocrEncuadreEstado.set('ajustando');
 
-    // NO se incluye 'focusMode' en constraints.
-    // En Android Chrome, cualquier llamada a applyConstraints({ focusMode })
-    // BLOQUEA el autofoco en la distancia actual en vez de activar el modo
-    // continuo — igual que congelar el foco de la app nativa.
-    // Sin la constraint, el OS usa su autofoco continuo nativo (el mismo
-    // comportamiento que la cámara predeterminada de Android).
-    const videoConstraints: MediaTrackConstraints = {
+    // focusMode: 'continuous' incluido en getUserMedia como constraint ideal.
+    // Colocarlo AQUÍ (no en applyConstraints posterior) hace que el driver lo
+    // negocie antes de activar el sensor, evitando el efecto "congelado".
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const videoConstraints = {
       facingMode: { ideal: 'environment' },
       width:  { ideal: 1280 },
       height: { ideal: 720 },
-    };
+      focusMode: 'continuous',
+    } as unknown as MediaTrackConstraints;
 
     navigator.mediaDevices
       .getUserMedia({ video: videoConstraints })
@@ -285,6 +285,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
           if (video) {
             video.srcObject = stream;
             video.onloadedmetadata = () => this._iniciarChequeoNitidez();
+            // onplaying = frames reales llegando: momento seguro para aplicar foco
+            video.onplaying = () => this._activarAutofoco(stream);
           }
         }, 150);
       })
@@ -294,17 +296,26 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Aplica focusMode: continuous de dos formas distintas para máxima compatibilidad. */
-  private _aplicarFocoContinuo(track: MediaStreamTrack): void {
+  /**
+   * Activa autofoco 1.5 s después de que el video reproduce frames reales.
+   * - Intento 1: focusMode continuous (Chrome 70+)
+   * - Fallback periódico: single-shot cada 3.5 s (dispositivos sin continuous)
+   */
+  private _activarAutofoco(stream: MediaStream): void {
+    const track = stream.getVideoTracks()[0];
+    if (!track) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const t = track as any;
-    // Método directo (Chrome 70 + Android): sin wrapper 'advanced'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t.applyConstraints({ focusMode: 'continuous' } as any).catch(() => {
-      // Fallback: wrapper advanced (Firefox / versiones antiguas de Chrome)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {});
-    });
+    setTimeout(() => {
+      if (this.ocrStream !== stream) return;
+      t.applyConstraints({ focusMode: 'continuous' } as any)
+        .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {}));
+    }, 1500);
+    this.ocrRefocusTimer = setInterval(() => {
+      if (this.ocrStream !== stream || this.ocrEncuadreEstado() === 'listo') return;
+      t.applyConstraints({ focusMode: 'auto' } as any)
+        .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] } as any).catch(() => {}));
+    }, 3500);
   }
 
   ocrDetenerCamara(): void {
@@ -315,19 +326,19 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Fuerza un ciclo de re-enfoque: single-shot → continuous. */
-  private _nudgeFocus(): void {
+  /** Tap‑para‑enfocar: dispara single-shot AF y vuelve a modo continuo. */
+  ocrTapEnfocar(): void {
     if (!this.ocrStream) return;
     const track = this.ocrStream.getVideoTracks()[0];
     if (!track) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const t = track as any;
-    // Cambiar a single-shot fuerza al driver a re-medir la distancia
-    t.applyConstraints({ focusMode: 'single-shot' } as any)
-      .catch(() => {})
-      .finally(() => {
-        setTimeout(() => this._aplicarFocoContinuo(track), 400);
-      });
+    (t.applyConstraints({ focusMode: 'single-shot' } as any) as Promise<void>)
+      .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'auto' }] } as any).catch(() => {}))
+      .finally?.(() => setTimeout(() =>
+        t.applyConstraints({ focusMode: 'continuous' } as any)
+          .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {}))
+      , 800));
   }
 
   ocrCapturar(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
@@ -335,9 +346,39 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     const canvas = this.ocrCanvasEl?.nativeElement;
     if (!video || !canvas) return;
     this._detenerChequeoNitidez();
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d')!.drawImage(video, 0, 0);
+
+    const streamW = video.videoWidth;
+    const streamH = video.videoHeight;
+    if (!streamW || !streamH) return;
+
+    // ── Calcular la región de la guía en coordenadas del stream ──
+    // La guía tiene CSS: width=92%, aspect-ratio=85.6/54, max-height=92%
+    const RATIO = 85.6 / 54; // tarjeta ID-1 (INE)
+    const displayW = video.clientWidth  || video.offsetWidth;
+    const displayH = video.clientHeight || video.offsetHeight;
+
+    let gW = displayW * 0.92;
+    let gH = gW / RATIO;
+    if (gH > displayH * 0.92) { gH = displayH * 0.92; gW = gH * RATIO; }
+    const gLeft = (displayW - gW) / 2;
+    const gTop  = (displayH - gH) / 2;
+
+    // Transformación inversa de object-fit:cover → coordenadas del stream
+    const s    = Math.max(displayW / streamW, displayH / streamH);
+    const offX = (streamW - displayW / s) / 2;
+    const offY = (streamH - displayH / s) / 2;
+    const srcX = offX + gLeft / s;
+    const srcY = offY + gTop  / s;
+    const srcW = gW / s;
+    const srcH = gH / s;
+
+    // Salida a resolución fija apropiada para OCR
+    const outW = 960;
+    const outH = Math.round(outW / RATIO);
+    canvas.width  = outW;
+    canvas.height = outH;
+    canvas.getContext('2d')!.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
+
     canvas.toBlob(blob => {
       if (!blob) return;
       const file = new File([blob], `${destino}.jpg`, { type: 'image/jpeg' });
@@ -383,6 +424,10 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     if (this.ocrSharpnessTimer !== null) {
       clearInterval(this.ocrSharpnessTimer);
       this.ocrSharpnessTimer = null;
+    }
+    if (this.ocrRefocusTimer !== null) {
+      clearInterval(this.ocrRefocusTimer);
+      this.ocrRefocusTimer = null;
     }
   }
 
