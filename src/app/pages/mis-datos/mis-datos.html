@@ -181,8 +181,11 @@
   .ocr-camara-wrap { position:relative; background:#000; border-radius:12px; overflow:hidden; margin-bottom:12px; }
   .ocr-camara-wrap video { width:100%; display:block; max-height:260px; object-fit:cover; }
   .ocr-camara-guide {
-    position:absolute; inset:8px; border-radius:8px; pointer-events:none;
-    border:2px dashed rgba(255,200,0,0.75); transition:border-color 0.4s, border-style 0.4s, box-shadow 0.4s;
+    /* Ratio exacto tarjeta ID-1 / INE: 85.6 × 54 mm, centrado en el visor */
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:92%; aspect-ratio:85.6/54; max-height:92%;
+    border-radius:6px; pointer-events:none;
+    border:2.5px dashed rgba(255,200,0,0.85); transition:border 0.4s, box-shadow 0.4s;
   }
   .ocr-camara-guide.listo {
     border:2px solid rgba(39,174,96,0.95);
@@ -1004,7 +1007,7 @@
               } @else if (ocrEncuadreEstado() === 'borroso') {
                 <i class="bi bi-exclamation-triangle me-1"></i>Imagen borrosa — acerca más
               } @else {
-                <i class="bi bi-arrow-clockwise me-1"></i>Ajustando enfoque...
+                <i class="bi bi-crop me-1"></i>Centra el INE en el marco
               }
             </div>
           </div>
@@ -1069,7 +1072,7 @@
               } @else if (ocrEncuadreEstado() === 'borroso') {
                 <i class="bi bi-exclamation-triangle me-1"></i>Imagen borrosa — acerca más
               } @else {
-                <i class="bi bi-arrow-clockwise me-1"></i>Ajustando enfoque...
+                <i class="bi bi-crop me-1"></i>Centra el INE en el marco
               }
             </div>
           </div>
@@ -1132,7 +1135,7 @@
               } @else if (ocrEncuadreEstado() === 'borroso') {
                 <i class="bi bi-exclamation-triangle me-1"></i>Imagen borrosa — acerca más
               } @else {
-                <i class="bi bi-arrow-clockwise me-1"></i>Ajustando enfoque...
+                <i class="bi bi-crop me-1"></i>Centra el INE en el marco
               }
             </div>
           </div>

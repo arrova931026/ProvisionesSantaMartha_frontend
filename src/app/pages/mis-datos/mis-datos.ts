@@ -75,7 +75,6 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private ocrIneReverso: File | null = null;
   private ocrActaFile: File | null = null;
   private ocrSharpnessTimer: ReturnType<typeof setInterval> | null = null;
-  private ocrRefocusTimer: ReturnType<typeof setInterval> | null = null;
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -264,34 +263,28 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     this.ocrErrorMsg.set('');
     this.ocrEncuadreEstado.set('ajustando');
 
-    // Resolución moderada sin 'min' para no bloquear el autofoco del hardware.
-    // focusMode incluido en el constraints inicial para que el navegador lo negocie
-    // desde el primer frame (algunos drivers ignoran applyConstraints posterior).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const videoConstraints: any = {
+    // NO se incluye 'focusMode' en constraints.
+    // En Android Chrome, cualquier llamada a applyConstraints({ focusMode })
+    // BLOQUEA el autofoco en la distancia actual en vez de activar el modo
+    // continuo — igual que congelar el foco de la app nativa.
+    // Sin la constraint, el OS usa su autofoco continuo nativo (el mismo
+    // comportamiento que la cámara predeterminada de Android).
+    const videoConstraints: MediaTrackConstraints = {
       facingMode: { ideal: 'environment' },
       width:  { ideal: 1280 },
       height: { ideal: 720 },
-      focusMode: 'continuous',
     };
 
     navigator.mediaDevices
-      .getUserMedia({ video: videoConstraints as MediaTrackConstraints })
+      .getUserMedia({ video: videoConstraints })
       .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }))
       .then(stream => {
         this.ocrStream = stream;
-        const track = stream.getVideoTracks()[0];
-        // Aplicar autofoco en cuanto el stream está disponible
-        this._aplicarFocoContinuo(track);
         setTimeout(() => {
           const video = this.ocrVideoEl?.nativeElement;
           if (video) {
             video.srcObject = stream;
-            video.onloadedmetadata = () => {
-              // Segundo intento de foco después de que el video arranca
-              this._aplicarFocoContinuo(track);
-              this._iniciarChequeoNitidez();
-            };
+            video.onloadedmetadata = () => this._iniciarChequeoNitidez();
           }
         }, 150);
       })
@@ -380,15 +373,10 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
   private _iniciarChequeoNitidez(): void {
     this.ocrEncuadreEstado.set('ajustando');
-    // Esperar 1.5 s para que el autofoco inicial se estabilice
     setTimeout(() => {
       this._evaluarNitidez();
-      this.ocrSharpnessTimer = setInterval(() => this._evaluarNitidez(), 700);
-      // Cada 2.5 s: si la imagen sigue borrosa, forzar re-enfoque
-      this.ocrRefocusTimer = setInterval(() => {
-        if (this.ocrEncuadreEstado() !== 'listo') this._nudgeFocus();
-      }, 2500);
-    }, 1500);
+      this.ocrSharpnessTimer = setInterval(() => this._evaluarNitidez(), 600);
+    }, 800);
   }
 
   private _detenerChequeoNitidez(): void {
@@ -396,48 +384,68 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       clearInterval(this.ocrSharpnessTimer);
       this.ocrSharpnessTimer = null;
     }
-    if (this.ocrRefocusTimer !== null) {
-      clearInterval(this.ocrRefocusTimer);
-      this.ocrRefocusTimer = null;
-    }
   }
 
   private _evaluarNitidez(): void {
-    const video = this.ocrVideoEl?.nativeElement;
-    if (!video || video.readyState < 2 || video.videoWidth === 0) return;
-    const score = this._laplacianVariance(video);
-    const estado = score > 35 ? 'listo' : score > 8 ? 'ajustando' : 'borroso';
+    const { nitidez, contenido } = this._analizarEncuadre();
+    const estado: 'ajustando' | 'listo' | 'borroso' =
+      nitidez < 7              ? 'borroso'  :  // imagen desenfocada
+      nitidez >= 22 && contenido >= 0.30 ? 'listo' :  // enfocado + documento detectado
+      'ajustando';                               // enfocado pero sin documento
     this.ngZone.run(() => this.ocrEncuadreEstado.set(estado));
   }
 
-  /** Varianza del Laplaciano sobre una región central reducida (proxy de nitidez). */
-  private _laplacianVariance(video: HTMLVideoElement): number {
-    const W = 80, H = 60;
-    const c = document.createElement('canvas');
-    c.width = W; c.height = H;
-    const ctx = c.getContext('2d');
-    if (!ctx) return 0;
-    const sw = video.videoWidth  * 0.5;
-    const sh = video.videoHeight * 0.5;
-    const sx = (video.videoWidth  - sw) / 2;
-    const sy = (video.videoHeight - sh) / 2;
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
+  /**
+   * Muestrea la región central al ratio ID-1 (85.6×54 mm).
+   * nitidez  = varianza del Laplaciano (>22 = enfocado).
+   * contenido = fracción de bloques con varianza local >60
+   *             (≥0.30 = probable documento con texto/foto/patrones).
+   */
+  private _analizarEncuadre(): { nitidez: number; contenido: number } {
+    const video = this.ocrVideoEl?.nativeElement;
+    if (!video || video.readyState < 2 || video.videoWidth === 0) return { nitidez: 0, contenido: 0 };
+
+    const W = 86, H = 54; // ratio exacto ID-1 en píxeles de muestra
+    const cvs = document.createElement('canvas');
+    cvs.width = W; cvs.height = H;
+    const ctx = cvs.getContext('2d')!;
+    const m = 0.07; // margen 7% en cada lado → muestrea el área de la guía
+    const vw = video.videoWidth, vh = video.videoHeight;
+    ctx.drawImage(video, vw*m, vh*m, vw*(1-2*m), vh*(1-2*m), 0, 0, W, H);
     const d = ctx.getImageData(0, 0, W, H).data;
-    let sum = 0, sumSq = 0, n = 0;
+
+    // Escala de grises
+    const g = new Float32Array(W * H);
+    for (let i = 0; i < W * H; i++) g[i] = d[i*4]*0.299 + d[i*4+1]*0.587 + d[i*4+2]*0.114;
+
+    // Nitidez: varianza del Laplaciano
+    let ls = 0, ls2 = 0, ln = 0;
     for (let y = 1; y < H - 1; y++) {
       for (let x = 1; x < W - 1; x++) {
-        const gray  = (i: number) => d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
-        const g  = gray((y * W + x) * 4);
-        const gt = gray(((y - 1) * W + x) * 4);
-        const gb = gray(((y + 1) * W + x) * 4);
-        const gl = gray((y * W + (x - 1)) * 4);
-        const gr = gray((y * W + (x + 1)) * 4);
-        const lap = gt + gb + gl + gr - 4 * g;
-        sum += lap; sumSq += lap * lap; n++;
+        const lap = g[(y-1)*W+x] + g[(y+1)*W+x] + g[y*W+x-1] + g[y*W+x+1] - 4*g[y*W+x];
+        ls += lap; ls2 += lap*lap; ln++;
       }
     }
-    const mean = sum / n;
-    return (sumSq / n) - mean * mean;
+    const nitidez = ls2/ln - (ls/ln)**2;
+
+    // Contenido: % de bloques 8×5 con varianza local > 60
+    // Documento (texto, foto, patrones) → muchos bloques activos.
+    // Superficie lisa o fondo vacío → casi ningún bloque activo.
+    const COLS = 8, ROWS = 5;
+    const bw = Math.floor(W / COLS), bh = Math.floor(H / ROWS);
+    let active = 0;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        let s = 0, s2 = 0, n = 0;
+        for (let y = r*bh; y < (r+1)*bh && y < H; y++) {
+          for (let x = c*bw; x < (c+1)*bw && x < W; x++) {
+            const v = g[y*W+x]; s += v; s2 += v*v; n++;
+          }
+        }
+        if (n > 0 && s2/n - (s/n)**2 > 60) active++;
+      }
+    }
+    return { nitidez, contenido: active / (COLS * ROWS) };
   }
 
   async ocrProcesar(): Promise<void> {
