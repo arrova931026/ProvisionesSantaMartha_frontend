@@ -56,6 +56,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private archivoSeleccionado: File | null = null;
   // environment.apiUrl = 'http://host:8081/api' → las fotos se sirven en /api/profile_pictures/**
   readonly apiBase = environment.apiUrl;
+  readonly ocrEnabled = environment.ocrAutocompletarEnabled;
 
   // ── OCR AUTOCOMPLETAR ──
   private readonly ngZone = inject(NgZone);

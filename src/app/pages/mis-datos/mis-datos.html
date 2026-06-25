@@ -349,12 +349,14 @@
             <div class="seccion-titulo">
               <h2><i class="bi bi-person-circle" style="color:var(--azul-principal)"></i> Datos Personales</h2>
               <div class="linea-azul"></div>
-              <div class="ocr-hint-bar">
-                <span><i class="bi bi-stars me-1"></i>Completa tus datos automáticamente escaneando tus documentos oficiales.</span>
-                <button type="button" class="ocr-hint-btn" (click)="abrirModalOcr()">
-                  <i class="bi bi-magic"></i> Autocompletar
-                </button>
-              </div>
+              @if (ocrEnabled) {
+                <div class="ocr-hint-bar">
+                  <span><i class="bi bi-stars me-1"></i>Completa tus datos automáticamente escaneando tus documentos oficiales.</span>
+                  <button type="button" class="ocr-hint-btn" (click)="abrirModalOcr()">
+                    <i class="bi bi-magic"></i> Autocompletar
+                  </button>
+                </div>
+              }
             </div>
             <div class="info-card">
               @if (persona()) {
