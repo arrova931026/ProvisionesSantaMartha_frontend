@@ -75,6 +75,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private ocrIneReverso: File | null = null;
   private ocrActaFile: File | null = null;
   private ocrSharpnessTimer: ReturnType<typeof setInterval> | null = null;
+  private ocrRefocusTimer: ReturnType<typeof setInterval> | null = null;
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -263,34 +264,34 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     this.ocrErrorMsg.set('');
     this.ocrEncuadreEstado.set('ajustando');
 
-    const tryGetCamera = (constraints: MediaStreamConstraints) =>
-      navigator.mediaDevices.getUserMedia(constraints);
-
-    const highRes: MediaStreamConstraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920, min: 1280 },
-        height: { ideal: 1080, min: 720 },
-      }
+    // Resolución moderada sin 'min' para no bloquear el autofoco del hardware.
+    // focusMode incluido en el constraints inicial para que el navegador lo negocie
+    // desde el primer frame (algunos drivers ignoran applyConstraints posterior).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const videoConstraints: any = {
+      facingMode: { ideal: 'environment' },
+      width:  { ideal: 1280 },
+      height: { ideal: 720 },
+      focusMode: 'continuous',
     };
 
-    tryGetCamera(highRes)
-      .catch(() => tryGetCamera({ video: { facingMode: 'environment' } }))
+    navigator.mediaDevices
+      .getUserMedia({ video: videoConstraints as MediaTrackConstraints })
+      .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }))
       .then(stream => {
         this.ocrStream = stream;
-        // Intentar activar autofoco continuo
         const track = stream.getVideoTracks()[0];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const caps = (track as any).getCapabilities?.() as any;
-        if (caps?.focusMode?.includes?.('continuous')) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] }).catch(() => {});
-        }
+        // Aplicar autofoco en cuanto el stream está disponible
+        this._aplicarFocoContinuo(track);
         setTimeout(() => {
           const video = this.ocrVideoEl?.nativeElement;
           if (video) {
             video.srcObject = stream;
-            video.onloadedmetadata = () => this._iniciarChequeoNitidez();
+            video.onloadedmetadata = () => {
+              // Segundo intento de foco después de que el video arranca
+              this._aplicarFocoContinuo(track);
+              this._iniciarChequeoNitidez();
+            };
           }
         }, 150);
       })
@@ -300,12 +301,40 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Aplica focusMode: continuous de dos formas distintas para máxima compatibilidad. */
+  private _aplicarFocoContinuo(track: MediaStreamTrack): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const t = track as any;
+    // Método directo (Chrome 70 + Android): sin wrapper 'advanced'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    t.applyConstraints({ focusMode: 'continuous' } as any).catch(() => {
+      // Fallback: wrapper advanced (Firefox / versiones antiguas de Chrome)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {});
+    });
+  }
+
   ocrDetenerCamara(): void {
     this._detenerChequeoNitidez();
     if (this.ocrStream) {
       this.ocrStream.getTracks().forEach(t => t.stop());
       this.ocrStream = null;
     }
+  }
+
+  /** Fuerza un ciclo de re-enfoque: single-shot → continuous. */
+  private _nudgeFocus(): void {
+    if (!this.ocrStream) return;
+    const track = this.ocrStream.getVideoTracks()[0];
+    if (!track) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const t = track as any;
+    // Cambiar a single-shot fuerza al driver a re-medir la distancia
+    t.applyConstraints({ focusMode: 'single-shot' } as any)
+      .catch(() => {})
+      .finally(() => {
+        setTimeout(() => this._aplicarFocoContinuo(track), 400);
+      });
   }
 
   ocrCapturar(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
@@ -351,10 +380,14 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
   private _iniciarChequeoNitidez(): void {
     this.ocrEncuadreEstado.set('ajustando');
-    // Esperar 1.5 s para que el autofoco se estabilice, luego revisar cada 700 ms
+    // Esperar 1.5 s para que el autofoco inicial se estabilice
     setTimeout(() => {
       this._evaluarNitidez();
       this.ocrSharpnessTimer = setInterval(() => this._evaluarNitidez(), 700);
+      // Cada 2.5 s: si la imagen sigue borrosa, forzar re-enfoque
+      this.ocrRefocusTimer = setInterval(() => {
+        if (this.ocrEncuadreEstado() !== 'listo') this._nudgeFocus();
+      }, 2500);
     }, 1500);
   }
 
@@ -362,6 +395,10 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     if (this.ocrSharpnessTimer !== null) {
       clearInterval(this.ocrSharpnessTimer);
       this.ocrSharpnessTimer = null;
+    }
+    if (this.ocrRefocusTimer !== null) {
+      clearInterval(this.ocrRefocusTimer);
+      this.ocrRefocusTimer = null;
     }
   }
 
