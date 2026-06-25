@@ -436,26 +436,68 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   }
 
   ocrSeleccionarImagen(event: Event, destino: 'ine-frente' | 'ine-reverso'): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';  // permite re-seleccionar el mismo archivo
     if (!file) return;
-    this._ocrSetFile(destino, file, URL.createObjectURL(file), false);
-    this.ocrPaso.set((destino + '-preview') as OcrStep);
+    this._normalizarImagen(file).then(norm => {
+      this._ocrSetFile(destino, norm, URL.createObjectURL(norm), false);
+      this.ocrPaso.set((destino + '-preview') as OcrStep);
+    });
   }
 
   ocrSeleccionarActa(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';  // permite re-seleccionar el mismo archivo
     if (!file) return;
     const esPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-    this.ocrActaFile = file;
-    this.ocrActaEsPdf.set(esPdf);
-    this.ocrActaUrl.set(esPdf ? null : URL.createObjectURL(file));
-    this.ocrPaso.set('acta-preview');
+    if (esPdf) {
+      this.ocrActaFile = file;
+      this.ocrActaEsPdf.set(true);
+      this.ocrActaUrl.set(null);
+      this.ocrPaso.set('acta-preview');
+    } else {
+      this._normalizarImagen(file).then(norm => {
+        this.ocrActaFile = norm;
+        this.ocrActaEsPdf.set(false);
+        this.ocrActaUrl.set(URL.createObjectURL(norm));
+        this.ocrPaso.set('acta-preview');
+      });
+    }
   }
 
   private _ocrSetFile(destino: 'ine-frente' | 'ine-reverso' | 'acta', file: File, url: string, esPdf: boolean): void {
     if (destino === 'ine-frente')    { this.ocrIneFrente = file; this.ocrIneFrenteUrl.set(url); }
     else if (destino === 'ine-reverso') { this.ocrIneReverso = file; this.ocrIneReversoUrl.set(url); }
     else { this.ocrActaFile = file; this.ocrActaUrl.set(url); this.ocrActaEsPdf.set(esPdf); }
+  }
+
+  /**
+   * Normaliza la imagen antes de pasarla a Tesseract:
+   * 1. Dibuja en canvas — el navegador aplica la rotación EXIF automáticamente.
+   * 2. Redimensiona a máx. 1920 px — fotos nativas son 12‑MP y saturan el worker.
+   */
+  private _normalizarImagen(file: File): Promise<File> {
+    return new Promise(resolve => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1920;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const cvs = document.createElement('canvas');
+        cvs.width = w; cvs.height = h;
+        cvs.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        cvs.toBlob(blob => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.92);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
   }
 
   private _iniciarChequeoNitidez(): void {
@@ -584,10 +626,11 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
       await worker.terminate();
       this.ngZone.run(() => { this.ocrProgresoMsg.set(''); this.ocrDatos.set(datos); this.ocrPaso.set('resultado'); });
-    } catch {
+    } catch (err) {
+      const detalle = err instanceof Error ? err.message : String(err);
       this.ngZone.run(() => {
-        this.ocrErrorMsg.set('Error al procesar los documentos. Verifica que las imágenes sean legibles e inténtalo de nuevo.');
-        this.ocrPaso.set('acta-preview');
+        this.ocrErrorMsg.set(`Error al procesar: ${detalle}`);
+        this.ocrPaso.set(this.ocrIneFrente ? 'ine-frente-preview' : this.ocrActaFile ? 'acta-preview' : 'intro');
       });
     }
   }
