@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
+﻿import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -265,20 +265,19 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     this.ocrErrorMsg.set('');
     this.ocrEncuadreEstado.set('ajustando');
 
-    // focusMode: 'continuous' incluido en getUserMedia como constraint ideal.
-    // Colocarlo AQUÍ (no en applyConstraints posterior) hace que el driver lo
-    // negocie antes de activar el sensor, evitando el efecto "congelado".
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const videoConstraints = {
+    // focusMode NO es un constraint válido de getUserMedia en Chrome Android —
+    // ponerlo a nivel raíz provoca OverconstrainedError y cae al fallback sin
+    // ningún control de foco. El autofoco se aplica vía applyConstraints() con
+    // el array `advanced` una vez que el stream ya está activo.
+    const videoConstraints: MediaTrackConstraints = {
       facingMode: { ideal: 'environment' },
-      width:  { ideal: 1280 },
-      height: { ideal: 720 },
-      focusMode: 'continuous',
-    } as unknown as MediaTrackConstraints;
+      width:  { ideal: 1920 },
+      height: { ideal: 1080 },
+    };
 
     navigator.mediaDevices
       .getUserMedia({ video: videoConstraints })
-      .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }))
+      .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } }))
       .then(stream => {
         this.ocrStream = stream;
         setTimeout(() => {
@@ -298,27 +297,65 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Activa autofoco 1.5 s después de que el video reproduce frames reales.
-   * - Intento 1: focusMode continuous (Chrome 70+)
-   * - Fallback periódico: single-shot cada 3.5 s (dispositivos sin continuous)
+   * Activa autofoco continuo usando el formato `advanced` que requiere
+   * Chrome Android para negociar con el driver Camera2.
+   * - Consulta getCapabilities() para no aplicar modos no soportados.
+   * - Intento inmediato (300 ms) + reintento (800 ms) para dar tiempo al sensor.
+   * - Para dispositivos sin `continuous`: single-shot periodico cada 2 s.
    */
   private _activarAutofoco(stream: MediaStream): void {
     const track = stream.getVideoTracks()[0];
     if (!track) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const t = track as any;
+    const caps: { focusMode?: string[] } = t.getCapabilities?.() ?? {};
+    const modos: string[] = caps.focusMode ?? [];
+
+    const aplicarContinuo = (): Promise<void> => {
+      if (modos.includes('continuous')) {
+        return (t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }) as Promise<void>)
+          .catch(() => {});
+      }
+      if (modos.includes('auto')) {
+        return (t.applyConstraints({ advanced: [{ focusMode: 'auto' }] }) as Promise<void>)
+          .catch(() => {});
+      }
+      return Promise.resolve();
+    };
+
+    // Primer intento: 300 ms (el sensor ya recibe frames).
+    // En algunos drivers Android hay que hacer un single-shot primero
+    // para 'despertar' el AF y luego pasar a continuous.
     setTimeout(() => {
       if (this.ocrStream !== stream) return;
-      t.applyConstraints({ focusMode: 'continuous' } as any)
-        .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {}));
-    }, 1500);
-    this.ocrRefocusTimer = setInterval(() => {
-      if (this.ocrStream !== stream || this.ocrEncuadreEstado() === 'listo') return;
-      t.applyConstraints({ focusMode: 'auto' } as any)
-        .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] } as any).catch(() => {}));
-    }, 3500);
-  }
+      const despertar: Promise<void> = modos.includes('single-shot')
+        ? (t.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] }) as Promise<void>).catch(() => {})
+        : Promise.resolve();
+      despertar.finally(() => {
+        if (this.ocrStream !== stream) return;
+        aplicarContinuo();
+      });
+    }, 300);
 
+    // Reintento a 800 ms por si el primer intento fue demasiado pronto
+    setTimeout(() => {
+      if (this.ocrStream !== stream) return;
+      aplicarContinuo();
+    }, 800);
+
+    // Para dispositivos sin modo continuous: reenfoque periodico cada 2 s
+    if (!modos.includes('continuous')) {
+      const modoPerio = modos.includes('single-shot') ? 'single-shot'
+                      : modos.includes('auto')        ? 'auto'
+                      : null;
+      if (modoPerio) {
+        this.ocrRefocusTimer = setInterval(() => {
+          if (this.ocrStream !== stream || this.ocrEncuadreEstado() === 'listo') return;
+          (t.applyConstraints({ advanced: [{ focusMode: modoPerio }] }) as Promise<void>).catch(() => {});
+        }, 2000);
+      }
+    }
+  }
   ocrDetenerCamara(): void {
     this._detenerChequeoNitidez();
     if (this.ocrStream) {
@@ -334,12 +371,20 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     if (!track) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const t = track as any;
-    (t.applyConstraints({ focusMode: 'single-shot' } as any) as Promise<void>)
-      .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'auto' }] } as any).catch(() => {}))
-      .finally?.(() => setTimeout(() =>
-        t.applyConstraints({ focusMode: 'continuous' } as any)
-          .catch(() => t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] } as any).catch(() => {}))
-      , 800));
+    const caps: { focusMode?: string[] } = t.getCapabilities?.() ?? {};
+    const modos: string[] = caps.focusMode ?? [];
+    const modoShot = modos.includes('single-shot') ? 'single-shot'
+                   : modos.includes('auto')         ? 'auto'
+                   : null;
+    const shot: Promise<void> = modoShot
+      ? (t.applyConstraints({ advanced: [{ focusMode: modoShot }] }) as Promise<void>).catch(() => {})
+      : Promise.resolve();
+    shot.finally?.(() => setTimeout(() => {
+      if (!this.ocrStream) return;
+      if (modos.includes('continuous')) {
+        (t.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }) as Promise<void>).catch(() => {});
+      }
+    }, 800));
   }
 
   ocrCapturar(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
