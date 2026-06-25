@@ -69,10 +69,12 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   readonly ocrProgresoMsg = signal('');
   readonly ocrDatos = signal<Record<string, string>>({});
   readonly ocrErrorMsg = signal('');
+  readonly ocrEncuadreEstado = signal<'ajustando' | 'listo' | 'borroso'>('ajustando');
   private ocrStream: MediaStream | null = null;
   private ocrIneFrente: File | null = null;
   private ocrIneReverso: File | null = null;
   private ocrActaFile: File | null = null;
+  private ocrSharpnessTimer: ReturnType<typeof setInterval> | null = null;
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -259,12 +261,36 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   ocrIniciarCamara(destino: 'ine-frente' | 'ine-reverso' | 'acta'): void {
     this.ocrPaso.set((destino + '-camara') as OcrStep);
     this.ocrErrorMsg.set('');
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    this.ocrEncuadreEstado.set('ajustando');
+
+    const tryGetCamera = (constraints: MediaStreamConstraints) =>
+      navigator.mediaDevices.getUserMedia(constraints);
+
+    const highRes: MediaStreamConstraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 },
+      }
+    };
+
+    tryGetCamera(highRes)
+      .catch(() => tryGetCamera({ video: { facingMode: 'environment' } }))
       .then(stream => {
         this.ocrStream = stream;
+        // Intentar activar autofoco continuo
+        const track = stream.getVideoTracks()[0];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const caps = (track as any).getCapabilities?.() as any;
+        if (caps?.focusMode?.includes?.('continuous')) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] }).catch(() => {});
+        }
         setTimeout(() => {
-          if (this.ocrVideoEl?.nativeElement) {
-            this.ocrVideoEl.nativeElement.srcObject = stream;
+          const video = this.ocrVideoEl?.nativeElement;
+          if (video) {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => this._iniciarChequeoNitidez();
           }
         }, 150);
       })
@@ -275,6 +301,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   }
 
   ocrDetenerCamara(): void {
+    this._detenerChequeoNitidez();
     if (this.ocrStream) {
       this.ocrStream.getTracks().forEach(t => t.stop());
       this.ocrStream = null;
@@ -285,6 +312,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     const video = this.ocrVideoEl?.nativeElement;
     const canvas = this.ocrCanvasEl?.nativeElement;
     if (!video || !canvas) return;
+    this._detenerChequeoNitidez();
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d')!.drawImage(video, 0, 0);
@@ -319,6 +347,60 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     if (destino === 'ine-frente')    { this.ocrIneFrente = file; this.ocrIneFrenteUrl.set(url); }
     else if (destino === 'ine-reverso') { this.ocrIneReverso = file; this.ocrIneReversoUrl.set(url); }
     else { this.ocrActaFile = file; this.ocrActaUrl.set(url); this.ocrActaEsPdf.set(esPdf); }
+  }
+
+  private _iniciarChequeoNitidez(): void {
+    this.ocrEncuadreEstado.set('ajustando');
+    // Esperar 1.5 s para que el autofoco se estabilice, luego revisar cada 700 ms
+    setTimeout(() => {
+      this._evaluarNitidez();
+      this.ocrSharpnessTimer = setInterval(() => this._evaluarNitidez(), 700);
+    }, 1500);
+  }
+
+  private _detenerChequeoNitidez(): void {
+    if (this.ocrSharpnessTimer !== null) {
+      clearInterval(this.ocrSharpnessTimer);
+      this.ocrSharpnessTimer = null;
+    }
+  }
+
+  private _evaluarNitidez(): void {
+    const video = this.ocrVideoEl?.nativeElement;
+    if (!video || video.readyState < 2 || video.videoWidth === 0) return;
+    const score = this._laplacianVariance(video);
+    const estado = score > 35 ? 'listo' : score > 8 ? 'ajustando' : 'borroso';
+    this.ngZone.run(() => this.ocrEncuadreEstado.set(estado));
+  }
+
+  /** Varianza del Laplaciano sobre una región central reducida (proxy de nitidez). */
+  private _laplacianVariance(video: HTMLVideoElement): number {
+    const W = 80, H = 60;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    if (!ctx) return 0;
+    const sw = video.videoWidth  * 0.5;
+    const sh = video.videoHeight * 0.5;
+    const sx = (video.videoWidth  - sw) / 2;
+    const sy = (video.videoHeight - sh) / 2;
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
+    const d = ctx.getImageData(0, 0, W, H).data;
+    let sum = 0, sumSq = 0, n = 0;
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const gray  = (i: number) => d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        const g  = gray((y * W + x) * 4);
+        const gt = gray(((y - 1) * W + x) * 4);
+        const gb = gray(((y + 1) * W + x) * 4);
+        const gl = gray((y * W + (x - 1)) * 4);
+        const gr = gray((y * W + (x + 1)) * 4);
+        const lap = gt + gb + gl + gr - 4 * g;
+        sum += lap; sumSq += lap * lap; n++;
+      }
+    }
+    const mean = sum / n;
+    return (sumSq / n) - mean * mean;
   }
 
   async ocrProcesar(): Promise<void> {
