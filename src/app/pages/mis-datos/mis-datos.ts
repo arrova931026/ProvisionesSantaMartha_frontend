@@ -792,18 +792,28 @@ export class MisDatosComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          const msg = err?.error?.error ?? err?.error?.message ?? 'Error al procesar. Intenta de nuevo.';
+          const raw: string = err?.error?.error ?? err?.error?.message ?? '';
+          const isChunkError = raw.includes('dynamically imported module') || raw.includes('Importing a module script failed');
+          const msg = isChunkError
+            ? 'La aplicación se actualizó. Recargando la página…'
+            : (raw || 'Error al procesar. Intenta de nuevo.');
           this.ngZone.run(() => {
             this.ocrErrorMsg.set(msg);
             this.ocrPaso.set(this.ocrIneFrente ? 'ine-frente-preview' : this.ocrActaFile ? 'acta-preview' : 'intro');
+            if (isChunkError) { setTimeout(() => window.location.reload(), 1500); }
           });
         }
       });
     } catch (err) {
       const detalle = err instanceof Error ? err.message : String(err);
+      const isChunkError = detalle.includes('dynamically imported module') || detalle.includes('Importing a module script failed');
+      const msg = isChunkError
+        ? 'La aplicación se actualizó. Recargando la página…'
+        : `Error al preparar los archivos: ${detalle}`;
       this.ngZone.run(() => {
-        this.ocrErrorMsg.set(`Error al preparar los archivos: ${detalle}`);
+        this.ocrErrorMsg.set(msg);
         this.ocrPaso.set(this.ocrIneFrente ? 'ine-frente-preview' : this.ocrActaFile ? 'acta-preview' : 'intro');
+        if (isChunkError) { setTimeout(() => window.location.reload(), 1500); }
       });
     }
   }
