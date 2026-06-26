@@ -2,6 +2,7 @@
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { PersonaService } from '../../core/services/persona.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { BeneficiarioService } from '../../core/services/beneficiario.service';
@@ -27,6 +28,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private readonly personaService = inject(PersonaService);
   private readonly contratoService = inject(ContratoService);
   private readonly beneficiarioService = inject(BeneficiarioService);
+  private readonly http = inject(HttpClient);
   readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -762,52 +764,45 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   async ocrProcesar(): Promise<void> {
     this.ocrPaso.set('procesando');
     this.ocrErrorMsg.set('');
-    this.ocrProgreso.set(0);
+    this.ocrProgreso.set(15);
+    this.ocrProgresoMsg.set('Enviando documentos al servidor...');
+
     try {
-      const { createWorker } = await import('tesseract.js');
-      const datos: Record<string, string> = {};
-      const worker = await createWorker('spa', 1, {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        logger: (m: any) => {
-          const pct = m.status === 'recognizing text' ? Math.round(m.progress * 100) : 0;
+      const formData = new FormData();
+
+      // Si el acta es PDF, conviértela a imagen antes de enviar
+      if (this.ocrActaFile && this.ocrActaEsPdf()) {
+        const img = await this._pdfToImage(this.ocrActaFile);
+        formData.append('acta', img, 'acta.jpg');
+      } else if (this.ocrActaFile) {
+        formData.append('acta', this.ocrActaFile);
+      }
+      if (this.ocrIneFrente)  formData.append('ineFrente',  this.ocrIneFrente);
+      if (this.ocrIneReverso) formData.append('ineReverso', this.ocrIneReverso);
+
+      this.ngZone.run(() => { this.ocrProgreso.set(40); this.ocrProgresoMsg.set('Analizando con IA...'); });
+
+      this.http.post<Record<string, string>>(`${this.apiBase}/ocr/ine`, formData).subscribe({
+        next: (datos) => {
           this.ngZone.run(() => {
-            if (m.status === 'loading tesseract core')    this.ocrProgresoMsg.set('Cargando motor OCR...');
-            else if (m.status === 'initializing tesseract') this.ocrProgresoMsg.set('Inicializando OCR...');
-            else if (m.status === 'loading language traineddata') this.ocrProgresoMsg.set('Cargando diccionario de idioma...');
-            else if (m.status === 'recognizing text') {
-              this.ocrProgresoMsg.set('Reconociendo texto...');
-              this.ocrProgreso.set(pct);
-            }
+            this.ocrProgreso.set(100);
+            this.ocrProgresoMsg.set('');
+            this.ocrDatos.set(datos);
+            this.ocrPaso.set('resultado');
+          });
+        },
+        error: (err) => {
+          const msg = err?.error?.error ?? err?.error?.message ?? 'Error al procesar. Intenta de nuevo.';
+          this.ngZone.run(() => {
+            this.ocrErrorMsg.set(msg);
+            this.ocrPaso.set(this.ocrIneFrente ? 'ine-frente-preview' : this.ocrActaFile ? 'acta-preview' : 'intro');
           });
         }
       });
-
-      if (this.ocrIneFrente) {
-        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo INE (frente)...'); this.ocrProgreso.set(0); });
-        const { data: { text } } = await worker.recognize(this.ocrIneFrente);
-        Object.assign(datos, this._parseIne(text));
-      }
-      if (this.ocrIneReverso) {
-        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo INE (reverso)...'); this.ocrProgreso.set(0); });
-        const { data: { text } } = await worker.recognize(this.ocrIneReverso);
-        const parsed = this._parseIne(text);
-        Object.entries(parsed).forEach(([k, v]) => { if (!datos[k]) datos[k] = v; });
-      }
-      if (this.ocrActaFile) {
-        this.ngZone.run(() => { this.ocrProgresoMsg.set('Leyendo Acta de Situación Fiscal...'); this.ocrProgreso.set(0); });
-        let src: File | Blob = this.ocrActaFile;
-        if (this.ocrActaEsPdf()) src = await this._pdfToImage(this.ocrActaFile);
-        const { data: { text } } = await worker.recognize(src as File);
-        const parsed = this._parseActaFiscal(text);
-        Object.entries(parsed).forEach(([k, v]) => { if (!datos[k]) datos[k] = v; });
-      }
-
-      await worker.terminate();
-      this.ngZone.run(() => { this.ocrProgresoMsg.set(''); this.ocrDatos.set(datos); this.ocrPaso.set('resultado'); });
     } catch (err) {
       const detalle = err instanceof Error ? err.message : String(err);
       this.ngZone.run(() => {
-        this.ocrErrorMsg.set(`Error al procesar: ${detalle}`);
+        this.ocrErrorMsg.set(`Error al preparar los archivos: ${detalle}`);
         this.ocrPaso.set(this.ocrIneFrente ? 'ine-frente-preview' : this.ocrActaFile ? 'acta-preview' : 'intro');
       });
     }
