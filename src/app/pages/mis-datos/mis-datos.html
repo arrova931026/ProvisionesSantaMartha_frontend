@@ -193,6 +193,9 @@
     animation:pulsar-verde 1.3s ease-in-out infinite;
   }
   .ocr-camara-guide.borroso { border:2px solid rgba(231,76,60,0.85); }
+  .ocr-camara-guide.hidden { opacity:0; transition:opacity 0.3s; }
+  /* Canvas overlay para detecci\u00f3n de contorno */
+  .ocr-overlay-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   @keyframes pulsar-verde {
     0%,100% { box-shadow:inset 0 0 4px 0 rgba(39,174,96,0); }
     50%      { box-shadow:inset 0 0 14px 4px rgba(39,174,96,0.28); }
@@ -971,14 +974,13 @@
           @if (ocrIneFrenteUrl()) {
             <img [src]="ocrIneFrenteUrl()!" alt="INE Frente" class="ocr-preview-img" style="margin-bottom:10px;"/>
           }
-          <label class="foto-opcion-btn">
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-frente')">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt">
               <strong>Tomar foto</strong>
               <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
             </div>
-            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarImagen($event, 'ine-frente')"/>
-          </label>
+          </button>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
             <div class="foto-opcion-txt">
@@ -999,7 +1001,9 @@
           <span class="ocr-badge">INE Frente — Cámara</span>
           <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
+            <canvas #ocrOverlayEl class="ocr-overlay-canvas"></canvas>
             <div class="ocr-camara-guide"
+              [class.hidden]="ocrContornoDetectado()"
               [class.listo]="ocrEncuadreEstado() === 'listo'"
               [class.borroso]="ocrEncuadreEstado() === 'borroso'"></div>
             <div class="ocr-camara-status"
@@ -1039,14 +1043,13 @@
           @if (ocrIneReversoUrl()) {
             <img [src]="ocrIneReversoUrl()!" alt="INE Reverso" class="ocr-preview-img" style="margin-bottom:10px;"/>
           }
-          <label class="foto-opcion-btn">
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('ine-reverso')">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt">
               <strong>Tomar foto</strong>
               <span>{{ isMobile ? 'Cámara trasera del dispositivo' : 'Cámara del equipo' }}</span>
             </div>
-            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarImagen($event, 'ine-reverso')"/>
-          </label>
+          </button>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-image"></i></div>
             <div class="foto-opcion-txt">
@@ -1065,7 +1068,9 @@
           <span class="ocr-badge">INE Reverso — Cámara</span>
           <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
+            <canvas #ocrOverlayEl class="ocr-overlay-canvas"></canvas>
             <div class="ocr-camara-guide"
+              [class.hidden]="ocrContornoDetectado()"
               [class.listo]="ocrEncuadreEstado() === 'listo'"
               [class.borroso]="ocrEncuadreEstado() === 'borroso'"></div>
             <div class="ocr-camara-status"
@@ -1102,11 +1107,10 @@
         @if (ocrPaso() === 'acta') {
           <span class="ocr-badge">Paso 2 — Acta de Situación Fiscal</span>
           <p class="ocr-step-desc">Selecciona o fotografía tu <strong>constancia del SAT</strong>. Acepta imagen o PDF.</p>
-          <label class="foto-opcion-btn">
+          <button class="foto-opcion-btn" (click)="ocrIniciarCamara('acta')">
             <div class="foto-opcion-icon"><i class="bi bi-camera"></i></div>
             <div class="foto-opcion-txt"><strong>Tomar foto</strong><span>Fotografía el documento impreso o en pantalla</span></div>
-            <input type="file" hidden accept="image/*" capture="environment" (change)="ocrSeleccionarActa($event)"/>
-          </label>
+          </button>
           <label class="foto-opcion-btn">
             <div class="foto-opcion-icon"><i class="bi bi-file-earmark-image"></i></div>
             <div class="foto-opcion-txt"><strong>Seleccionar imagen</strong><span>JPG, PNG</span></div>
@@ -1129,7 +1133,9 @@
           <span class="ocr-badge">Acta Fiscal — Cámara</span>
           <div class="ocr-camara-wrap" (click)="ocrTapEnfocar()" title="Toca para enfocar">
             <video #ocrVideoEl autoplay playsinline muted></video>
+            <canvas #ocrOverlayEl class="ocr-overlay-canvas"></canvas>
             <div class="ocr-camara-guide"
+              [class.hidden]="ocrContornoDetectado()"
               [class.listo]="ocrEncuadreEstado() === 'listo'"
               [class.borroso]="ocrEncuadreEstado() === 'borroso'"></div>
             <div class="ocr-camara-status"

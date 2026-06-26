@@ -34,6 +34,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   @ViewChild('canvasEl') canvasEl?: ElementRef<HTMLCanvasElement>;
   @ViewChild('ocrVideoEl') ocrVideoEl?: ElementRef<HTMLVideoElement>;
   @ViewChild('ocrCanvasEl') ocrCanvasEl?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('ocrOverlayEl') ocrOverlayEl?: ElementRef<HTMLCanvasElement>;
 
   readonly persona = signal<PersonaResponse | null>(null);
   readonly contrato = signal<ContratoResponse | null>(null);
@@ -77,6 +78,11 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private ocrActaFile: File | null = null;
   private ocrSharpnessTimer: ReturnType<typeof setInterval> | null = null;
   private ocrRefocusTimer:   ReturnType<typeof setInterval> | null = null;
+  // ── Detección de contorno ──
+  private ocrDetectionTimer: ReturnType<typeof setInterval> | null = null;
+  private ocrRectActual: { x: number; y: number; w: number; h: number } | null = null;
+  private ocrRectEstable = 0;
+  readonly ocrContornoDetectado = signal(false);
 
   readonly form = this.fb.group({
     nombre: ['', Validators.required],
@@ -285,8 +291,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
           if (video) {
             video.srcObject = stream;
             video.onloadedmetadata = () => this._iniciarChequeoNitidez();
-            // onplaying = frames reales llegando: momento seguro para aplicar foco
-            video.onplaying = () => this._activarAutofoco(stream);
+            // onplaying = frames reales llegando: momento seguro para aplicar foco y detección
+            video.onplaying = () => { this._activarAutofoco(stream); this._iniciarLoopDeteccion(); };
           }
         }, 150);
       })
@@ -358,6 +364,7 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   }
   ocrDetenerCamara(): void {
     this._detenerChequeoNitidez();
+    this._pararLoopDeteccion();
     if (this.ocrStream) {
       this.ocrStream.getTracks().forEach(t => t.stop());
       this.ocrStream = null;
@@ -392,35 +399,37 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     const canvas = this.ocrCanvasEl?.nativeElement;
     if (!video || !canvas) return;
     this._detenerChequeoNitidez();
+    this._pararLoopDeteccion();
 
     const streamW = video.videoWidth;
     const streamH = video.videoHeight;
     if (!streamW || !streamH) return;
 
-    // ── Calcular la región de la guía en coordenadas del stream ──
-    // La guía tiene CSS: width=92%, aspect-ratio=85.6/54, max-height=92%
     const RATIO = 85.6 / 54; // tarjeta ID-1 (INE)
-    const displayW = video.clientWidth  || video.offsetWidth;
-    const displayH = video.clientHeight || video.offsetHeight;
+    let srcX: number, srcY: number, srcW: number, srcH: number;
 
-    let gW = displayW * 0.92;
-    let gH = gW / RATIO;
-    if (gH > displayH * 0.92) { gH = displayH * 0.92; gW = gH * RATIO; }
-    const gLeft = (displayW - gW) / 2;
-    const gTop  = (displayH - gH) / 2;
+    if (this.ocrRectActual) {
+      // ── Usar el rectángulo detectado por visión ─────────────────────────
+      ({ x: srcX, y: srcY, w: srcW, h: srcH } = this.ocrRectActual);
+    } else {
+      // ── Fallback: recortar la región de la guía CSS ─────────────────────
+      const displayW = video.clientWidth  || video.offsetWidth;
+      const displayH = video.clientHeight || video.offsetHeight;
+      let gW = displayW * 0.92;
+      let gH = gW / RATIO;
+      if (gH > displayH * 0.92) { gH = displayH * 0.92; gW = gH * RATIO; }
+      const gLeft = (displayW - gW) / 2;
+      const gTop  = (displayH - gH) / 2;
+      const s     = Math.max(displayW / streamW, displayH / streamH);
+      const offX  = (streamW - displayW / s) / 2;
+      const offY  = (streamH - displayH / s) / 2;
+      srcX = offX + gLeft / s;  srcY = offY + gTop  / s;
+      srcW = gW / s;             srcH = gH / s;
+    }
 
-    // Transformación inversa de object-fit:cover → coordenadas del stream
-    const s    = Math.max(displayW / streamW, displayH / streamH);
-    const offX = (streamW - displayW / s) / 2;
-    const offY = (streamH - displayH / s) / 2;
-    const srcX = offX + gLeft / s;
-    const srcY = offY + gTop  / s;
-    const srcW = gW / s;
-    const srcH = gH / s;
-
-    // Salida a resolución fija apropiada para OCR
+    // Salida a 960 px de ancho (suficiente para OCR, sin exceso de memoria)
     const outW = 960;
-    const outH = Math.round(outW / RATIO);
+    const outH = Math.round(outW / (srcW / srcH));
     canvas.width  = outW;
     canvas.height = outH;
     canvas.getContext('2d')!.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
@@ -516,6 +525,175 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     if (this.ocrRefocusTimer !== null) {
       clearInterval(this.ocrRefocusTimer);
       this.ocrRefocusTimer = null;
+    }
+  }
+
+  // ── Detección de contorno del documento ──────────────────────────────────
+
+  /** Inicia el loop de detección de contorno cada 200 ms. */
+  private _iniciarLoopDeteccion(): void {
+    if (this.ocrDetectionTimer !== null) return;
+    this.ocrRectActual = null;
+    this.ocrRectEstable = 0;
+    this.ocrContornoDetectado.set(false);
+    this.ocrDetectionTimer = setInterval(() => this._procesarFrameDeteccion(), 200);
+  }
+
+  /** Para el loop de detección y limpia el overlay. */
+  private _pararLoopDeteccion(): void {
+    if (this.ocrDetectionTimer !== null) {
+      clearInterval(this.ocrDetectionTimer);
+      this.ocrDetectionTimer = null;
+    }
+    this.ocrRectActual = null;
+    this.ocrRectEstable = 0;
+    this.ngZone.run(() => this.ocrContornoDetectado.set(false));
+    const overlay = this.ocrOverlayEl?.nativeElement;
+    if (overlay) { const ctx = overlay.getContext('2d'); ctx?.clearRect(0, 0, overlay.width, overlay.height); }
+  }
+
+  /**
+   * Procesa un frame del video:
+   * 1. Detecta un rectángulo con proporciones de tarjeta (ratio ~1.1‑2.2).
+   * 2. Requiere ≥3 frames estables antes de marcar como "detectado".
+   * 3. Dibuja el contorno en el canvas overlay.
+   */
+  private _procesarFrameDeteccion(): void {
+    const video = this.ocrVideoEl?.nativeElement;
+    const overlay = this.ocrOverlayEl?.nativeElement;
+    if (!video || video.readyState < 2 || video.videoWidth === 0) return;
+
+    const rect = this._encontrarDocumentoRect(video);
+
+    if (rect) {
+      this.ocrRectEstable = Math.min(this.ocrRectEstable + 1, 5);
+      this.ocrRectActual  = rect;
+    } else {
+      this.ocrRectEstable = Math.max(this.ocrRectEstable - 1, 0);
+      if (this.ocrRectEstable === 0) this.ocrRectActual = null;
+    }
+
+    const detectado = this.ocrRectEstable >= 3;
+    this.ngZone.run(() => {
+      this.ocrContornoDetectado.set(detectado);
+      // Cuando hay contorno estable, actualiza el estado del encuadre
+      if (detectado) this.ocrEncuadreEstado.set('listo');
+    });
+
+    if (overlay) this._dibujarOverlay(overlay, video, this.ocrRectActual, detectado);
+  }
+
+  /**
+   * Detecta el rectángulo del documento usando proyecciones de gradiente Sobel.
+   * Trabaja a 1/4 de resolución para rendimiento en móvil.
+   */
+  private _encontrarDocumentoRect(video: HTMLVideoElement): { x: number; y: number; w: number; h: number } | null {
+    const W = 320;
+    const H = Math.round(W * video.videoHeight / video.videoWidth);
+    if (H <= 0) return null;
+
+    const cvs = document.createElement('canvas');
+    cvs.width = W; cvs.height = H;
+    cvs.getContext('2d')!.drawImage(video, 0, 0, W, H);
+    const data = cvs.getContext('2d')!.getImageData(0, 0, W, H).data;
+
+    // Escala de grises
+    const g = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++)
+      g[i] = (data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114) | 0;
+
+    // Gradiente Sobel → mapa de bordes binario
+    const e = new Uint8Array(W * H);
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const gx = -g[(y-1)*W+(x-1)] + g[(y-1)*W+(x+1)]
+                   - 2*g[y*W+(x-1)] + 2*g[y*W+(x+1)]
+                   - g[(y+1)*W+(x-1)] + g[(y+1)*W+(x+1)];
+        const gy = -g[(y-1)*W+(x-1)] - 2*g[(y-1)*W+x] - g[(y-1)*W+(x+1)]
+                   + g[(y+1)*W+(x-1)] + 2*g[(y+1)*W+x] + g[(y+1)*W+(x+1)];
+        e[y*W+x] = (gx*gx + gy*gy) > 900 ? 1 : 0; // umbral 30²
+      }
+    }
+
+    // Proyección horizontal y vertical
+    const hProj = new Int32Array(H);
+    const vProj = new Int32Array(W);
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++)
+        if (e[y*W+x]) { hProj[y]++; vProj[x]++; }
+
+    // Busca bordes dominantes en los cuatro lados (umbral = 20% del lado)
+    const hThr = W * 0.20, vThr = H * 0.20;
+    let top = -1, bottom = -1, left = -1, right = -1;
+    for (let y = 2;   y < H * 0.45; y++)   if (hProj[y] > hThr) { top    = y; break; }
+    for (let y = H-2; y > H * 0.55; y--)   if (hProj[y] > hThr) { bottom = y; break; }
+    for (let x = 2;   x < W * 0.45; x++)   if (vProj[x] > vThr) { left   = x; break; }
+    for (let x = W-2; x > W * 0.55; x--)   if (vProj[x] > vThr) { right  = x; break; }
+
+    if (top < 0 || bottom < 0 || left < 0 || right < 0) return null;
+
+    const rw = right - left, rh = bottom - top;
+    if (rw <= 0 || rh <= 0) return null;
+
+    // Ratio tarjeta ID-1: ~1.58; admitimos 1.05–2.20 para rotaciones leves
+    const ratio = rw / rh;
+    if (ratio < 1.05 || ratio > 2.20) return null;
+
+    // El documento debe ocupar ≥18% del área del frame
+    if (rw * rh < W * H * 0.18) return null;
+
+    // Devuelve en coordenadas del video original
+    const sx = video.videoWidth / W, sy = video.videoHeight / H;
+    return { x: left * sx, y: top * sy, w: rw * sx, h: rh * sy };
+  }
+
+  /** Dibuja el contorno detectado en el canvas overlay. */
+  private _dibujarOverlay(
+    overlay: HTMLCanvasElement,
+    video: HTMLVideoElement,
+    rect: { x: number; y: number; w: number; h: number } | null,
+    detectado: boolean
+  ): void {
+    const dw = overlay.clientWidth, dh = overlay.clientHeight;
+    if (!dw || !dh) return;
+    overlay.width = dw; overlay.height = dh;
+    const ctx = overlay.getContext('2d')!;
+    ctx.clearRect(0, 0, dw, dh);
+    if (!rect) return;
+
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return;
+
+    // Transforma coordenadas de video → coordenadas de display (object-fit:cover)
+    const scale = Math.max(dw / vw, dh / vh);
+    const offX  = (dw - vw * scale) / 2;
+    const offY  = (dh - vh * scale) / 2;
+
+    const dx = rect.x * scale + offX;
+    const dy = rect.y * scale + offY;
+    const dW = rect.w * scale;
+    const dH = rect.h * scale;
+
+    const color = detectado ? 'rgba(39,174,96,0.95)' : 'rgba(241,196,15,0.90)';
+    const cs = 20; // tamaño de la L de esquina
+
+    // Rectángulo completo (semitransparente)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash(detectado ? [] : [7, 5]);
+    ctx.strokeRect(dx, dy, dW, dH);
+
+    // Marcadores de esquina (líneas L sólidas)
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([]);
+    const corners: [number, number, number, number, number, number][] = [
+      [dx,      dy,      dx + cs, dy,      dx,      dy + cs     ],
+      [dx + dW, dy,      dx+dW-cs,dy,      dx + dW, dy + cs     ],
+      [dx,      dy + dH, dx + cs, dy + dH, dx,      dy + dH - cs],
+      [dx + dW, dy + dH, dx+dW-cs,dy + dH, dx + dW, dy + dH - cs],
+    ];
+    for (const [x1, y1, x2, y2, x3, y3] of corners) {
+      ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x1, y1); ctx.lineTo(x3, y3); ctx.stroke();
     }
   }
 
