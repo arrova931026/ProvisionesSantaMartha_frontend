@@ -47,11 +47,24 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   readonly errorMsg = signal('');
   readonly successMsg = signal('');
 
+  readonly camposContratoFaltantes = computed(() => {
+    const p = this.persona();
+    if (!p || this.contrato()) return [];
+    const f: string[] = [];
+    if (!p.curp?.trim())     f.push('CURP');
+    if (!p.rfc?.trim())      f.push('RFC');
+    if (!p.fechaNacimiento)  f.push('fecha de nacimiento');
+    if (!p.calle?.trim())    f.push('domicilio');
+    if (!p.telefono?.trim()) f.push('teléfono');
+    return f;
+  });
+
   /** true si no tiene contrato y tiene edad válida (< 65 años) */
   readonly puedeCrearContrato = computed(() => {
     if (this.contrato()) return false;
     const p = this.persona();
     if (!p?.fechaNacimiento) return false;
+    if (this.camposContratoFaltantes().length > 0) return false;
     const born = new Date(p.fechaNacimiento);
     const now = new Date();
     let age = now.getFullYear() - born.getFullYear();

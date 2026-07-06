@@ -165,6 +165,20 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
           this.errorElegibilidad.set('Su fecha de nacimiento no está registrada. Complétela en Mis Datos antes de continuar.');
         }
 
+        // Verificar campos obligatorios para crear contrato
+        if (!this.errorElegibilidad()) {
+          const faltantes: string[] = [];
+          if (!persona.curp?.trim())     faltantes.push('CURP');
+          if (!persona.rfc?.trim())      faltantes.push('RFC');
+          if (!persona.calle?.trim())    faltantes.push('domicilio');
+          if (!persona.telefono?.trim()) faltantes.push('teléfono');
+          if (faltantes.length > 0) {
+            this.errorElegibilidad.set(
+              `Complete los siguientes datos en "Mis Datos" antes de continuar: ${faltantes.join(', ')}.`
+            );
+          }
+        }
+
         // Marcar documentos ya subidos
         const faltantes = new Set(pendientes.faltantes ?? []);
         this.docs.update(list =>
