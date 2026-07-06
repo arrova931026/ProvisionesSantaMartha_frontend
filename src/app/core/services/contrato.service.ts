@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { ContratoResponse, ContratoRequest } from '../models/contrato.model';
+import { Observable } from 'rxjs';
+import { ContratoResponse, ContratoRequest, BeneficiarioRequest } from '../models/contrato.model';
+import { BeneficiarioResponse } from '../models/beneficiario.model';
 import { PageResponse } from '../models/persona.model';
 import { environment } from '../../../environments/environment';
 
@@ -23,8 +25,28 @@ export class ContratoService {
     return this.http.get<ContratoResponse[]>(`${this.base}/persona/${personaId}`);
   }
 
-  crear(data: ContratoRequest) {
+  listarBeneficiarios(contratoId: number): Observable<BeneficiarioResponse[]> {
+    return this.http.get<BeneficiarioResponse[]>(`${this.base}/${contratoId}/beneficiarios`);
+  }
+
+  crear(data: ContratoRequest): Observable<ContratoResponse> {
     return this.http.post<ContratoResponse>(this.base, data);
+  }
+
+  agregarBeneficiario(contratoId: number, data: BeneficiarioRequest): Observable<BeneficiarioResponse> {
+    return this.http.post<BeneficiarioResponse>(`${this.base}/${contratoId}/beneficiarios`, data);
+  }
+
+  descargarPdf(contratoId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/${contratoId}/pdf`, { responseType: 'blob' });
+  }
+
+  enviarPdf(contratoId: number): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.base}/${contratoId}/enviar-pdf`, null);
+  }
+
+  verificarElegibilidad(personaId: number): Observable<{ elegible: string }> {
+    return this.http.get<{ elegible: string }>(`${this.base}/elegibilidad/${personaId}`);
   }
 
   actualizarEstado(id: number, clave: string) {

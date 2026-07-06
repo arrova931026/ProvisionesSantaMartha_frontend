@@ -12,3 +12,6 @@ export interface Beneficiario {
   telefono?: string;
   correo?: string;
 }
+
+// Alias used by ContratoService and plan-funerario
+export type BeneficiarioResponse = Beneficiario;

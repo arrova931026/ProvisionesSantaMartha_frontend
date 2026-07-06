@@ -26,18 +26,18 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/portal/cobros" routerLinkActive="active" (click)="cerrarMenu()">
-            <i class="bi bi-credit-card me-1"></i>Cobros
-          </a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" routerLink="/portal/plan-funerario" routerLinkActive="active" (click)="cerrarMenu()">
             <i class="bi bi-file-earmark-text me-1"></i>Mi plan funerario
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/portal/informacion" routerLinkActive="active" (click)="cerrarMenu()">
-            <i class="bi bi-info-circle me-1"></i>Información
+          <a class="nav-link" routerLink="/portal/cobros" routerLinkActive="active" (click)="cerrarMenu()">
+            <i class="bi bi-credit-card me-1"></i>Cobros
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/portal/beneficiarios" routerLinkActive="active" (click)="cerrarMenu()">
+            <i class="bi bi-people me-1"></i>Beneficiarios
           </a>
         </li>
         <li class="nav-item">
@@ -46,8 +46,8 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/portal/beneficiarios" routerLinkActive="active" (click)="cerrarMenu()">
-            <i class="bi bi-people me-1"></i>Beneficiarios
+          <a class="nav-link" routerLink="/portal/informacion" routerLinkActive="active" (click)="cerrarMenu()">
+            <i class="bi bi-info-circle me-1"></i>Información
           </a>
         </li>
         @if (auth.isAdmin()) {

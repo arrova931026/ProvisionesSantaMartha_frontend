@@ -1,4 +1,4 @@
-﻿import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -46,6 +46,41 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   readonly saving = signal(false);
   readonly errorMsg = signal('');
   readonly successMsg = signal('');
+
+  /** true si no tiene contrato y tiene edad válida (< 65 años) */
+  readonly puedeCrearContrato = computed(() => {
+    if (this.contrato()) return false;
+    const p = this.persona();
+    if (!p?.fechaNacimiento) return false;
+    const born = new Date(p.fechaNacimiento);
+    const now = new Date();
+    let age = now.getFullYear() - born.getFullYear();
+    const m = now.getMonth() - born.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < born.getDate())) age--;
+    return age < 65;
+  });
+
+  /** true si el contrato activo aún admite más beneficiarios */
+  readonly puedeAgregarBeneficiario = computed(() => {
+    const c = this.contrato();
+    if (!c) return false;
+    const max = c.planNumeroBeneficiarios ?? 0;
+    if (max === 0) return true; // sin límite conocido → permitir
+    return this.beneficiarios().length < max;
+  });
+
+  readonly mensajeEdadNoElegible = computed(() => {
+    const p = this.persona();
+    if (!p?.fechaNacimiento || this.contrato()) return '';
+    const born = new Date(p.fechaNacimiento);
+    const now = new Date();
+    let age = now.getFullYear() - born.getFullYear();
+    const m = now.getMonth() - born.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < born.getDate())) age--;
+    return age >= 65
+      ? 'Lo sentimos, ha superado la edad máxima permitida (64 años 11 meses) para contratar un plan funerario.'
+      : '';
+  });
 
   // ── Foto de perfil ──
   readonly fotoUrl = signal<string | null>(null);
@@ -429,8 +464,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       srcW = gW / s;             srcH = gH / s;
     }
 
-    // Salida a 960 px de ancho (suficiente para OCR, sin exceso de memoria)
-    const outW = 960;
+    // Salida a 1280 px de ancho — mejor lectura de texto en Gemini
+    const outW = 1280;
     const outH = Math.round(outW / (srcW / srcH));
     canvas.width  = outW;
     canvas.height = outH;
@@ -705,7 +740,12 @@ export class MisDatosComponent implements OnInit, OnDestroy {
       nitidez < 7              ? 'borroso'  :  // imagen desenfocada
       nitidez >= 22 && contenido >= 0.30 ? 'listo' :  // enfocado + documento detectado
       'ajustando';                               // enfocado pero sin documento
+    const anterior = this.ocrEncuadreEstado();
     this.ngZone.run(() => this.ocrEncuadreEstado.set(estado));
+    // Si la imagen cae a "borroso", pedir re-enfoque inmediato
+    if (estado === 'borroso' && anterior !== 'borroso' && this.ocrStream) {
+      this.ocrTapEnfocar();
+    }
   }
 
   /**

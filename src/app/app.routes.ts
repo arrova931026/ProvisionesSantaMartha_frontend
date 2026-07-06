@@ -23,6 +23,7 @@ export const routes: Routes = [
       { path: 'notificaciones', loadComponent: () => import('./pages/notificaciones/notificaciones').then(m => m.NotificacionesComponent) },
       { path: 'beneficiarios', loadComponent: () => import('./pages/beneficiarios/beneficiarios').then(m => m.BeneficiariosComponent) },
       { path: 'cambiar-contrasena', loadComponent: () => import('./pages/cambiar-contrasena/cambiar-contrasena').then(m => m.CambiarContrasenaComponent) },
+      { path: 'crear-contrato', loadComponent: () => import('./pages/crear-contrato/crear-contrato').then(m => m.CrearContratoComponent) },
       { path: 'admin', loadComponent: () => import('./pages/panel-admin/panel-admin').then(m => m.PanelAdminComponent), canActivate: [adminGuard] }
     ]
   },

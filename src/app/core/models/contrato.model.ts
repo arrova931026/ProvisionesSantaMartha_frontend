@@ -5,6 +5,7 @@ export interface ContratoResponse {
   titularNombre?: string;
   planId?: number;
   planNombre?: string;
+  planNumeroBeneficiarios?: number;
   sucursalId?: number;
   estadoClave?: string;
   estadoNombre?: string;
@@ -19,7 +20,22 @@ export interface ContratoResponse {
 
 export interface ContratoRequest {
   personaId: number;
-  planFunerarioId: number;
-  periodicidad: string;
+  planId: number;
   fechaInicio: string;
+  precioContratado: number;
+  mensualidadPactada: number;
+  sucursalId?: number;
+  empleadoVendedorId?: number;
+  notas?: string;
+}
+
+export interface BeneficiarioRequest {
+  nombre: string;
+  apPaterno: string;
+  apMaterno?: string;
+  fechaNacimiento?: string;
+  telefono?: string;
+  correo?: string;
+  parentescoId: number;
+  porcentajeCobertura: number;
 }

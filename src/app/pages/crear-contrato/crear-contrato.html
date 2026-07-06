@@ -1,0 +1,1044 @@
+<div class="wizard-page">
+
+  <!-- HEADER -->
+  <div class="wizard-header">
+    <a routerLink="/portal/mis-datos" class="wizard-back">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div class="wizard-title">
+      <h1>Crear Contrato Funerario</h1>
+      <p class="wizard-subtitle">Complete los pasos para contratar su plan funerario</p>
+    </div>
+  </div>
+
+  <!-- STEPS INDICATOR -->
+  <div class="wizard-steps-bar">
+    <div class="wsb-step" [class.active]="paso() >= 1" [class.done]="paso() > 1">
+      <div class="wsb-circle">
+        @if (paso() > 1) { <i class="bi bi-check-lg"></i> } @else { 1 }
+      </div>
+      <span>Documentos</span>
+    </div>
+    <div class="wsb-line" [class.done]="paso() > 1"></div>
+    <div class="wsb-step" [class.active]="paso() >= 2" [class.done]="paso() > 2">
+      <div class="wsb-circle">
+        @if (paso() > 2) { <i class="bi bi-check-lg"></i> } @else { 2 }
+      </div>
+      <span>Consentimiento</span>
+    </div>
+    <div class="wsb-line" [class.done]="paso() > 2"></div>
+    <div class="wsb-step" [class.active]="paso() >= 3" [class.done]="paso() > 3">
+      <div class="wsb-circle">
+        @if (paso() > 3) { <i class="bi bi-check-lg"></i> } @else { 3 }
+      </div>
+      <span>Plan</span>
+    </div>
+    <div class="wsb-line" [class.done]="paso() > 3"></div>
+    <div class="wsb-step" [class.active]="paso() >= 4">
+      <div class="wsb-circle">4</div>
+      <span>Beneficiarios</span>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="wizard-loading">
+      <div class="spinner-border text-primary"></div>
+      <p>Cargando información...</p>
+    </div>
+  } @else if (errorElegibilidad()) {
+    <div class="wizard-ineligible">
+      <i class="bi bi-x-circle-fill"></i>
+      <h2>No elegible</h2>
+      <p>{{ errorElegibilidad() }}</p>
+      <a routerLink="/portal/mis-datos" class="btn-volver">Volver a Mis Datos</a>
+    </div>
+  } @else if (successMsg()) {
+    <div class="wizard-success">
+      <i class="bi bi-check-circle-fill"></i>
+      <h2>¡Contrato creado!</h2>
+      <p>{{ successMsg() }}</p>
+      <p class="redir-note">Redirigiendo a Mi Plan Funerario...</p>
+    </div>
+  } @else {
+
+    <!-- ERROR GLOBAL -->
+    @if (errorMsg()) {
+      <div class="wizard-alert danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMsg() }}
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         PASO 1 – DOCUMENTOS
+    ════════════════════════════════════════════════════════════ -->
+    @if (paso() === 1) {
+      <div class="wizard-card">
+        <div class="wc-header">
+          <i class="bi bi-folder2-open wc-icon"></i>
+          <div>
+            <h2>Documentos requeridos</h2>
+            <p>Cargue cada uno de los documentos para poder continuar.</p>
+          </div>
+        </div>
+
+        <div class="docs-list">
+          @for (doc of docs(); track doc.clave) {
+            <div class="doc-item" [class.subido]="doc.subido">
+              <div class="doc-icon">
+                @if (doc.subido) {
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                } @else {
+                  <i class="bi bi-file-earmark-text text-muted"></i>
+                }
+              </div>
+              <div class="doc-info">
+                <span class="doc-nombre">{{ doc.etiqueta }}</span>
+                <span class="doc-estado">{{ doc.subido ? 'Cargado ✓' : 'Pendiente' }}</span>
+              </div>
+              <button class="btn-cargar" (click)="abrirModalDoc(doc.clave, doc.etiqueta)">
+                {{ doc.subido ? 'Reemplazar' : 'Cargar Documento' }}
+              </button>
+              @if (doc.subido) {
+                <button class="btn-eliminar-doc" title="Eliminar documento"
+                        (click)="pedirConfirmacionEliminar(doc.clave, doc.etiqueta)">
+                  <i class="bi bi-trash"></i>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        @if (!todosDocsSubidos()) {
+          <p class="docs-nota">
+            <i class="bi bi-info-circle me-1"></i>
+            Faltan {{ docs().filter(d => !d.subido).length }} documento(s) por cargar.
+          </p>
+        }
+
+        <div class="wizard-actions">
+          <a routerLink="/portal/mis-datos" class="btn-secundario">Cancelar</a>
+          <button class="btn-primario" (click)="irPaso2()" [disabled]="!todosDocsSubidos()">
+            Continuar <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         PASO 2 – VIDEO DE CONSENTIMIENTO
+    ════════════════════════════════════════════════════════════ -->
+    @if (paso() === 2) {
+      <div class="wizard-card">
+        <div class="wc-header">
+          <i class="bi bi-camera-video wc-icon"></i>
+          <div>
+            <h2>Video de Consentimiento</h2>
+            <p>Grabe un video leyendo la leyenda en voz alta. Máximo 20 segundos.</p>
+          </div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="leyenda-box">
+          <p class="leyenda-label"><i class="bi bi-mic me-1"></i>Lea la siguiente leyenda en voz alta:</p>
+          <p class="leyenda-texto">“{{ leyendaConsentimiento() }}”</p>
+        </div>
+
+        <!-- Vista de cámara / reproducción -->
+        <div class="video-wrap">
+          <video id="videoConsentimiento" autoplay playsinline class="video-preview"></video>
+          @if (videoEstado() === 'grabando') {
+            <div class="video-countdown">{{ segundosRestantes() }}</div>
+            <div class="video-rec-indicator"><span class="rec-dot"></span>REC</div>
+          }
+        </div>
+
+        @if (errorVideo()) {
+          <div class="wizard-alert danger" style="margin-top:12px;">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ errorVideo() }}
+          </div>
+        }
+
+        <!-- Controles de grabación -->
+        <div class="video-controls">
+          @if (videoEstado() === 'listo') {
+            <button class="btn-grabar" (click)="iniciarGrabacion()">
+              <i class="bi bi-record-circle me-2"></i>Iniciar Grabación
+            </button>
+          }
+          @if (videoEstado() === 'grabando') {
+            <div class="grabando-row">
+              <button class="btn-detener" (click)="detenerGrabacion()">
+                <i class="bi bi-stop-circle me-2"></i>Detener
+              </button>
+              <span class="grabando-info">
+                <span class="rec-dot-inline"></span>Grabando — {{ segundosRestantes() }}s restantes
+              </span>
+            </div>
+          }
+          @if (videoEstado() === 'detenido') {
+            <div class="video-detenido-btns">
+              <button class="btn-secundario" (click)="regrabarVideo()">
+                <i class="bi bi-arrow-repeat me-1"></i>Volver a grabar
+              </button>
+              @if (!videoSubido()) {
+                <button class="btn-enviar-video" (click)="subirVideoConsentimiento()" [disabled]="subiendoVideo()">
+                  @if (subiendoVideo()) {
+                    <span class="spinner-border spinner-border-sm me-2"></span>Enviando...
+                  } @else {
+                    <i class="bi bi-cloud-upload me-1"></i>Enviar Video
+                  }
+                </button>
+              } @else {
+                <span class="video-ok"><i class="bi bi-check-circle-fill me-2"></i>Video guardado</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="wizard-actions">
+          <button class="btn-secundario" (click)="volverDesdeVideo()">
+            <i class="bi bi-arrow-left me-1"></i>Atrás
+          </button>
+          <button class="btn-primario" (click)="irPaso3()" [disabled]="!videoSubido()">
+            Continuar <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         PASO 3 – PLAN
+    ════════════════════════════════════════════════════════════ -->
+    @if (paso() === 3) {
+      <div class="wizard-card">
+        <div class="wc-header">
+          <i class="bi bi-star wc-icon"></i>
+          <div>
+            <h2>Seleccione su plan</h2>
+            <p>Elija el plan funerario que mejor se adapte a sus necesidades.</p>
+          </div>
+        </div>
+
+        @if (planes().length === 0) {
+          <p class="text-center text-muted py-4">No hay planes disponibles en este momento.</p>
+        }
+
+        <div class="planes-grid">
+          @for (plan of planes(); track plan.id) {
+            <div class="plan-card" [class.seleccionado]="planSeleccionado()?.id === plan.id"
+                 (click)="seleccionarPlan(plan)">
+              @if (planSeleccionado()?.id === plan.id) {
+                <div class="plan-check"><i class="bi bi-check-circle-fill"></i></div>
+              }
+              <h3 class="plan-nombre">{{ plan.nombre }}</h3>
+              @if (plan.descripcion) {
+                <p class="plan-desc">{{ plan.descripcion }}</p>
+              }
+              <div class="plan-precio">
+                <span class="plan-precio-label">Precio total</span>
+                <span class="plan-precio-valor">{{ formatMoney(plan.precioTotal) }}</span>
+              </div>
+              <div class="plan-detalle">
+                <span><i class="bi bi-calendar3 me-1"></i>{{ plan.duracionMeses }} meses</span>
+                <span><i class="bi bi-people me-1"></i>{{ plan.numeroBeneficiarios }} beneficiario(s)</span>
+                <span><i class="bi bi-cash me-1"></i>{{ formatMoney(plan.mensualidad) }}/mes</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="wizard-actions">
+          <button class="btn-secundario" (click)="paso.set(2)">
+            <i class="bi bi-arrow-left me-1"></i>Atrás
+          </button>
+          <button class="btn-primario" (click)="irPaso4()" [disabled]="!planSeleccionado()">
+            Continuar <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ════════════════════════════════════════════════════════════
+         PASO 4 – BENEFICIARIOS
+    ════════════════════════════════════════════════════════════ -->
+    @if (paso() === 4) {
+      <div class="wizard-card">
+        <div class="wc-header">
+          <i class="bi bi-people wc-icon"></i>
+          <div>
+            <h2>Beneficiarios</h2>
+            <p>
+              El plan <strong>{{ planSeleccionado()!.nombre }}</strong> permite
+              <strong>{{ maxBeneficiarios() }}</strong> beneficiario(s).
+              Puede dejar campos opcionales en blanco.
+            </p>
+          </div>
+        </div>
+
+        <form [formGroup]="benefForm">
+          <div formArrayName="beneficiarios">
+            @for (g of benefControls; track $index) {
+              <div class="benef-card" [formGroupName]="$index">
+                <div class="benef-num">Beneficiario {{ $index + 1 }}</div>
+                <div class="benef-row">
+                  <div class="benef-field">
+                    <label>Nombre *</label>
+                    <input formControlName="nombre" placeholder="Nombre(s)">
+                  </div>
+                  <div class="benef-field">
+                    <label>Apellido Paterno *</label>
+                    <input formControlName="apPaterno" placeholder="Apellido paterno">
+                  </div>
+                  <div class="benef-field">
+                    <label>Apellido Materno</label>
+                    <input formControlName="apMaterno" placeholder="Apellido materno">
+                  </div>
+                </div>
+                <div class="benef-row">
+                  <div class="benef-field">
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" formControlName="fechaNacimiento">
+                  </div>
+                  <div class="benef-field">
+                    <label>Teléfono</label>
+                    <input formControlName="telefono" placeholder="10 dígitos">
+                  </div>
+                  <div class="benef-field">
+                    <label>Correo</label>
+                    <input formControlName="correo" placeholder="correo@ejemplo.com">
+                  </div>
+                </div>
+                <div class="benef-row">
+                  <div class="benef-field">
+                    <label>Parentesco *</label>
+                    <select formControlName="parentescoId">
+                      <option value="">— Seleccionar —</option>
+                      @for (p of parentescos(); track p.id) {
+                        <option [value]="p.id">{{ p.nombre }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="benef-field">
+                    <label>% Cobertura *</label>
+                    <input type="number" formControlName="porcentajeCobertura" min="1" max="100">
+                  </div>
+                </div>
+                <button type="button" class="benef-remove" (click)="eliminarBeneficiario($index)">
+                  <i class="bi bi-trash me-1"></i>Quitar beneficiario
+                </button>
+              </div>
+            }
+          </div>
+        </form>
+
+        @if (benefArray.length < maxBeneficiarios()) {
+          <button class="btn-agregar-benef" (click)="agregarBeneficiarioForm()">
+            <i class="bi bi-plus-circle me-2"></i>Agregar beneficiario
+          </button>
+        }
+
+        <div class="wizard-actions">
+          <button class="btn-secundario" (click)="paso.set(3)">
+            <i class="bi bi-arrow-left me-1"></i>Atrás
+          </button>
+          <button class="btn-primario btn-terminar" (click)="terminarContrato()" [disabled]="guardando()">
+            @if (guardando()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Procesando...
+            } @else {
+              <i class="bi bi-check2-circle me-1"></i>Terminar Contrato
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+  }<!-- end @else -->
+</div><!-- end wizard-page -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL CONFIRMACIÓN ELIMINAR DOCUMENTO
+══════════════════════════════════════════════════════════════════ -->
+@if (modalEliminarAbierto()) {
+  <div class="modal-backdrop" (click)="cerrarModalEliminar()"></div>
+  <div class="doc-modal">
+    <div class="dm-header">
+      <h3>Eliminar documento</h3>
+      <button class="dm-close" (click)="cerrarModalEliminar()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    @if (errorEliminar()) {
+      <div class="dm-error"><i class="bi bi-exclamation-triangle me-1"></i>{{ errorEliminar() }}</div>
+    }
+
+    <div class="elim-body">
+      <i class="bi bi-exclamation-triangle-fill elim-icon"></i>
+      <p>¿Está seguro que desea eliminar <strong>{{ modalEliminarEtiqueta() }}</strong>?</p>
+      <p class="elim-nota">Tendrá que volver a cargarlo para poder continuar.</p>
+    </div>
+
+    <div class="elim-actions">
+      <button class="btn-secundario" (click)="cerrarModalEliminar()" [disabled]="eliminandoDoc()">
+        Cancelar
+      </button>
+      <button class="btn-eliminar-confirm" (click)="confirmarEliminarDoc()" [disabled]="eliminandoDoc()">
+        @if (eliminandoDoc()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>Eliminando...
+        } @else {
+          <i class="bi bi-trash me-1"></i>Sí, eliminar
+        }
+      </button>
+    </div>
+  </div>
+}
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL CARGA DE DOCUMENTO
+══════════════════════════════════════════════════════════════════ -->
+@if (modalDocAbierto()) {
+  <div class="modal-backdrop" (click)="cerrarModalDoc()"></div>
+  <div class="doc-modal">
+    <div class="dm-header">
+      <h3>{{ modalDocEtiqueta() }}</h3>
+      <button class="dm-close" (click)="cerrarModalDoc()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    @if (errorDoc()) {
+      <div class="dm-error"><i class="bi bi-exclamation-triangle me-1"></i>{{ errorDoc() }}</div>
+    }
+
+    <!-- Opciones -->
+    @if (modoModalDoc() === 'opciones') {
+      <div class="dm-opciones">
+        <button class="dm-btn-opcion" (click)="iniciarCamaraDoc()">
+          <i class="bi bi-camera"></i>
+          <span>Tomar Foto</span>
+        </button>
+        <label class="dm-btn-opcion" for="docFileInput">
+          <i class="bi bi-folder2-open"></i>
+          <span>Examinar Archivo</span>
+        </label>
+        <input id="docFileInput" type="file" accept="image/*,application/pdf"
+               (change)="seleccionarArchivoDoc($event)" style="display:none">
+      </div>
+    }
+
+    <!-- Cámara -->
+    @if (modoModalDoc() === 'camara') {
+      <div class="dm-camara">
+        <video id="docVideo" autoplay playsinline muted class="dm-video"></video>
+        <button class="btn-capturar" (click)="capturarFotoDoc()">
+          <i class="bi bi-circle-fill"></i>
+        </button>
+      </div>
+    }
+
+    <!-- Preview -->
+    @if (modoModalDoc() === 'preview') {
+      <div class="dm-preview">
+        @if (docPreviewUrl()) {
+          <img [src]="docPreviewUrl()" alt="Vista previa" class="dm-preview-img">
+        } @else {
+          <div class="dm-pdf-icon">
+            <i class="bi bi-file-earmark-pdf"></i>
+            <span>Archivo PDF seleccionado</span>
+          </div>
+        }
+        <div class="dm-preview-actions">
+          <button class="btn-secundario" (click)="modoModalDoc.set('opciones')">Cambiar</button>
+          <button class="btn-primario" (click)="confirmarSubidaDoc()" [disabled]="subiendoDoc()">
+            @if (subiendoDoc()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>Subiendo...
+            } @else {
+              <i class="bi bi-cloud-upload me-1"></i>Confirmar
+            }
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+
+<style>
+/* ── Wizard page ─────────────────────────────────────────── */
+.wizard-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.wizard-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.wizard-back {
+  color: var(--azul-principal, #1e6fa3);
+  font-size: 1.3rem;
+  text-decoration: none;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.wizard-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--texto-principal, #1a2b3c);
+  margin: 0 0 2px;
+}
+.wizard-subtitle {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* ── Steps bar ──────────────────────────────────────────── */
+.wizard-steps-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 32px;
+}
+.wsb-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.wsb-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #dee2e6;
+  background: #fff;
+  color: #adb5bd;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .25s;
+}
+.wsb-step.active .wsb-circle {
+  border-color: var(--azul-principal, #1e6fa3);
+  background: var(--azul-principal, #1e6fa3);
+  color: #fff;
+}
+.wsb-step.done .wsb-circle {
+  border-color: #28a745;
+  background: #28a745;
+  color: #fff;
+}
+.wsb-step span {
+  font-size: 0.72rem;
+  color: #adb5bd;
+  font-weight: 500;
+}
+.wsb-step.active span, .wsb-step.done span { color: var(--azul-principal, #1e6fa3); }
+.wsb-line {
+  flex: 1;
+  height: 2px;
+  background: #dee2e6;
+  margin: 0 8px;
+  margin-bottom: 18px;
+  transition: background .25s;
+}
+.wsb-line.done { background: #28a745; }
+
+/* ── Loading / ineligible / success ─────────────────────── */
+.wizard-loading, .wizard-ineligible, .wizard-success {
+  text-align: center;
+  padding: 60px 20px;
+}
+.wizard-ineligible i, .wizard-success i {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
+.wizard-ineligible i { color: #dc3545; }
+.wizard-success i { color: #28a745; }
+.wizard-ineligible h2, .wizard-success h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.redir-note { font-size: 0.82rem; color: #6c757d; margin-top: 10px; }
+.btn-volver {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 28px;
+  background: var(--azul-principal, #1e6fa3);
+  color: #fff;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* ── Alert ───────────────────────────────────────────────── */
+.wizard-alert {
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.wizard-alert.danger { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; }
+
+/* ── Wizard card ─────────────────────────────────────────── */
+.wizard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 20px rgba(0,0,0,.07);
+  padding: 28px 24px;
+}
+.wc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.wc-icon {
+  font-size: 2rem;
+  color: var(--azul-principal, #1e6fa3);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.wc-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--texto-principal, #1a2b3c);
+  margin: 0 0 4px;
+}
+.wc-header p { font-size: 0.85rem; color: #6c757d; margin: 0; }
+
+/* ── Docs list ───────────────────────────────────────────── */
+.docs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  background: #fafafa;
+  transition: border-color .2s;
+}
+.doc-item.subido { border-color: #28a745; background: #f6fff8; }
+.doc-icon { font-size: 1.3rem; flex-shrink: 0; }
+.doc-info { flex: 1; min-width: 0; }
+.doc-nombre { font-weight: 600; font-size: 0.92rem; display: block; }
+.doc-estado { font-size: 0.78rem; color: #6c757d; }
+.doc-item.subido .doc-estado { color: #28a745; }
+.btn-cargar {
+  border: none;
+  background: var(--azul-principal, #1e6fa3);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.docs-nota { font-size: 0.82rem; color: #856404; background: #fff3cd; border-radius: 8px; padding: 8px 12px; }
+
+/* ── Planes grid ─────────────────────────────────────────── */
+.planes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.plan-card {
+  border: 2px solid #dee2e6;
+  border-radius: 14px;
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.plan-card:hover { border-color: var(--azul-medio, #3a8fc7); box-shadow: 0 4px 14px rgba(30,111,163,.12); }
+.plan-card.seleccionado { border-color: var(--azul-principal, #1e6fa3); background: #f0f8ff; }
+.plan-check { position: absolute; top: 10px; right: 10px; color: var(--azul-principal, #1e6fa3); font-size: 1.1rem; }
+.plan-nombre { font-size: 1rem; font-weight: 700; color: var(--texto-principal, #1a2b3c); margin: 0 0 6px; }
+.plan-desc { font-size: 0.8rem; color: #6c757d; margin-bottom: 10px; }
+.plan-precio { display: flex; flex-direction: column; margin-bottom: 10px; }
+.plan-precio-label { font-size: 0.72rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.04em; }
+.plan-precio-valor { font-size: 1.4rem; font-weight: 700; color: var(--azul-principal, #1e6fa3); }
+.plan-detalle { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: #495057; }
+
+/* ── Beneficiarios ───────────────────────────────────────── */
+.benef-card {
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  background: #fafafa;
+}
+.benef-num { font-weight: 700; color: var(--azul-principal, #1e6fa3); margin-bottom: 12px; font-size: 0.9rem; }
+.benef-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 10px; }
+.benef-field { display: flex; flex-direction: column; gap: 4px; }
+.benef-field label { font-size: 0.78rem; font-weight: 600; color: #495057; }
+.benef-field input, .benef-field select {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color .2s;
+}
+.benef-field input:focus, .benef-field select:focus { border-color: var(--azul-principal, #1e6fa3); }
+.benef-remove {
+  border: none;
+  background: none;
+  color: #dc3545;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 4px;
+}
+.btn-agregar-benef {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: 2px dashed var(--azul-medio, #3a8fc7);
+  background: transparent;
+  color: var(--azul-principal, #1e6fa3);
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background .2s;
+}
+.btn-agregar-benef:hover { background: #f0f8ff; }
+
+/* ── Actions ─────────────────────────────────────────────── */
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+}
+.btn-primario {
+  border: none;
+  background: var(--azul-principal, #1e6fa3);
+  color: #fff;
+  border-radius: 50px;
+  padding: 10px 28px;
+  font-weight: 700;
+  font-size: 0.93rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity .2s;
+}
+.btn-primario:disabled { opacity: .6; cursor: not-allowed; }
+.btn-terminar { background: #198754; }
+.btn-terminar:not(:disabled):hover { background: #157347; }
+.btn-secundario {
+  border: 1px solid #ced4da;
+  background: #fff;
+  color: #495057;
+  border-radius: 50px;
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background .2s;
+}
+.btn-secundario:hover { background: #f8f9fa; }
+
+/* ── Modal documento ─────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1040;
+}
+.doc-modal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  z-index: 1050;
+  padding: 24px 20px 32px;
+  max-width: 540px;
+  margin: 0 auto;
+  animation: slideUp .25s ease;
+}
+@media (min-width: 600px) {
+  .doc-modal {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    border-radius: 16px;
+    min-width: 420px;
+  }
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.dm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.dm-header h3 { font-size: 1rem; font-weight: 700; margin: 0; color: var(--texto-principal, #1a2b3c); }
+.dm-close { border: none; background: none; font-size: 1.1rem; cursor: pointer; color: #6c757d; }
+.dm-error { background: #fff5f5; border: 1px solid #f5c6cb; color: #842029; border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 12px; }
+.dm-opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dm-btn-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px solid #dee2e6;
+  border-radius: 14px;
+  padding: 20px 16px;
+  cursor: pointer;
+  font-size: 1.6rem;
+  font-weight: 600;
+  background: #fafafa;
+  transition: all .2s;
+  text-decoration: none;
+  color: var(--azul-principal, #1e6fa3);
+}
+.dm-btn-opcion span { font-size: 0.82rem; color: #495057; }
+.dm-btn-opcion:hover { border-color: var(--azul-principal, #1e6fa3); background: #f0f8ff; }
+.dm-camara { position: relative; }
+.dm-video { width: 100%; border-radius: 10px; background: #000; max-height: 280px; object-fit: cover; }
+.btn-capturar {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 3px solid #fff;
+  background: var(--azul-principal, #1e6fa3);
+  color: #fff;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dm-preview { text-align: center; }
+.dm-preview-img { max-width: 100%; max-height: 260px; border-radius: 10px; margin-bottom: 16px; object-fit: contain; }
+.dm-pdf-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px 0; color: #dc3545; font-size: 3rem; margin-bottom: 12px; }
+.dm-pdf-icon span { font-size: 0.85rem; color: #495057; }
+.dm-preview-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* ── Eliminar documento ──────────────────────────────────── */
+.btn-eliminar-doc {
+  border: none;
+  background: none;
+  color: #dc3545;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background .15s;
+  line-height: 1;
+}
+.btn-eliminar-doc:hover { background: #fff0f0; }
+.elim-body {
+  text-align: center;
+  padding: 12px 8px 20px;
+}
+.elim-icon {
+  font-size: 2.5rem;
+  color: #dc3545;
+  display: block;
+  margin-bottom: 14px;
+}
+.elim-nota { font-size: 0.82rem; color: #6c757d; margin-top: 6px; }
+.elim-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.btn-eliminar-confirm {
+  border: none;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background .2s;
+}
+.btn-eliminar-confirm:hover:not(:disabled) { background: #bb2d3b; }
+.btn-eliminar-confirm:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── Video de consentimiento ──────────────────────────────────── */
+.leyenda-box {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-left: 3px solid var(--azul-principal, #1e6fa3);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.leyenda-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+.leyenda-texto {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: #343a40;
+  line-height: 1.65;
+  margin: 0;
+  font-style: italic;
+}
+.video-wrap {
+  position: relative;
+  background: #111;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  aspect-ratio: 16/9;
+  max-height: 300px;
+  max-width: 480px;
+  width: 100%;
+}
+.video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.video-countdown {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,.7);
+  line-height: 1;
+}
+.video-rec-indicator {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,.6);
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+.rec-dot {
+  width: 8px; height: 8px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: inline-block;
+  animation: blink-rec 1s ease-in-out infinite;
+}
+.rec-dot-inline {
+  width: 8px; height: 8px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  animation: blink-rec 1s ease-in-out infinite;
+}
+@keyframes blink-rec { 0%,100% { opacity:1; } 50% { opacity:.15; } }
+.video-controls { margin-bottom: 8px; min-height: 44px; display: flex; flex-direction: column; align-items: center; }
+.grabando-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.btn-grabar {
+  border: none;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 50px;
+  padding: 11px 28px;
+  font-weight: 700;
+  font-size: 0.93rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background .2s;
+}
+.btn-grabar:hover { background: #c0392b; }
+.btn-detener {
+  border: none;
+  background: #e74c3c;
+  color: #fff;
+  border-radius: 50px;
+  padding: 11px 24px;
+  font-weight: 700;
+  font-size: 0.93rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background .2s;
+}
+.btn-detener:hover { background: #c0392b; }
+.grabando-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e74c3c;
+}
+.video-detenido-btns { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
+.btn-enviar-video {
+  border: none;
+  background: #198754;
+  color: #fff;
+  border-radius: 50px;
+  padding: 10px 28px;
+  font-weight: 700;
+  font-size: 0.93rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background .2s;
+}
+.btn-enviar-video:hover:not(:disabled) { background: #157347; }
+.btn-enviar-video:disabled { opacity: .6; cursor: not-allowed; }
+.video-ok {
+  color: #28a745;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+}
+</style>
