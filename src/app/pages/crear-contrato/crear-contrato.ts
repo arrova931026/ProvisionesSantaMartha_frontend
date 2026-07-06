@@ -220,9 +220,11 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   abrirSelectorGaleria() {
     const input = document.createElement('input');
     input.type = 'file';
-    // Tipos explícitos (no image/*) para que Android abra el explorador
-    // de archivos en lugar del selector de medios con opción de cámara
-    input.accept = 'image/jpeg,image/jpg,image/png,image/webp,image/bmp,application/pdf';
+    // accept="*/*" evita que Android/Samsung muestre el diálogo previo
+    // "Seleccionar una acción" con Cámara/Archivos. Con tipo genérico el OS
+    // abre el explorador de archivos directamente. La validación del tipo
+    // de archivo se hace en seleccionarArchivoDoc().
+    input.accept = '*/*';
     input.addEventListener('change', (e) => this.seleccionarArchivoDoc(e));
     input.click();
   }
