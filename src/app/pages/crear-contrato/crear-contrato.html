@@ -448,7 +448,7 @@
           <label class="dm-btn-opcion">
             <i class="bi bi-folder2-open"></i>
             <span>Elegir de galería</span>
-            <input type="file" accept="image/*,application/pdf" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
+            <input type="file" accept="image/*,application/pdf" style="width:0;height:0;overflow:hidden;opacity:0;position:absolute;" (change)="seleccionarArchivoDoc($event)"/>
           </label>
         </div>
       } @else {
