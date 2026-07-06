@@ -146,7 +146,8 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       next: ({ persona, pendientes, planes, parentescos }) => {
         this.persona.set(persona);
         this.planes.set(planes);
-        this.parentescos.set(parentescos);
+        // Solo permitir Cónyuge e Hijo(a) como parentescos válidos
+        this.parentescos.set(parentescos.filter(p => ['CONYUGE', 'HIJO'].includes(p.clave)));
 
         // Verificar elegibilidad de edad
         if (persona.fechaNacimiento) {
@@ -864,12 +865,20 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       const g = this.benefArray.at(i) as FormGroup;
       const n = (idx: string) => g.get(idx)?.value;
 
-      if (!n('nombre')?.trim())     return `Beneficiario ${i + 1}: el nombre es requerido.`;
+      // Omitir slots completamente vacíos (el usuario no los llenó)
+      if (!n('nombre')?.trim()) continue;
+
       if (!n('apPaterno')?.trim())  return `Beneficiario ${i + 1}: el apellido paterno es requerido.`;
       if (!n('apMaterno')?.trim())  return `Beneficiario ${i + 1}: el apellido materno es requerido.`;
       const fechaNac = n('fechaNacimiento') as string | null;
       if (!fechaNac)                return `Beneficiario ${i + 1}: la fecha de nacimiento es requerida.`;
       if (!n('parentescoId'))       return `Beneficiario ${i + 1}: el parentesco es requerido.`;
+
+      // Validar teléfono: si se ingresó, debe tener exactamente 10 dígitos
+      const telefono = (n('telefono') as string | null)?.trim() ?? '';
+      if (telefono && !/^\d{10}$/.test(telefono)) {
+        return `Beneficiario ${i + 1}: el teléfono debe tener exactamente 10 dígitos.`;
+      }
 
       // Validación de edad para Hijo(a)
       const parentescoId = +n('parentescoId');
