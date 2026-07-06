@@ -133,7 +133,7 @@
           <i class="bi bi-camera-video wc-icon"></i>
           <div>
             <h2>Video de Consentimiento</h2>
-            <p>Grabe un video leyendo la leyenda en voz alta. Máximo 20 segundos.</p>
+            <p>Grabe un video leyendo la leyenda en voz alta. Máximo 30 segundos.</p>
           </div>
         </div>
 
@@ -270,7 +270,7 @@
             <p>
               El plan <strong>{{ planSeleccionado()!.nombre }}</strong> permite
               <strong>{{ maxBeneficiarios() }}</strong> beneficiario(s).
-              Puede dejar campos opcionales en blanco.
+              Solo el teléfono es opcional.
             </p>
           </div>
         </div>
@@ -290,25 +290,19 @@
                     <input formControlName="apPaterno" placeholder="Apellido paterno">
                   </div>
                   <div class="benef-field">
-                    <label>Apellido Materno</label>
+                    <label>Apellido Materno *</label>
                     <input formControlName="apMaterno" placeholder="Apellido materno">
                   </div>
                 </div>
                 <div class="benef-row">
                   <div class="benef-field">
-                    <label>Fecha de Nacimiento</label>
+                    <label>Fecha de Nacimiento *</label>
                     <input type="date" formControlName="fechaNacimiento">
                   </div>
                   <div class="benef-field">
                     <label>Teléfono</label>
                     <input formControlName="telefono" placeholder="10 dígitos">
                   </div>
-                  <div class="benef-field">
-                    <label>Correo</label>
-                    <input formControlName="correo" placeholder="correo@ejemplo.com">
-                  </div>
-                </div>
-                <div class="benef-row">
                   <div class="benef-field">
                     <label>Parentesco *</label>
                     <select formControlName="parentescoId">
@@ -318,6 +312,8 @@
                       }
                     </select>
                   </div>
+                </div>
+                <div class="benef-row">
                   <div class="benef-field">
                     <label>% Cobertura *</label>
                     <input type="number" formControlName="porcentajeCobertura" min="1" max="100">
@@ -408,36 +404,111 @@
       <div class="dm-error"><i class="bi bi-exclamation-triangle me-1"></i>{{ errorDoc() }}</div>
     }
 
-    <!-- Opciones -->
-    @if (modoModalDoc() === 'opciones') {
-      <div class="dm-opciones">
-        <button class="dm-btn-opcion" (click)="iniciarCamaraDoc()">
-          <i class="bi bi-camera"></i>
-          <span>Tomar Foto</span>
-        </button>
-        <label class="dm-btn-opcion" for="docFileInput">
-          <i class="bi bi-folder2-open"></i>
-          <span>Examinar Archivo</span>
-        </label>
-        <input id="docFileInput" type="file" accept="image/*,application/pdf"
-               (change)="seleccionarArchivoDoc($event)" style="display:none">
+    <!-- INE: indicador de pasos -->
+    @if (modalDocClave() === 'INE') {
+      <div class="ine-stepper">
+        <div class="ine-step-item" [class.active]="ineStep() >= 1" [class.done]="ineStep() > 1">
+          <div class="ine-step-num">
+            @if (ineStep() > 1) { <i class="bi bi-check-lg"></i> } @else { 1 }
+          </div>
+          <span>Frente</span>
+        </div>
+        <div class="ine-step-line" [class.done]="ineStep() > 1"></div>
+        <div class="ine-step-item" [class.active]="ineStep() >= 2">
+          <div class="ine-step-num">2</div>
+          <span>Reverso</span>
+        </div>
       </div>
     }
 
-    <!-- Cámara -->
-    @if (modoModalDoc() === 'camara') {
-      <div class="dm-camara">
-        <video id="docVideo" autoplay playsinline muted class="dm-video"></video>
-        <button class="btn-capturar" (click)="capturarFotoDoc()">
-          <i class="bi bi-circle-fill"></i>
-        </button>
+    <!-- Opciones -->
+    @if (modoModalDoc() === 'opciones') {
+      @if (modalDocClave() === 'INE') {
+        <p class="ine-lado-hint">
+          @if (ineStep() === 1) {
+            <i class="bi bi-front me-1"></i>Fotografía el <strong>frente</strong> de tu credencial
+          } @else {
+            <i class="bi bi-back me-1"></i>Ahora fotografía el <strong>reverso</strong> de tu credencial
+          }
+        </p>
+        @if (ineStep() === 2 && ineFrentePreviewUrl()) {
+          <div class="ine-ref-wrap">
+            <span class="ine-ref-label"><i class="bi bi-check-circle-fill me-1"></i>Frente capturado</span>
+            <img [src]="ineFrentePreviewUrl()!" alt="Frente INE" class="ine-ref-img">
+          </div>
+        }
+      }
+      @if (isMobile) {
+        <div class="dm-opciones">
+          <label class="dm-btn-opcion">
+            <i class="bi bi-camera"></i>
+            <span>Tomar Foto</span>
+            <input type="file" accept="image/*" capture="environment" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
+          </label>
+          <label class="dm-btn-opcion">
+            <i class="bi bi-folder2-open"></i>
+            <span>Elegir de galería</span>
+            <input type="file" accept="image/*,application/pdf" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
+          </label>
+        </div>
+      } @else {
+        <div class="dm-opciones dm-opciones-solo">
+          <label class="dm-btn-opcion">
+            <i class="bi bi-folder2-open"></i>
+            <span>Examinar Archivo</span>
+            <input type="file" accept="image/*,application/pdf" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
+          </label>
+        </div>
+      }
+    }
+
+    <!-- Editar imagen -->
+    @if (modoModalDoc() === 'editar') {
+      <div class="dm-editar">
+        <p class="dm-edit-hint"><i class="bi bi-crop me-1"></i>Arrastra las esquinas o bordes para recortar</p>
+        <div class="dm-edit-canvas-wrap">
+          <canvas id="docEditCanvas" class="dm-edit-canvas"
+                  [style.cursor]="cropCursor()"
+                  (pointerdown)="cropPointerDown($event)"
+                  (pointermove)="cropPointerMove($event)"
+                  (pointerup)="cropPointerUp($event)"
+                  (pointercancel)="cropPointerUp($event)"></canvas>
+        </div>
+        <div class="dm-edit-tools">
+          <button type="button" class="btn-rotar" (click)="rotarDocumento()">
+            <i class="bi bi-arrow-clockwise"></i> Rotar 90°
+          </button>
+        </div>
+        <div class="dm-preview-actions" style="margin-top:6px;">
+          <button class="btn-secundario" (click)="modoModalDoc.set('opciones')">
+            <i class="bi bi-arrow-left me-1"></i>Cancelar
+          </button>
+          <button class="btn-primario" (click)="aplicarEdicionDoc()">
+            @if (modalDocClave() === 'INE' && ineStep() === 1) {
+              <i class="bi bi-check2 me-1"></i>Usar frente →
+            } @else {
+              <i class="bi bi-check2 me-1"></i>Usar imagen
+            }
+          </button>
+        </div>
       </div>
     }
 
     <!-- Preview -->
     @if (modoModalDoc() === 'preview') {
       <div class="dm-preview">
-        @if (docPreviewUrl()) {
+        @if (modalDocClave() === 'INE' && ineFrentePreviewUrl()) {
+          <div class="ine-preview-dual">
+            <div class="ine-preview-side">
+              <span class="ine-side-label">Frente</span>
+              <img [src]="ineFrentePreviewUrl()!" alt="Frente INE" class="ine-preview-half">
+            </div>
+            <div class="ine-preview-side">
+              <span class="ine-side-label">Reverso</span>
+              <img [src]="docPreviewUrl()!" alt="Reverso INE" class="ine-preview-half">
+            </div>
+          </div>
+        } @else if (docPreviewUrl()) {
           <img [src]="docPreviewUrl()" alt="Vista previa" class="dm-preview-img">
         } @else {
           <div class="dm-pdf-icon">
@@ -446,7 +517,13 @@
           </div>
         }
         <div class="dm-preview-actions">
-          <button class="btn-secundario" (click)="modoModalDoc.set('opciones')">Cambiar</button>
+          @if (docImgData()) {
+            <button class="btn-secundario" (click)="modoModalDoc.set('editar')">
+              <i class="bi bi-crop me-1"></i>Editar
+            </button>
+          } @else {
+            <button class="btn-secundario" (click)="modoModalDoc.set('opciones')">Cambiar</button>
+          }
           <button class="btn-primario" (click)="confirmarSubidaDoc()" [disabled]="subiendoDoc()">
             @if (subiendoDoc()) {
               <span class="spinner-border spinner-border-sm me-1"></span>Subiendo...
@@ -783,21 +860,28 @@
   z-index: 1050;
   padding: 24px 20px 32px;
   max-width: 540px;
+  max-height: 92vh;
+  overflow-y: auto;
   margin: 0 auto;
-  animation: slideUp .25s ease;
+  animation: slideUp .32s cubic-bezier(.22,1,.36,1);
 }
 @media (min-width: 600px) {
   .doc-modal {
-    top: 50%;
     bottom: auto;
+    top: 50%;
     left: 50%;
     right: auto;
     transform: translate(-50%, -50%);
     border-radius: 16px;
-    min-width: 420px;
+    min-width: 480px;
+    animation: fadeRiseModal .28s cubic-bezier(.22,1,.36,1);
   }
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeRiseModal {
+  from { transform: translate(-50%, calc(-50% + 44px)); opacity: 0; }
+  to   { transform: translate(-50%, -50%); opacity: 1; }
+}
 .dm-header {
   display: flex;
   align-items: center;
@@ -851,6 +935,31 @@
 .dm-pdf-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px 0; color: #dc3545; font-size: 3rem; margin-bottom: 12px; }
 .dm-pdf-icon span { font-size: 0.85rem; color: #495057; }
 .dm-preview-actions { display: flex; gap: 12px; justify-content: center; }
+.ine-stepper { display:flex; align-items:center; gap:0; margin-bottom:14px; justify-content:center; }
+.ine-step-item { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.ine-step-num { width:26px; height:26px; border-radius:50%; border:2px solid #dee2e6; background:#fff; color:#adb5bd; font-weight:700; font-size:0.78rem; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.ine-step-item.active .ine-step-num { border-color:var(--azul-principal,#1e6fa3); background:var(--azul-principal,#1e6fa3); color:#fff; }
+.ine-step-item.done .ine-step-num { border-color:#28a745; background:#28a745; color:#fff; }
+.ine-step-item > span { font-size:0.66rem; color:#adb5bd; font-weight:500; }
+.ine-step-item.active > span, .ine-step-item.done > span { color:var(--azul-principal,#1e6fa3); }
+.ine-step-line { width:36px; height:2px; background:#dee2e6; margin:0 8px 16px; transition:background .2s; }
+.ine-step-line.done { background:#28a745; }
+.ine-lado-hint { font-size:0.82rem; color:#495057; text-align:center; margin-bottom:12px; padding:8px 12px; background:#f8f9fa; border-radius:8px; }
+.ine-ref-wrap { text-align:center; margin-bottom:12px; }
+.ine-ref-label { font-size:0.72rem; color:#28a745; font-weight:600; display:block; margin-bottom:4px; }
+.ine-ref-img { max-width:100%; max-height:72px; border-radius:6px; border:1px solid #dee2e6; object-fit:cover; }
+.ine-preview-dual { display:flex; gap:10px; margin-bottom:14px; }
+.ine-preview-side { flex:1; text-align:center; }
+.ine-side-label { font-size:0.72rem; font-weight:600; color:#6c757d; display:block; margin-bottom:4px; }
+.ine-preview-half { width:100%; max-height:150px; object-fit:cover; border-radius:8px; border:1px solid #dee2e6; }
+.dm-opciones-solo { grid-template-columns: 1fr; max-width: 220px; margin: 0 auto; }
+.dm-editar { display: flex; flex-direction: column; gap: 14px; }
+.dm-edit-hint { font-size: 0.8rem; color: #6c757d; margin: 0; text-align: center; }
+.dm-edit-canvas-wrap { background: #1a1a1a; border-radius: 10px; overflow: hidden; }
+.dm-edit-canvas { display: block; width: 100%; height: auto; touch-action: none; user-select: none; }
+.dm-edit-tools { display: flex; justify-content: center; }
+.btn-rotar { border: 1px solid var(--azul-principal, #1e6fa3); background: #fff; color: var(--azul-principal, #1e6fa3); border-radius: 50px; padding: 8px 20px; font-size: 0.86rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .2s; }
+.btn-rotar:hover { background: #f0f8ff; }
 
 /* ── Eliminar documento ──────────────────────────────────── */
 .btn-eliminar-doc {
@@ -928,10 +1037,13 @@
   border-radius: 12px;
   overflow: hidden;
   margin: 0 auto 16px;
-  aspect-ratio: 16/9;
-  max-height: 300px;
+  aspect-ratio: 4/3;
+  max-height: 440px;
   max-width: 480px;
   width: 100%;
+}
+@media (max-width: 479px) {
+  .video-wrap { aspect-ratio: 3/4; max-height: none; }
 }
 .video-preview {
   width: 100%;
@@ -1041,4 +1153,7 @@
   display: inline-flex;
   align-items: center;
 }
+.video-validacion-msg { font-size:0.83rem; border-radius:8px; padding:10px 14px; margin-top:12px; text-align:left; line-height:1.5; }
+.video-validacion-msg.validado { background:#f0fff4; border:1px solid #28a745; color:#155724; }
+.video-validacion-msg.advertencia { background:#fff8e1; border:1px solid #ffc107; color:#856404; }
 </style>
