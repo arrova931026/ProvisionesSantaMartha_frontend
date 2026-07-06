@@ -458,6 +458,14 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
         ctx.beginPath(); ctx.arc(mx, my, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       }
     }
+
+    // ── Reducir espacio visual: mostrar solo 50% de las áreas oscuras fuera del recorte ──
+    const cssRatio   = maxW / dispW;
+    const topTrimCss = Math.round(cropY * 0.5 * cssRatio);
+    const showHCss   = Math.round((cropH + dispH) * 0.5 * cssRatio);
+    canvas.style.marginTop = `-${topTrimCss}px`;
+    const wrap = canvas.parentElement as HTMLElement;
+    if (wrap) wrap.style.height = `${showHCss}px`;
   }
 
   aplicarEdicionDoc() {
