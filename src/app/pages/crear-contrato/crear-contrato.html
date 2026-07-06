@@ -445,10 +445,11 @@
             <span>Tomar Foto</span>
             <input type="file" accept="image/*" capture="environment" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
           </label>
-          <button type="button" class="dm-btn-opcion" (click)="abrirSelectorGaleria()">
+          <label class="dm-btn-opcion">
             <i class="bi bi-folder2-open"></i>
-            <span>Elegir archivos</span>
-          </button>
+            <span>Galería / Archivos</span>
+            <input type="file" accept="image/*,application/pdf" style="display:none" (change)="seleccionarArchivoDoc($event)"/>
+          </label>
         </div>
       } @else {
         <div class="dm-opciones dm-opciones-solo">

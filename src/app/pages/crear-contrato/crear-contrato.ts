@@ -217,18 +217,6 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     this.detenerCamaraDoc();
   }
 
-  abrirSelectorGaleria() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    // accept="*/*" evita que Android/Samsung muestre el diálogo previo
-    // "Seleccionar una acción" con Cámara/Archivos. Con tipo genérico el OS
-    // abre el explorador de archivos directamente. La validación del tipo
-    // de archivo se hace en seleccionarArchivoDoc().
-    input.accept = '*/*';
-    input.addEventListener('change', (e) => this.seleccionarArchivoDoc(e));
-    input.click();
-  }
-
   seleccionarArchivoDoc(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
