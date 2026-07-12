@@ -140,6 +140,97 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
     this.tabActiva.set(tab);
   }
 
+  toggleTodasMensualidades() {
+    const expanding = !this.mostrarTodasMensualidades();
+    this.mostrarTodasMensualidades.set(expanding);
+    if (expanding) this._blinkScroll('mensualidades-scrollable');
+  }
+
+  toggleHistorial() {
+    const expanding = !this.mostrarHistorialCompleto();
+    this.mostrarHistorialCompleto.set(expanding);
+    if (expanding) this._blinkScroll('historial-scrollable');
+  }
+
+  private _blinkScroll(id: string) {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el || el.scrollHeight <= el.clientHeight) return;
+      el.scrollTo({ top: 80, behavior: 'smooth' });
+      setTimeout(() => el.scrollTo({ top: 0, behavior: 'smooth' }), 700);
+    }, 200);
+  }
+
+  descargarReportePDF() {
+    const contrato = this.contratoActivo();
+    if (!contrato) return;
+    const cobros = this.cobros();
+    const hoy = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const fmtFecha = (iso: string | null | undefined): string => {
+      if (!iso) return '—';
+      const d = new Date(iso + (iso.includes('T') ? '' : 'T00:00:00'));
+      return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    };
+    const filas = cobros.map(c => {
+      const fecha = fmtFecha(c.estadoCobro === 'PAGADO' ? (c.fechaPago ?? c.fechaVencimiento) : c.fechaVencimiento);
+      const color = c.estadoCobro === 'PAGADO' ? '#27ae60' : c.estadoCobro === 'VENCIDO' ? '#e74c3c' : '#f39c12';
+      return `<tr>
+        <td style="text-align:center">${c.numeroMensualidad}</td>
+        <td>${fecha ?? ''}</td>
+        <td style="text-align:right">$${Number(c.monto).toFixed(2)} MXN</td>
+        <td style="text-align:center;color:${color};font-weight:700">${c.estadoCobro}</td>
+      </tr>`;
+    }).join('');
+    const pagados = cobros.filter(c => c.estadoCobro === 'PAGADO').length;
+    const pendientes = cobros.filter(c => c.estadoCobro !== 'PAGADO').length;
+    const totalPagado = cobros.filter(c => c.estadoCobro === 'PAGADO').reduce((s, c) => s + Number(c.monto), 0);
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Reporte Cobros — ${contrato.numeroContrato}</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:32px;color:#333;font-size:13px}
+  h1{color:#3A8FC4;font-size:18px;margin:0}
+  h2{color:#555;font-size:13px;margin:4px 0 0}
+  .header{border-bottom:2px solid #3A8FC4;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}
+  .info{display:flex;gap:28px;margin-bottom:18px;flex-wrap:wrap}
+  .info div{font-size:12px}.info label{color:#888;display:block}
+  .info strong{color:#333}
+  .summary{display:flex;gap:20px;margin-bottom:20px}
+  .summary div{background:#f5f7fa;border-radius:8px;padding:10px 18px;flex:1;text-align:center}
+  .summary .val{font-size:18px;font-weight:700;color:#3A8FC4}
+  .summary .lbl{font-size:11px;color:#888}
+  table{width:100%;border-collapse:collapse}
+  th{background:#3A8FC4;color:white;padding:8px 10px;text-align:left;font-size:12px}
+  td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
+  tr:nth-child(even) td{background:#f9f9f9}
+  .footer{margin-top:28px;font-size:11px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:12px}
+  @media print{body{margin:16px}}
+</style></head><body>
+<div class="header">
+  <div><h1>Sociedad Humanista Santa Martha S.A. de C.V.</h1>
+    <h2>Reporte de Cobros — ${contrato.numeroContrato}</h2></div>
+  <div style="font-size:12px;color:#888">Generado: ${hoy}</div>
+</div>
+<div class="info">
+  <div><label>Titular</label><strong>${contrato.titularNombre ?? ''}</strong></div>
+  <div><label>Plan contratado</label><strong>${contrato.planNombre ?? ''}</strong></div>
+  <div><label>Mensualidad</label><strong>$${Number(contrato.mensualidadPactada ?? 0).toFixed(2)} MXN</strong></div>
+</div>
+<div class="summary">
+  <div><div class="val">${cobros.length}</div><div class="lbl">Total cobros</div></div>
+  <div><div class="val" style="color:#27ae60">${pagados}</div><div class="lbl">Pagados</div></div>
+  <div><div class="val" style="color:#f39c12">${pendientes}</div><div class="lbl">Pendientes</div></div>
+  <div><div class="val">$${totalPagado.toFixed(2)}</div><div class="lbl">Total pagado MXN</div></div>
+</div>
+<table><thead><tr><th style="width:40px">#</th><th>Fecha</th><th style="text-align:right">Monto</th><th style="text-align:center">Estado</th></tr></thead>
+<tbody>${filas}</tbody></table>
+<div class="footer">Sociedad Humanista Santa Martha S.A. de C.V. — ${hoy}</div>
+<script>setTimeout(()=>window.print(),400)</script>
+</body></html>`;
+    const win = window.open('', '_blank', 'width=800,height=700');
+    if (win) { win.document.write(html); win.document.close(); }
+  }
+
   copiar(texto: string) {
     navigator.clipboard.writeText(texto).then(() => {
       this.toastVisible.set(true);
