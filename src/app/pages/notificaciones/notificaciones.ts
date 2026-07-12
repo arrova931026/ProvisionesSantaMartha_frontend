@@ -1,19 +1,24 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NotificacionService } from '../../core/services/notificacion.service';
+import { CobroService } from '../../core/services/cobro.service';
+import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Notificacion } from '../../core/models/notificacion.model';
-import { DatePipe } from '@angular/common';
+import { CobroProgramado } from '../../core/models/cobro.model';
+import { DatePipe, DecimalPipe } from '@angular/common';
 
 type Filtro = 'TODOS' | 'PAGO' | 'SISTEMA' | 'COBERTURA' | 'PROMOCION';
 
 @Component({
   selector: 'app-notificaciones',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, DecimalPipe, RouterLink],
   templateUrl: './notificaciones.html'
 })
 export class NotificacionesComponent implements OnInit {
   private readonly notificacionService = inject(NotificacionService);
+  private readonly cobroService = inject(CobroService);
+  private readonly contratoService = inject(ContratoService);
   private readonly auth = inject(AuthService);
 
   readonly notificaciones = signal<Notificacion[]>([]);
@@ -22,6 +27,19 @@ export class NotificacionesComponent implements OnInit {
   readonly errorMsg = signal('');
   readonly currentUser = this.auth.currentUser;
 
+  // ── Cobros-derived alerts ──────────────────────────────────────────────────
+  readonly cobrosVencidos = signal<CobroProgramado[]>([]);
+  readonly proximoPago   = signal<CobroProgramado | null>(null);
+  readonly montoMensual  = signal<number>(0);
+  readonly tieneVencidos = computed(() => this.cobrosVencidos().length > 0);
+  readonly tieneProximosAVencer = computed(() => {
+    const p = this.proximoPago();
+    if (!p) return false;
+    const hoy  = new Date();
+    const venc = new Date(p.fechaVencimiento + 'T00:00:00');
+    const diff = (venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff <= 3;
+  });
   readonly noLeidas = computed(() => this.notificaciones().filter(n => !n.leida).length);
 
   readonly filtradas = computed(() => {
@@ -46,9 +64,35 @@ export class NotificacionesComponent implements OnInit {
   ];
 
   ngOnInit() {
+    // ── Notificaciones del backend ────────────────────────────────────────────
     this.notificacionService.listar().subscribe({
       next: data => { this.notificaciones.set(Array.isArray(data) ? data : (data as any).content ?? []); this.loading.set(false); },
       error: () => { this.errorMsg.set('Error al cargar notificaciones.'); this.loading.set(false); }
+    });
+
+    // ── Alertas de cobros del contrato activo ─────────────────────────────────
+    const personaId = this.auth.currentUser()?.personaId;
+    if (!personaId) return;
+
+    this.contratoService.listarPorPersona(personaId).subscribe({
+      next: contratos => {
+        const activo = contratos.find(c => c.activo) ?? contratos[0];
+        if (!activo) return;
+        this.montoMensual.set(activo.mensualidadPactada ?? 0);
+        this.cobroService.listarPorContrato(activo.id).subscribe({
+          next: cobros => {
+            const hoy = new Date();
+            const vencidos = cobros.filter(c =>
+              c.estadoCobro !== 'PAGADO' && new Date(c.fechaVencimiento) < hoy
+            );
+            this.cobrosVencidos.set(vencidos);
+            const siguiente = cobros.find(c =>
+              c.estadoCobro === 'PENDIENTE' && new Date(c.fechaVencimiento) >= hoy
+            );
+            this.proximoPago.set(siguiente ?? null);
+          }
+        });
+      }
     });
   }
 

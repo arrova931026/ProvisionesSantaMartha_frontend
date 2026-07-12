@@ -2,7 +2,9 @@
   .notif-section { padding: 36px 16px 56px; }
 
   /* ── HEADER BADGE ── */
-  .header-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); border-radius:50px; padding:4px 14px; font-size:0.8rem; color:var(--blanco); margin-top:10px; }
+  .header-badge         { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); border-radius:50px; padding:4px 14px; font-size:0.8rem; color:var(--blanco); margin-top:10px; }
+  .header-badge-peligro { background:rgba(231,76,60,0.25); border-color:rgba(231,76,60,0.55); font-weight:700; }
+  .header-badge-alerta  { background:rgba(243,156,18,0.25); border-color:rgba(243,156,18,0.55); font-weight:700; }
 
   /* ── STATS ROW ── */
   .stats-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
@@ -67,6 +69,42 @@
   .empty-notif { text-align:center; padding:48px 24px; color:var(--gris-medio); }
   .empty-notif i { font-size:2.8rem; opacity:.35; margin-bottom:14px; display:block; }
   .empty-notif p { font-size:0.88rem; margin:0; }
+
+  /* ── COBROS ALERTS ── */
+  @keyframes danger-pulse {
+    0%,100% { box-shadow: 0 0 0 rgba(231,76,60,0); }
+    50%      { box-shadow: 0 0 0 4px rgba(231,76,60,0.15); }
+  }
+  .cobro-vencido-alert {
+    background: #fff3cd;
+    border: 1.5px solid #f39c12;
+    border-left: 5px solid #e74c3c;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    animation: danger-pulse 1.4s ease-in-out 4;
+  }
+  .cobro-vencido-alert .cva-icono { font-size:1.4rem; color:#e74c3c; flex-shrink:0; margin-top:2px; }
+  .cobro-vencido-alert .cva-titulo { font-size:.88rem; font-weight:800; color:#c0392b; margin-bottom:3px; }
+  .cobro-vencido-alert .cva-desc { font-size:.8rem; color:#7a5c00; line-height:1.5; margin-bottom:8px; }
+  .cobro-vencido-alert .cva-badge { display:inline-flex; align-items:center; gap:6px; background:#e74c3c; color:#fff; font-size:.72rem; font-weight:700; padding:3px 11px; border-radius:50px; }
+  .cobro-proximo-alert {
+    background: var(--azul-suave);
+    border: 1px solid var(--gris-borde);
+    border-left: 4px solid var(--azul-principal);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .cobro-proximo-alert .cpa-icono { font-size:1.3rem; color:var(--azul-principal); flex-shrink:0; }
+  .cobro-proximo-alert .cpa-titulo { font-size:.87rem; font-weight:700; color:var(--gris-texto); margin-bottom:2px; }
+  .cobro-proximo-alert .cpa-desc { font-size:.79rem; color:var(--gris-medio); }
 </style>
 
 <!-- HEADER -->
@@ -75,7 +113,17 @@
   <h1>Notificaciones</h1>
   <p>Centro de avisos de Sociedad Humanista Santa Martha</p>
   <div>
-    @if (noLeidas() > 0) {
+    @if (tieneVencidos()) {
+      <span class="header-badge header-badge-peligro">
+        <i class="bi bi-x-circle-fill" style="font-size:.85rem;"></i>
+        Saldo Vencido, Realizar pago a la brevedad
+      </span>
+    } @else if (tieneProximosAVencer()) {
+      <span class="header-badge header-badge-alerta">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:.8rem;"></i>
+        Saldo Próximo a Vencer
+      </span>
+    } @else if (noLeidas() > 0) {
       <span class="header-badge">
         <i class="bi bi-circle-fill" style="font-size:0.5rem;color:#f39c12;"></i>
         {{ noLeidas() }} sin leer
@@ -173,7 +221,7 @@
           </div>
 
         <!-- Empty -->
-        } @else if (filtradas().length === 0) {
+        } @else if (filtradas().length === 0 && cobrosVencidos().length === 0 && !proximoPago()) {
           <div class="empty-notif">
             <i class="bi bi-bell-slash"></i>
             <p>No hay notificaciones en esta categoría.</p>
@@ -181,30 +229,83 @@
 
         <!-- Cards -->
         } @else {
-          @for (n of filtradas(); track n.id) {
-            <div class="notif-card" [class.no-leida]="!n.leida" (click)="marcarLeida(n.id)">
-              <div class="notif-icon" [class]="iconoClase(n.tipo)">
-                <i [class]="'bi ' + iconoTipo(n.tipo)"></i>
-              </div>
-              <div class="notif-body">
-                <div class="notif-titulo">{{ n.titulo }}</div>
-                <div class="notif-desc">{{ n.mensaje }}</div>
-                <div class="notif-meta">
-                  <span class="notif-tag" [class]="tagClase(n.tipo)">
-                    <i class="bi bi-tag me-1"></i>{{ tagLabel(n.tipo) }}
+
+          <!-- ── ALERTAS DE COBROS VENCIDOS ── -->
+          @if (cobrosVencidos().length > 0 && (filtroActivo() === 'TODOS' || filtroActivo() === 'PAGO')) {
+            @for (c of cobrosVencidos(); track c.id) {
+              <div class="cobro-vencido-alert">
+                <i class="bi bi-exclamation-triangle-fill cva-icono"></i>
+                <div style="flex:1;min-width:0;">
+                  <div class="cva-titulo">
+                    <i class="bi bi-x-circle-fill me-1"></i>
+                    ¡Mensualidad #{{ c.numeroMensualidad }} VENCIDA!
+                  </div>
+                  <div class="cva-desc">
+                    Su mensualidad venció el <strong>{{ c.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>.
+                    El no pagar afecta la vigencia de su cobertura funeraria.
+                    Por favor regularice su pago a la brevedad posible.
+                  </div>
+                  <span class="cva-badge">
+                    <i class="bi bi-currency-dollar"></i>
+                    ${{ c.monto | number:'1.2-2' }} MXN pendiente
                   </span>
-                  <span class="notif-fecha">
-                    <i class="bi bi-calendar3"></i>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}
-                  </span>
-                  @if (accionTipo(n.tipo); as accion) {
-                    <a [routerLink]="accion.ruta" class="notif-action" (click)="$event.stopPropagation()">
-                      <i class="bi bi-arrow-right-circle"></i> {{ accion.label }}
-                    </a>
-                  }
                 </div>
               </div>
+            }
+          }
+
+          <!-- ── PRÓXIMO PAGO ── -->
+          @if (proximoPago() && cobrosVencidos().length === 0 && (filtroActivo() === 'TODOS' || filtroActivo() === 'PAGO')) {
+            <div class="cobro-proximo-alert">
+              <i class="bi bi-calendar-check-fill cpa-icono"></i>
+              <div style="flex:1;min-width:0;">
+                <div class="cpa-titulo">
+                  Próximo pago: Mensualidad #{{ proximoPago()!.numeroMensualidad }}
+                </div>
+                <div class="cpa-desc">
+                  Vence el <strong>{{ proximoPago()!.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>
+                  &nbsp;&mdash;&nbsp;
+                  <strong style="color:var(--azul-principal)">${{ proximoPago()!.monto | number:'1.2-2' }} MXN</strong>
+                </div>
+              </div>
+              <a routerLink="/portal/cobros" style="font-size:.8rem;font-weight:600;color:var(--azul-principal);text-decoration:none;white-space:nowrap;">
+                Pagar <i class="bi bi-arrow-right"></i>
+              </a>
             </div>
           }
+
+          <!-- Notificaciones del backend -->
+          @if (filtradas().length === 0) {
+            @if (cobrosVencidos().length === 0 && !proximoPago()) {
+              <div class="empty-notif"><i class="bi bi-bell-slash"></i><p>No hay notificaciones en esta categoría.</p></div>
+            }
+          } @else {
+            @for (n of filtradas(); track n.id) {
+              <div class="notif-card" [class.no-leida]="!n.leida" (click)="marcarLeida(n.id)">
+                <div class="notif-icon" [class]="iconoClase(n.tipo)">
+                  <i [class]="'bi ' + iconoTipo(n.tipo)"></i>
+                </div>
+                <div class="notif-body">
+                  <div class="notif-titulo">{{ n.titulo }}</div>
+                  <div class="notif-desc">{{ n.mensaje }}</div>
+                  <div class="notif-meta">
+                    <span class="notif-tag" [class]="tagClase(n.tipo)">
+                      <i class="bi bi-tag me-1"></i>{{ tagLabel(n.tipo) }}
+                    </span>
+                    <span class="notif-fecha">
+                      <i class="bi bi-calendar3"></i>{{ n.createdAt | date:"dd 'de' MMMM 'de' yyyy HH:mm":'':'es' }}
+                    </span>
+                    @if (accionTipo(n.tipo); as accion) {
+                      <a [routerLink]="accion.ruta" class="notif-action" (click)="$event.stopPropagation()">
+                        <i class="bi bi-arrow-right-circle"></i> {{ accion.label }}
+                      </a>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          }
+
         }
 
       </div><!-- /col izquierda -->
