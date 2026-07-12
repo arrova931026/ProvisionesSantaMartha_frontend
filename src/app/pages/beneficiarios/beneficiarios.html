@@ -1,35 +1,97 @@
 <style>
   .benef-section { padding: 36px 16px 56px; }
-  .benef-card { background:var(--blanco); border-radius:12px; border:1px solid var(--gris-borde); padding:16px 18px; display:flex; align-items:center; gap:14px; }
-  .benef-avatar { width:44px; height:44px; border-radius:50%; background:var(--azul-suave); color:var(--azul-principal); display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:700; flex-shrink:0; }
-  .benef-nombre { font-size:0.9rem; font-weight:700; color:var(--gris-texto); }
-  .benef-detalle { font-size:0.78rem; color:var(--gris-medio); }
-  .btn-agregar { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 22px; font-size:0.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; }
-  .btn-agregar:hover { background:var(--azul-medio); }
-  .btn-agregar:disabled { opacity:0.55; cursor:not-allowed; background:var(--azul-principal); }
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; }
-  .modal-box { background:var(--blanco); border-radius:16px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; }
+
+  /* ── CARDS ── */
+  .benef-card { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:14px; box-shadow:0 2px 16px rgba(0,0,0,0.05); padding:20px; transition:box-shadow .2s,transform .2s; height:100%; }
+  .benef-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(58,143,196,0.1); }
+  .benef-card.titular { border-top:3px solid var(--azul-principal); }
+  .benef-avatar { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; }
+  .av-azul     { background:var(--azul-suave);    color:var(--azul-principal); }
+  .av-verde    { background:var(--verde-suave);   color:var(--verde); }
+  .av-morado   { background:var(--morado-suave);  color:var(--morado); }
+  .av-amarillo { background:var(--amarillo-suave); color:var(--amarillo); }
+  .benef-nombre     { font-size:0.95rem; font-weight:700; color:var(--gris-texto); margin-bottom:2px; }
+  .benef-parentesco { font-size:0.78rem; color:var(--gris-medio); margin-bottom:8px; }
+  .benef-dato { font-size:0.78rem; color:var(--gris-medio); display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+  .benef-dato i { color:var(--azul-principal); width:14px; flex-shrink:0; }
+  .porcentaje-barra { height:6px; background:var(--gris-borde); border-radius:50px; margin:10px 0 4px; overflow:hidden; }
+  .porcentaje-fill  { height:100%; border-radius:50px; background:var(--azul-principal); transition:width .8s ease; }
+  .porcentaje-label { font-size:0.74rem; color:var(--gris-medio); display:flex; justify-content:space-between; }
+  .badge-titular    { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:50px; background:var(--azul-suave); color:var(--azul-principal); display:inline-flex; align-items:center; gap:4px; }
+  .badge-secundario { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:50px; background:var(--gris-fondo); color:var(--gris-medio); border:1px solid var(--gris-borde); }
+
+  /* ── ALERTS ── */
+  .alerta-limite { background:var(--amarillo-suave); border:1px solid #f0c060; border-radius:10px; padding:12px 16px; font-size:0.82rem; color:var(--amarillo); display:flex; align-items:flex-start; gap:10px; }
+  .alerta-limite i { flex-shrink:0; margin-top:2px; }
+  .alerta-completo { background:var(--rojo-suave); border:1px solid #f1948a; border-radius:10px; padding:12px 16px; font-size:0.82rem; color:var(--rojo); display:flex; align-items:flex-start; gap:10px; }
+
+  /* ── COVERAGE HERO ── */
+  .cobertura-hero { background:linear-gradient(135deg,var(--azul-medio) 0%,var(--azul-principal) 100%); border-radius:14px; padding:24px; color:var(--blanco); position:relative; overflow:hidden; }
+  .cobertura-hero::before { content:''; position:absolute; right:-20px; top:-20px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); }
+  .cobertura-hero .ch-label { font-size:0.78rem; opacity:0.8; margin-bottom:4px; }
+  .cobertura-hero .ch-valor { font-size:1.7rem; font-weight:700; font-family:'Inter',sans-serif; margin-bottom:2px; }
+  .cobertura-hero .ch-desc  { font-size:0.78rem; opacity:0.75; }
+
+  /* ── COBERTURA ITEMS ── */
+  .cobertura-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--gris-borde); }
+  .cobertura-item:last-child { border-bottom:none; }
+  .cob-icon { width:38px; height:38px; border-radius:9px; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .cob-icon i { font-size:1rem; color:var(--azul-principal); }
+  .cob-info { flex:1; min-width:0; }
+  .cob-nombre  { font-size:0.86rem; font-weight:600; color:var(--gris-texto); }
+  .cob-detalle { font-size:0.74rem; color:var(--gris-medio); }
+  .cob-monto   { font-size:0.9rem; font-weight:700; color:var(--azul-principal); white-space:nowrap; }
+
+  /* ── BUTTONS ── */
+  .btn-agregar { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 22px; font-size:0.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .2s,transform .15s; }
+  .btn-agregar:hover { background:var(--azul-medio); transform:translateY(-1px); }
+  .btn-agregar:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1050; display:flex; align-items:flex-start; justify-content:center; padding:16px; overflow-y:auto; }
+  .modal-box { background:var(--blanco); border-radius:16px; width:100%; max-width:640px; margin:auto; }
   .modal-header-sh { padding:20px 24px 16px; border-bottom:1px solid var(--gris-borde); display:flex; justify-content:space-between; align-items:center; }
-  .modal-header-sh h3 { font-size:1rem; font-weight:700; margin:0; }
-  .btn-close-sh { background:none; border:none; cursor:pointer; color:var(--gris-medio); font-size:1.2rem; line-height:1; }
+  .modal-header-sh h3 { font-size:1rem; font-weight:700; margin:0; color:var(--gris-texto); }
+  .btn-close-sh { background:none; border:none; cursor:pointer; color:var(--gris-medio); font-size:1.2rem; padding:4px; border-radius:4px; transition:color .2s; line-height:1; }
+  .btn-close-sh:hover { color:var(--gris-texto); }
   .modal-body-sh { padding:20px 24px; }
   .modal-footer-sh { padding:16px 24px; border-top:1px solid var(--gris-borde); display:flex; gap:10px; justify-content:flex-end; }
-  .form-label { font-size:0.82rem; font-weight:500; color:var(--gris-texto); }
-  .form-control, .form-select { border:1px solid var(--gris-borde); border-radius:8px; padding:10px 14px; font-size:0.88rem; }
-  .form-control:focus, .form-select:focus { border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
-  .btn-guardar { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 24px; font-size:0.88rem; font-weight:600; cursor:pointer; }
-  .btn-cancelar { background:var(--blanco); color:var(--gris-medio); border:1px solid var(--gris-borde); border-radius:50px; padding:9px 20px; font-size:0.88rem; cursor:pointer; }
+
+  /* ── FORM ── */
+  .form-label-sh { font-size:0.8rem; font-weight:600; color:var(--gris-texto); margin-bottom:4px; display:block; }
+  .optional-tag { font-size:0.7rem; color:var(--gris-medio); font-weight:400; margin-left:4px; }
+  .form-ctrl { border:1px solid var(--gris-borde); border-radius:8px; padding:9px 13px; font-size:0.86rem; color:var(--gris-texto); background:var(--blanco); width:100%; transition:border-color .2s,box-shadow .2s; }
+  .form-ctrl:focus { border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); outline:none; }
+  .form-ctrl.invalid { border-color:var(--rojo); }
+  .form-ctrl.invalid:focus { box-shadow:0 0 0 3px rgba(192,57,43,0.12); }
+  .field-error { font-size:0.74rem; color:var(--rojo); margin-top:3px; display:flex; align-items:center; gap:4px; }
+  .field-hint  { font-size:0.72rem; color:var(--gris-medio); margin-top:3px; }
+  .btn-guardar  { background:var(--azul-principal); color:var(--blanco); border:none; border-radius:50px; padding:9px 24px; font-size:0.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .2s; }
+  .btn-guardar:hover { background:var(--azul-medio); }
+  .btn-guardar:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-cancelar { background:var(--rojo); color:var(--blanco); border:none; border-radius:50px; padding:9px 24px; font-size:0.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .2s; }
+  .btn-cancelar:hover { background:#a93226; }
+  .btn-cancelar:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-eliminar-confirm { background:#7b241c; color:var(--blanco); border:none; border-radius:50px; padding:9px 24px; font-size:0.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .2s; }
+  .btn-eliminar-confirm:hover { background:#641e16; }
+  .btn-eliminar-confirm:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-accion { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; border:none; transition:background .2s,transform .15s; }
+  .btn-editar  { background:var(--azul-suave); color:var(--azul-principal); }
+  .btn-editar:hover  { background:#d4eaf7; transform:translateY(-1px); }
+  .btn-eliminar { background:var(--rojo-suave); color:var(--rojo); }
+  .btn-eliminar:hover { background:#f9d5d0; transform:translateY(-1px); }
+  .card-actions { display:flex; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--gris-borde); flex-wrap:wrap; }
 </style>
 
 <!-- HEADER -->
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-people"></i></div>
   <h1>Beneficiarios</h1>
-  <p>Gestione los beneficiarios de su plan funerario</p>
+  <p>Gestione los beneficiarios registrados en su contrato de previsión funeraria</p>
 </div>
 
 <section class="benef-section">
-  <div class="container-fluid">
+  <div class="container-lg">
 
     @if (errorMsg()) {
       <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.85rem;border-radius:8px;">
@@ -42,107 +104,311 @@
       </div>
     }
 
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <div class="seccion-titulo mb-0">
-        <h2 style="margin:0;"><i class="bi bi-people me-2" style="color:var(--azul-principal);"></i>Lista de Beneficiarios</h2>
+    <!-- ── TÍTULO + BOTÓN ── -->
+    <div class="seccion-titulo d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+      <div>
+        <h2><i class="bi bi-people" style="color:var(--azul-principal)"></i> Beneficiarios Registrados</h2>
+        <div class="linea-azul"></div>
         @if (maxBeneficiarios() > 0) {
-          <p style="font-size:0.78rem;color:var(--gris-medio);margin:4px 0 0;">
+          <p style="font-size:0.78rem;color:var(--gris-medio);margin:6px 0 0;">
             {{ beneficiarios().length }} / {{ maxBeneficiarios() }} permitidos por el plan
           </p>
         }
       </div>
       <button class="btn-agregar" (click)="abrirModal()" [disabled]="limitAlcanzado()" [title]="limitAlcanzado() ? 'Límite del plan alcanzado' : 'Agregar beneficiario'">
-        <i class="bi bi-plus-lg"></i>Agregar beneficiario
+        <i class="bi bi-person-plus"></i> Agregar Beneficiario
       </button>
     </div>
 
+    <!-- ── ALERTA LÍMITE ── -->
+    @if (maxBeneficiarios() > 0) {
+      @if (limitAlcanzado()) {
+        <div class="alerta-completo mb-3">
+          <i class="bi bi-x-circle-fill"></i>
+          <div>Ha alcanzado el límite de <strong>{{ maxBeneficiarios() }} beneficiario(s)</strong> permitidos por su plan. No puede agregar más.</div>
+        </div>
+      } @else {
+        <div class="alerta-limite mb-3">
+          <i class="bi bi-info-circle-fill"></i>
+          <div>
+            Su plan permite hasta <strong>{{ maxBeneficiarios() }} beneficiarios</strong>.
+            Actualmente tiene <strong>{{ beneficiarios().length }} registrado(s)</strong>.
+            Puede agregar {{ maxBeneficiarios() - beneficiarios().length }} más.
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ── CARGANDO ── -->
     @if (loading()) {
       <div class="text-center py-5">
         <div class="spinner-border text-primary"></div>
         <p class="mt-3 text-muted">Cargando beneficiarios...</p>
       </div>
+
+    <!-- ── SIN BENEFICIARIOS ── -->
     } @else if (beneficiarios().length === 0) {
       <div class="info-card text-center py-5">
         <i class="bi bi-people" style="font-size:2.5rem;color:var(--gris-borde);"></i>
         <p class="mt-3" style="color:var(--gris-medio);">Aún no tiene beneficiarios registrados.</p>
-            <button class="btn-agregar mx-auto mt-2" (click)="abrirModal()" [disabled]="limitAlcanzado()">
-              <i class="bi bi-plus-lg"></i>Agregar el primero
-            </button>
+        <button class="btn-agregar mx-auto mt-2" (click)="abrirModal()" [disabled]="limitAlcanzado()">
+          <i class="bi bi-person-plus"></i> Agregar el primero
+        </button>
       </div>
+
+    <!-- ── CARDS GRID ── -->
     } @else {
-      <div class="d-flex flex-column gap-2">
-        @for (b of beneficiarios(); track b.id) {
-          <div class="benef-card">
-            <div class="benef-avatar">{{ b.nombreCompleto[0] }}{{ b.nombreCompleto.split(' ')[1]?.[0] }}</div>
-            <div class="flex-grow-1">
-              <div class="benef-nombre">{{ b.nombreCompleto }}</div>
-              <div class="benef-detalle">
-                {{ parentescoLabel(b.parentesco) }}
-                @if (b.porcentajeCobertura) { · {{ b.porcentajeCobertura }}% cobertura }
-                @if (b.telefono) { · {{ b.telefono }} }
+      <div class="row g-3 mb-4">
+        @for (b of beneficiarios(); track b.id; let i = $index) {
+          <div class="col-12 col-md-6 col-lg-4 d-flex flex-column">
+            <div class="benef-card" [class.titular]="b.esTitular">
+              <div class="d-flex align-items-center gap-3" style="margin-bottom:12px;">
+                <div class="benef-avatar" [class]="avatarColor(i)">{{ inicialesDeNombre(b.nombreCompleto) }}</div>
+                <div>
+                  <div class="benef-nombre">{{ b.nombreCompleto }}</div>
+                  <div class="benef-parentesco">{{ parentescoLabel(b.parentesco) }}</div>
+                  @if (b.esTitular) {
+                    <span class="badge-titular"><i class="bi bi-star-fill" style="font-size:0.55rem;"></i> Titular</span>
+                  } @else {
+                    <span class="badge-secundario">Secundario</span>
+                  }
+                </div>
+              </div>
+              @if (b.telefono) {
+                <div class="benef-dato"><i class="bi bi-telephone"></i> {{ b.telefono }}</div>
+              }
+              @if (b.correo) {
+                <div class="benef-dato"><i class="bi bi-envelope"></i> {{ b.correo }}</div>
+              }
+              @if (b.porcentajeCobertura) {
+                <div class="porcentaje-barra">
+                  <div class="porcentaje-fill" [style.width.%]="b.porcentajeCobertura"></div>
+                </div>
+                <div class="porcentaje-label">
+                  <span>Cobertura asignada</span>
+                  <span style="font-weight:700;color:var(--azul-principal);">{{ b.porcentajeCobertura }}%</span>
+                </div>
+              }
+              <div class="card-actions">
+                <button class="btn-accion btn-editar" (click)="abrirEditar(b)" type="button">
+                  <i class="bi bi-pencil"></i> Editar
+                </button>
+                @if (!b.esTitular) {
+                  <button class="btn-accion btn-eliminar" (click)="abrirConfEliminar(b)" type="button">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                }
               </div>
             </div>
           </div>
         }
       </div>
+
     }
 
   </div>
 </section>
 
-<!-- MODAL -->
+<!-- ══════════════════════════════════════
+     MODAL — AGREGAR BENEFICIARIO
+══════════════════════════════════════ -->
 @if (mostrarModal()) {
   <div class="modal-overlay" (click)="cerrarModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
+
       <div class="modal-header-sh">
-        <h3>Agregar Beneficiario</h3>
-        <button class="btn-close-sh" (click)="cerrarModal()"><i class="bi bi-x-lg"></i></button>
+        <h3><i class="bi bi-person-plus me-2" style="color:var(--azul-principal)"></i>Agregar Beneficiario</h3>
+        <button class="btn-close-sh" (click)="cerrarModal()" type="button"><i class="bi bi-x-lg"></i></button>
       </div>
+
       <form [formGroup]="form" (ngSubmit)="guardar()">
         <div class="modal-body-sh">
+
+          @if (errorMsg()) {
+            <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.83rem;border-radius:8px;">
+              <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+            </div>
+          }
+
           <div class="row g-3">
-            <div class="col-6">
-              <label class="form-label">Nombre *</label>
-              <input type="text" class="form-control" formControlName="nombre"/>
+
+            <!-- Nombre -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Nombre(s) <span style="color:var(--rojo);">*</span></label>
+              <input type="text" formControlName="nombre" placeholder="Ej. María Luisa"
+                     class="form-ctrl" [class.invalid]="isInvalid('nombre')"/>
+              @if (isInvalid('nombre')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> El nombre es requerido.</div>
+              }
             </div>
-            <div class="col-6">
-              <label class="form-label">Apellido Paterno *</label>
-              <input type="text" class="form-control" formControlName="apPaterno"/>
+
+            <!-- Apellido paterno -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Apellido Paterno <span style="color:var(--rojo);">*</span></label>
+              <input type="text" formControlName="apPaterno" placeholder="Ej. López"
+                     class="form-ctrl" [class.invalid]="isInvalid('apPaterno')"/>
+              @if (isInvalid('apPaterno')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> El apellido paterno es requerido.</div>
+              }
             </div>
-            <div class="col-6">
-              <label class="form-label">Apellido Materno</label>
-              <input type="text" class="form-control" formControlName="apMaterno"/>
+
+            <!-- Apellido materno -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Apellido Materno <span class="optional-tag">(opcional)</span></label>
+              <input type="text" formControlName="apMaterno" placeholder="Ej. Pérez" class="form-ctrl"/>
             </div>
-            <div class="col-6">
-              <label class="form-label">Parentesco *</label>
-              <select class="form-select" formControlName="parentescoId">
-                <option value="">Seleccione...</option>
+
+            <!-- Parentesco -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Parentesco <span style="color:var(--rojo);">*</span></label>
+              <select formControlName="parentescoId" class="form-ctrl" [class.invalid]="isInvalid('parentescoId')">
+                <option [ngValue]="null">Seleccionar…</option>
                 @for (p of parentescos(); track p.id) {
                   <option [value]="p.id">{{ p.nombre }}</option>
                 }
               </select>
+              @if (isInvalid('parentescoId')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> Seleccione un parentesco.</div>
+              }
             </div>
-            <div class="col-6">
-              <label class="form-label">Teléfono</label>
-              <input type="tel" class="form-control" formControlName="telefono" maxlength="10"/>
+
+            <!-- Fecha de nacimiento -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Fecha de Nacimiento <span class="optional-tag">(opcional)</span></label>
+              <input type="date" formControlName="fechaNacimiento" class="form-ctrl"/>
             </div>
-            <div class="col-6">
-              <label class="form-label">Correo</label>
-              <input type="email" class="form-control" formControlName="correo"/>
+
+            <!-- Teléfono -->
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Teléfono <span class="optional-tag">(opcional)</span></label>
+              <input type="tel" formControlName="telefono" placeholder="10 dígitos" maxlength="10"
+                     class="form-ctrl" [class.invalid]="isInvalid('telefono')"/>
+              @if (isInvalid('telefono')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> Debe tener exactamente 10 dígitos.</div>
+              }
             </div>
-            <div class="col-6">
-              <label class="form-label">% Cobertura</label>
-              <input type="number" class="form-control" formControlName="porcentajeCobertura" min="1" max="100"/>
+
+            <!-- Correo -->
+            <div class="col-12 col-md-6">
+              <label class="form-label-sh">Correo Electrónico <span class="optional-tag">(opcional)</span></label>
+              <input type="email" formControlName="correo" placeholder="correo@ejemplo.com"
+                     class="form-ctrl" [class.invalid]="isInvalid('correo')"/>
+              @if (isInvalid('correo')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> Ingrese un correo electrónico válido.</div>
+              }
+            </div>
+
+            <!-- % Cobertura -->
+            <div class="col-12 col-md-6">
+              <label class="form-label-sh">% de Cobertura <span style="color:var(--rojo);">*</span></label>
+              <input type="number" formControlName="porcentajeCobertura" min="1" max="100"
+                     class="form-ctrl" [class.invalid]="isInvalid('porcentajeCobertura')"/>
+              @if (isInvalid('porcentajeCobertura')) {
+                <div class="field-error"><i class="bi bi-exclamation-circle"></i> Ingrese un porcentaje entre 1 y 100.</div>
+              } @else {
+                <div class="field-hint"><i class="bi bi-info-circle"></i> La suma de todos los beneficiarios debe ser 100%.</div>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer-sh">
+          <button type="button" class="btn-guardar" [style.background-color]="'#c0392b'" (click)="cerrarModal()">
+            <i class="bi bi-x-lg" style="margin-right:4px;"></i> Cancelar
+          </button>
+          <button type="submit" class="btn-guardar" [disabled]="guardando()">
+            @if (guardando()) {
+              <span class="spinner-border spinner-border-sm"></span> Guardando...
+            } @else {
+              <i class="bi bi-person-check"></i> Guardar Beneficiario
+            }
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════
+     MODAL — EDITAR BENEFICIARIO
+══════════════════════════════════════ -->
+@if (mostrarModalEditar()) {
+  <div class="modal-overlay" (click)="cerrarEditar()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header-sh">
+        <h3><i class="bi bi-pencil me-2" style="color:var(--azul-principal)"></i>Editar Beneficiario</h3>
+        <button class="btn-close-sh" (click)="cerrarEditar()" type="button"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <form [formGroup]="formEditar" (ngSubmit)="guardarEdicion()">
+        <div class="modal-body-sh">
+
+          @if (errorMsg()) {
+            <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.83rem;border-radius:8px;">
+              <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
+            </div>
+          }
+
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Nombre(s) <span style="color:var(--rojo);">*</span></label>
+              <input type="text" formControlName="nombre" class="form-ctrl" [class.invalid]="isInvalidEdit('nombre')"/>
+              @if (isInvalidEdit('nombre')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Requerido.</div> }
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Apellido Paterno <span style="color:var(--rojo);">*</span></label>
+              <input type="text" formControlName="apPaterno" class="form-ctrl" [class.invalid]="isInvalidEdit('apPaterno')"/>
+              @if (isInvalidEdit('apPaterno')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Requerido.</div> }
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Apellido Materno <span class="optional-tag">(opcional)</span></label>
+              <input type="text" formControlName="apMaterno" class="form-ctrl"/>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Parentesco <span style="color:var(--rojo);">*</span></label>
+              <select formControlName="parentescoId" class="form-ctrl" [class.invalid]="isInvalidEdit('parentescoId')">
+                <option [ngValue]="null">Seleccionar…</option>
+                @for (p of parentescos(); track p.id) {
+                  <option [value]="p.id">{{ p.nombre }}</option>
+                }
+              </select>
+              @if (isInvalidEdit('parentescoId')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Requerido.</div> }
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Fecha de Nacimiento <span class="optional-tag">(opcional)</span></label>
+              <input type="date" formControlName="fechaNacimiento" class="form-ctrl"/>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label-sh">Teléfono <span class="optional-tag">(opcional)</span></label>
+              <input type="tel" formControlName="telefono" maxlength="10" placeholder="10 dígitos"
+                     class="form-ctrl" [class.invalid]="isInvalidEdit('telefono')"/>
+              @if (isInvalidEdit('telefono')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Debe tener 10 dígitos.</div> }
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label-sh">Correo Electrónico <span class="optional-tag">(opcional)</span></label>
+              <input type="email" formControlName="correo" class="form-ctrl" [class.invalid]="isInvalidEdit('correo')"/>
+              @if (isInvalidEdit('correo')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Correo inválido.</div> }
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label-sh">% de Cobertura <span style="color:var(--rojo);">*</span></label>
+              <input type="number" formControlName="porcentajeCobertura" min="1" max="100"
+                     class="form-ctrl" [class.invalid]="isInvalidEdit('porcentajeCobertura')"/>
+              @if (isInvalidEdit('porcentajeCobertura')) { <div class="field-error"><i class="bi bi-exclamation-circle"></i> Ingrese entre 1 y 100.</div> }
             </div>
           </div>
         </div>
         <div class="modal-footer-sh">
-          <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
-          <button type="submit" class="btn-guardar" [disabled]="guardando()">
-            @if (guardando()) {
-              <span class="spinner-border spinner-border-sm me-1"></span>Guardando...
+          <button type="button" class="btn-guardar" [style.background-color]="'#c0392b'" (click)="cerrarEditar()">
+            <i class="bi bi-x-lg" style="margin-right:4px;"></i> Cancelar
+          </button>
+          <button type="submit" class="btn-guardar" [disabled]="guardandoEdicion()">
+            @if (guardandoEdicion()) {
+              <span class="spinner-border spinner-border-sm"></span> Guardando...
             } @else {
-              Guardar
+              <i class="bi bi-check2"></i> Guardar Cambios
             }
           </button>
         </div>
@@ -150,3 +416,40 @@
     </div>
   </div>
 }
+
+<!-- ══════════════════════════════════════
+     MODAL — CONFIRMAR ELIMINAR
+══════════════════════════════════════ -->
+@if (mostrarConfEliminar()) {
+  <div class="modal-overlay" (click)="cerrarConfEliminar()">
+    <div class="modal-box" style="max-width:420px;" (click)="$event.stopPropagation()">
+      <div class="modal-header-sh">
+        <h3><i class="bi bi-exclamation-triangle me-2" style="color:var(--rojo)"></i>Eliminar Beneficiario</h3>
+        <button class="btn-close-sh" (click)="cerrarConfEliminar()" type="button"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body-sh text-center" style="padding-top:24px;padding-bottom:24px;">
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--rojo-suave);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <i class="bi bi-person-dash" style="font-size:1.5rem;color:var(--rojo);"></i>
+        </div>
+        <p style="font-size:0.92rem;color:var(--gris-texto);margin-bottom:6px;">
+          ¿Desea eliminar al beneficiario
+          <strong>{{ beneficiarioAEliminarNombre() }}</strong>?
+        </p>
+        <p style="font-size:0.8rem;color:var(--gris-medio);">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer-sh justify-content-center gap-3">
+        <button type="button" class="btn-guardar" [style.background-color]="'#c0392b'" (click)="cerrarConfEliminar()" [disabled]="eliminando()">
+          <i class="bi bi-x-lg" style="margin-right:4px;"></i> Cancelar
+        </button>
+        <button type="button" class="btn-eliminar-confirm" (click)="confirmarEliminar()" [disabled]="eliminando()">
+          @if (eliminando()) {
+            <span class="spinner-border spinner-border-sm"></span> Eliminando...
+          } @else {
+            <i class="bi bi-trash"></i> Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

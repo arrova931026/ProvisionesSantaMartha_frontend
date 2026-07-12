@@ -7,6 +7,7 @@ export interface Beneficiario {
   apMaterno?: string;
   nombreCompleto: string;
   parentesco?: string;
+  parentescoId?: number;
   porcentajeCobertura?: number;
   esTitular?: boolean;
   telefono?: string;

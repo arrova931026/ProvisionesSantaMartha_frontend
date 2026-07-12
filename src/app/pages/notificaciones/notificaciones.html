@@ -1,86 +1,314 @@
 <style>
   .notif-section { padding: 36px 16px 56px; }
-  .filtros-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
-  .filtro-btn { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:50px; padding:6px 16px; font-size:0.82rem; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s; color:var(--gris-texto); }
-  .filtro-btn.active { background:var(--azul-principal); border-color:var(--azul-principal); color:var(--blanco); }
-  .notif-item { background:var(--blanco); border-radius:12px; border:1px solid var(--gris-borde); padding:14px 16px; display:flex; gap:14px; transition:box-shadow 0.2s; cursor:pointer; }
-  .notif-item.no-leida { border-left:3px solid var(--azul-principal); background:var(--azul-suave); }
-  .notif-item:hover { box-shadow:0 4px 14px rgba(58,143,196,0.12); }
-  .notif-icon-wrap { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(58,143,196,0.1); }
-  .notif-icon-wrap i { font-size:1rem; }
-  .notif-titulo { font-size:0.88rem; font-weight:600; color:var(--gris-texto); }
-  .notif-item.no-leida .notif-titulo { font-weight:700; }
-  .notif-msg { font-size:0.82rem; color:var(--gris-medio); line-height:1.5; margin-top:4px; }
-  .notif-fecha { font-size:0.75rem; color:var(--gris-medio); margin-top:6px; }
-  .punto-azul { width:8px; height:8px; border-radius:50%; background:var(--azul-principal); flex-shrink:0; margin-top:6px; }
+
+  /* ── HEADER BADGE ── */
+  .header-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); border-radius:50px; padding:4px 14px; font-size:0.8rem; color:var(--blanco); margin-top:10px; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+  .stat-chip { display:flex; align-items:center; gap:10px; background:var(--blanco); border:1px solid var(--gris-borde); border-radius:12px; padding:12px 18px; flex:1; min-width:120px; }
+  .stat-chip .sc-ico { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .stat-chip .sc-ico i { font-size:1rem; }
+  .stat-chip .sc-val { font-size:1.3rem; font-weight:700; font-family:'Inter',sans-serif; line-height:1; }
+  .stat-chip .sc-lbl { font-size:0.72rem; color:var(--gris-medio); line-height:1.3; }
+
+  /* ── FILTROS ── */
+  .filtros-bar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+  .filtro-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border:1.5px solid var(--gris-borde); border-radius:50px; background:var(--blanco); font-size:0.8rem; font-weight:500; color:var(--gris-medio); cursor:pointer; transition:all .2s; }
+  .filtro-btn:hover { border-color:var(--azul-principal); color:var(--azul-principal); }
+  .filtro-btn.active { border-color:var(--azul-principal); background:var(--azul-suave); color:var(--azul-principal); font-weight:600; }
+  .fbadge { font-size:0.7rem; font-weight:700; padding:1px 6px; border-radius:50px; background:var(--azul-principal); color:var(--blanco); line-height:1.4; }
+  .filtro-btn.active .fbadge { background:var(--azul-medio); }
+
+  /* ── NOTIF CARD ── */
+  .notif-card { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:14px; padding:18px 20px; margin-bottom:12px; display:flex; gap:16px; align-items:flex-start; transition:box-shadow .2s,border-color .2s; position:relative; cursor:pointer; }
+  .notif-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.07); }
+  .notif-card.no-leida { border-left:4px solid var(--azul-principal); }
+  .notif-card.no-leida::after { content:''; position:absolute; top:18px; right:18px; width:8px; height:8px; border-radius:50%; background:var(--azul-principal); }
+  .notif-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .notif-icon i { font-size:1.2rem; }
+  .ni-amarillo { background:var(--amarillo-suave); } .ni-amarillo i { color:var(--amarillo); }
+  .ni-rojo     { background:var(--rojo-suave); }     .ni-rojo i     { color:var(--rojo); }
+  .ni-verde    { background:var(--verde-suave); }    .ni-verde i    { color:var(--verde); }
+  .ni-azul     { background:var(--azul-suave); }     .ni-azul i     { color:var(--azul-principal); }
+  .ni-naranja  { background:var(--naranja-suave); }  .ni-naranja i  { color:var(--naranja); }
+  .ni-morado   { background:var(--morado-suave); }   .ni-morado i   { color:var(--morado); }
+  .notif-body { flex:1; min-width:0; }
+  .notif-titulo { font-size:0.88rem; font-weight:700; color:var(--gris-texto); margin-bottom:3px; padding-right:20px; }
+  .notif-desc { font-size:0.82rem; color:var(--gris-medio); line-height:1.5; margin-bottom:10px; }
+  .notif-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .notif-fecha { font-size:0.74rem; color:var(--gris-medio); display:flex; align-items:center; gap:4px; }
+  .notif-tag { font-size:0.7rem; font-weight:600; padding:2px 10px; border-radius:50px; }
+  .tag-pago-proximo { background:var(--amarillo-suave); color:var(--amarillo); }
+  .tag-pago-vencido { background:var(--rojo-suave);     color:var(--rojo); }
+  .tag-promo        { background:var(--morado-suave);   color:var(--morado); }
+  .tag-cobertura    { background:var(--azul-suave);     color:var(--azul-principal); }
+  .tag-aviso        { background:var(--verde-suave);    color:var(--verde); }
+  .tag-sistema      { background:#f0f0f0;               color:#555; }
+  .notif-action { font-size:0.78rem; font-weight:600; color:var(--azul-principal); text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin-top:2px; }
+  .notif-action:hover { text-decoration:underline; }
+
+  /* ── PREFERENCIAS ── */
+  .pref-card { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:14px; padding:24px; }
+  .pref-title { font-size:0.88rem; font-weight:700; color:var(--gris-texto); display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--gris-borde); }
+  .pref-fila { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--gris-borde); gap:12px; }
+  .pref-fila:last-child { border-bottom:none; }
+  .pref-info { flex:1; min-width:0; }
+  .pref-info .pf-titulo { font-size:0.84rem; font-weight:600; color:var(--gris-texto); margin-bottom:1px; }
+  .pref-info .pf-desc   { font-size:0.74rem; color:var(--gris-medio); line-height:1.3; }
+  .form-check-input:checked { background-color:var(--azul-principal); border-color:var(--azul-principal); }
+  .form-check-input:focus { box-shadow:0 0 0 3px rgba(58,143,196,0.15); border-color:var(--azul-principal); }
+
+  /* ── BTN ── */
+  .btn-sh-outline { display:inline-flex; align-items:center; gap:7px; padding:9px 20px; border:1.5px solid var(--azul-principal); border-radius:50px; background:transparent; color:var(--azul-principal); font-size:0.85rem; font-weight:600; text-decoration:none; transition:background .2s; cursor:pointer; }
+  .btn-sh-outline:hover { background:var(--azul-suave); color:var(--azul-principal); }
+
+  /* ── EMPTY STATE ── */
+  .empty-notif { text-align:center; padding:48px 24px; color:var(--gris-medio); }
+  .empty-notif i { font-size:2.8rem; opacity:.35; margin-bottom:14px; display:block; }
+  .empty-notif p { font-size:0.88rem; margin:0; }
 </style>
 
 <!-- HEADER -->
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-bell"></i></div>
   <h1>Notificaciones</h1>
-  <p>
+  <p>Centro de avisos de Sociedad Humanista Santa Martha</p>
+  <div>
     @if (noLeidas() > 0) {
-      <span class="badge-azul">{{ noLeidas() }} sin leer</span>
+      <span class="header-badge">
+        <i class="bi bi-circle-fill" style="font-size:0.5rem;color:#f39c12;"></i>
+        {{ noLeidas() }} sin leer
+      </span>
     } @else {
-      Todas leídas
+      <span class="header-badge">
+        <i class="bi bi-check-circle-fill" style="font-size:0.8rem;color:#27ae60;"></i>
+        Todo al día
+      </span>
     }
-  </p>
+  </div>
 </div>
 
 <section class="notif-section">
-  <div class="container-fluid">
+  <div class="container-lg">
 
     @if (errorMsg()) {
-      <div class="alert alert-danger py-2 px-3" style="font-size:0.85rem;border-radius:8px;">
+      <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.85rem;border-radius:8px;">
         <i class="bi bi-exclamation-circle me-2"></i>{{ errorMsg() }}
       </div>
     }
 
-    <!-- FILTROS + MARCAR TODAS -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-      <div class="filtros-bar mb-0">
-        @for (f of filtros; track f.key) {
-          <button class="filtro-btn" [class.active]="filtroActivo() === f.key" (click)="filtroActivo.set(f.key)">
-            <i [class]="'bi ' + f.icon"></i>{{ f.label }}
-          </button>
-        }
-      </div>
-      @if (noLeidas() > 0) {
-        <button class="btn-leer-todas" (click)="marcarTodasLeidas()" style="background:transparent;border:none;color:var(--azul-principal);font-size:0.82rem;font-weight:600;cursor:pointer;">
-          <i class="bi bi-check-all me-1"></i>Marcar todas como leídas
-        </button>
-      }
-    </div>
-
-    @if (loading()) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
-        <p class="mt-3 text-muted">Cargando notificaciones...</p>
-      </div>
-    } @else if (filtradas().length === 0) {
-      <div class="text-center py-5">
-        <i class="bi bi-bell-slash" style="font-size:2.5rem;color:var(--gris-borde);"></i>
-        <p class="mt-3" style="color:var(--gris-medio);">No hay notificaciones en esta categoría.</p>
-      </div>
-    } @else {
-      <div class="d-flex flex-column gap-2">
-        @for (n of filtradas(); track n.id) {
-          <div class="notif-item" [class.no-leida]="!n.leida" (click)="marcarLeida(n.id)">
-            <div class="notif-icon-wrap" [style.background]="colorTipo(n.tipo) + '1a'">
-              <i [class]="'bi ' + iconoTipo(n.tipo)" [style.color]="colorTipo(n.tipo)"></i>
-            </div>
-            <div class="flex-grow-1">
-              <div class="notif-titulo">{{ n.titulo }}</div>
-              <div class="notif-msg">{{ n.mensaje }}</div>
-              <div class="notif-fecha"><i class="bi bi-clock me-1"></i>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
-            </div>
-            @if (!n.leida) {
-              <div class="punto-azul"></div>
-            }
+    <!-- ── STATS ROW ── -->
+    @if (!loading() && notificaciones().length > 0) {
+      <div class="stats-row">
+        <div class="stat-chip">
+          <div class="sc-ico" style="background:var(--azul-suave);">
+            <i class="bi bi-bell" style="color:var(--azul-principal);"></i>
           </div>
-        }
+          <div>
+            <div class="sc-val" style="color:var(--azul-principal);">{{ notificaciones().length }}</div>
+            <div class="sc-lbl">Total</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="sc-ico" style="background:var(--amarillo-suave);">
+            <i class="bi bi-credit-card-fill" style="color:var(--amarillo);"></i>
+          </div>
+          <div>
+            <div class="sc-val" style="color:var(--amarillo);">{{ conteoPorTipo()['PAGO'] ?? 0 }}</div>
+            <div class="sc-lbl">Pagos</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="sc-ico" style="background:var(--morado-suave);">
+            <i class="bi bi-tag-fill" style="color:var(--morado);"></i>
+          </div>
+          <div>
+            <div class="sc-val" style="color:var(--morado);">{{ conteoPorTipo()['PROMOCION'] ?? 0 }}</div>
+            <div class="sc-lbl">Promociones</div>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="sc-ico" style="background:var(--verde-suave);">
+            <i class="bi bi-bell-fill" style="color:var(--verde);"></i>
+          </div>
+          <div>
+            <div class="sc-val" style="color:var(--verde);">{{ noLeidas() }}</div>
+            <div class="sc-lbl">Sin leer</div>
+          </div>
+        </div>
       </div>
     }
+
+    <div class="row g-4">
+
+      <!-- ══ COLUMNA IZQUIERDA: Listado ══ -->
+      <div class="col-12 col-lg-8">
+
+        <!-- Filtros + marcar leídas -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div class="filtros-bar mb-0">
+            @for (f of filtros; track f.key) {
+              <button class="filtro-btn" [class.active]="filtroActivo() === f.key" (click)="filtroActivo.set(f.key)">
+                <i [class]="'bi ' + f.icon"></i>
+                {{ f.label }}
+                @if ((conteoPorTipo()[f.key] ?? (f.key === 'TODOS' ? notificaciones().length : 0)) > 0) {
+                  <span class="fbadge">{{ f.key === 'TODOS' ? notificaciones().length : (conteoPorTipo()[f.key] ?? 0) }}</span>
+                }
+              </button>
+            }
+          </div>
+          @if (noLeidas() > 0) {
+            <button class="btn-sh-outline" style="padding:6px 16px;font-size:0.8rem;" (click)="marcarTodasLeidas()">
+              <i class="bi bi-check2-all"></i> Marcar todas como leídas
+            </button>
+          }
+        </div>
+
+        <!-- Loading -->
+        @if (loading()) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-3 text-muted">Cargando notificaciones...</p>
+          </div>
+
+        <!-- Empty -->
+        } @else if (filtradas().length === 0) {
+          <div class="empty-notif">
+            <i class="bi bi-bell-slash"></i>
+            <p>No hay notificaciones en esta categoría.</p>
+          </div>
+
+        <!-- Cards -->
+        } @else {
+          @for (n of filtradas(); track n.id) {
+            <div class="notif-card" [class.no-leida]="!n.leida" (click)="marcarLeida(n.id)">
+              <div class="notif-icon" [class]="iconoClase(n.tipo)">
+                <i [class]="'bi ' + iconoTipo(n.tipo)"></i>
+              </div>
+              <div class="notif-body">
+                <div class="notif-titulo">{{ n.titulo }}</div>
+                <div class="notif-desc">{{ n.mensaje }}</div>
+                <div class="notif-meta">
+                  <span class="notif-tag" [class]="tagClase(n.tipo)">
+                    <i class="bi bi-tag me-1"></i>{{ tagLabel(n.tipo) }}
+                  </span>
+                  <span class="notif-fecha">
+                    <i class="bi bi-calendar3"></i>{{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                  @if (accionTipo(n.tipo); as accion) {
+                    <a [routerLink]="accion.ruta" class="notif-action" (click)="$event.stopPropagation()">
+                      <i class="bi bi-arrow-right-circle"></i> {{ accion.label }}
+                    </a>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+      </div><!-- /col izquierda -->
+
+      <!-- ══ COLUMNA DERECHA: Preferencias ══ -->
+      <div class="col-12 col-lg-4 d-flex flex-column gap-4">
+
+        <!-- Preferencias WhatsApp -->
+        <div class="pref-card">
+          <div class="pref-title">
+            <i class="bi bi-whatsapp" style="color:#25d366;font-size:1.1rem;"></i>
+            Avisos por WhatsApp
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Pago próximo</div>
+              <div class="pf-desc">Aviso 10 días antes del vencimiento</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Pago vencido</div>
+              <div class="pf-desc">Aviso inmediato al vencer el plazo</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Promociones</div>
+              <div class="pf-desc">Ofertas y beneficios exclusivos</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Cambios de cobertura</div>
+              <div class="pf-desc">Actualizaciones a los servicios del plan</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="mt-3">
+            <a href="https://api.whatsapp.com/send?phone=5217821574801" target="_blank" rel="noopener noreferrer"
+               class="btn-sh-outline w-100 justify-content-center">
+              <i class="bi bi-whatsapp"></i> Contactar por WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- Preferencias Correo -->
+        <div class="pref-card">
+          <div class="pref-title">
+            <i class="bi bi-envelope-at" style="color:var(--azul-principal);font-size:1.1rem;"></i>
+            Avisos por Correo
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Pago próximo</div>
+              <div class="pf-desc">Recordatorio 5 días antes</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Pago vencido</div>
+              <div class="pf-desc">Notificación al día siguiente de vencer</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Promociones</div>
+              <div class="pf-desc">Boletín mensual de beneficios</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" readonly/>
+            </div>
+          </div>
+          <div class="pref-fila">
+            <div class="pref-info">
+              <div class="pf-titulo">Cambios de cobertura</div>
+              <div class="pf-desc">Comunicado oficial de modificaciones</div>
+            </div>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" checked readonly/>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /col derecha -->
+    </div><!-- /row -->
+
   </div>
 </section>
+

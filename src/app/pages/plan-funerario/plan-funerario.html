@@ -1,43 +1,141 @@
 <style>
   .plan-section { padding: 36px 16px 56px; }
-  .servicio-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--gris-borde); }
-  .servicio-item:last-child { border-bottom:none; }
-  .servicio-icon { width:38px; height:38px; border-radius:8px; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .servicio-icon i { font-size:1rem; color:var(--azul-principal); }
-  /* PDF button */
-  .btn-descargar-pdf {
-    border: none;
-    background: var(--azul-principal, #1e6fa3);
-    color: #fff;
-    border-radius: 50px;
-    padding: 10px 24px;
-    font-weight: 700;
-    font-size: 0.88rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    transition: opacity .2s;
+
+  /* ── PLAN HERO CARD ── */
+  .plan-hero-card {
+    background: linear-gradient(135deg, var(--azul-principal) 0%, var(--azul-medio) 100%);
+    border-radius: 16px; padding: 28px 24px;
+    color: var(--blanco);
+    box-shadow: 0 8px 32px rgba(58,143,196,0.25);
+    position: relative; overflow: hidden;
   }
-  .btn-descargar-pdf:disabled { opacity:.6; cursor:not-allowed; }
-  /* beneficiarios */
-  .benef-row-pf { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--gris-borde,#e9ecef); }
-  .benef-row-pf:last-child { border-bottom:none; }
-  .benef-avatar { width:40px; height:40px; border-radius:50%; background:var(--azul-suave,#dbeeff); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--azul-principal,#1e6fa3); font-size:1.2rem; }
-  .benef-datos { flex:1; min-width:0; }
-  .benef-nombre { font-weight:600; font-size:0.9rem; color:var(--texto-principal,#1a2b3c); }
-  .benef-meta { display:flex; flex-wrap:wrap; gap:8px; font-size:0.78rem; color:#6c757d; margin-top:3px; }
-  .badge-titular { background:var(--azul-principal,#1e6fa3); color:#fff; border-radius:20px; padding:2px 8px; font-size:0.72rem; font-weight:600; }
+  .plan-hero-card::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+  .plan-hero-card::after {
+    content: ''; position: absolute; bottom: -60px; left: -20px;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .plan-tipo-label { font-size:0.72rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; opacity:0.75; margin-bottom:6px; }
+  .plan-nombre { font-family:'Lora',serif; font-size:clamp(1.3rem,4vw,1.8rem); font-weight:600; margin-bottom:4px; }
+  .plan-contrato { font-size:0.82rem; opacity:0.8; margin-bottom:20px; }
+  .plan-datos-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; position:relative; z-index:1; }
+  .plan-dato { background:rgba(255,255,255,0.12); border-radius:10px; padding:12px 14px; backdrop-filter:blur(4px); }
+  .plan-dato .pd-label { font-size:0.7rem; opacity:0.75; margin-bottom:3px; font-weight:500; }
+  .plan-dato .pd-valor { font-size:0.92rem; font-weight:700; }
+  .plan-badge-activo {
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35);
+    padding:4px 12px; border-radius:50px;
+    font-size:0.78rem; font-weight:600; color:white; margin-bottom:16px;
+  }
+  .plan-badge-activo i { font-size:0.45rem; }
+  .plan-hero-actions { margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.2); position:relative; z-index:1; }
+  .btn-pdf {
+    border:1px solid rgba(255,255,255,0.6); background:rgba(255,255,255,0.15);
+    color:#fff; border-radius:50px; padding:8px 20px;
+    font-weight:700; font-size:0.84rem; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition:background .2s;
+  }
+  .btn-pdf:hover { background:rgba(255,255,255,0.25); }
+  .btn-pdf:disabled { opacity:.55; cursor:not-allowed; }
+
+  /* ── VIGENCIA ── */
+  .vigencia-barra-wrap { margin:16px 0 8px; }
+  .vigencia-barra-labels { display:flex; justify-content:space-between; font-size:0.74rem; color:var(--gris-medio); margin-bottom:6px; }
+  .vigencia-barra { width:100%; height:10px; border-radius:5px; background:var(--gris-borde); overflow:hidden; }
+  .vigencia-barra-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,var(--azul-principal),var(--verde)); transition:width 1s ease; }
+  .vigencia-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px; }
+  .vigencia-stat { background:var(--gris-fondo); border:1px solid var(--gris-borde); border-radius:10px; padding:12px; text-align:center; }
+  .vigencia-stat .vs-valor { font-size:1.1rem; font-weight:700; color:var(--azul-principal); }
+  .vigencia-stat .vs-label { font-size:0.72rem; color:var(--gris-medio); line-height:1.3; }
+
+  /* ── COBERTURA ── */
+  .cobertura-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--gris-borde); }
+  .cobertura-item:last-child { border-bottom:none; }
+  .cob-icon { width:38px; height:38px; border-radius:8px; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .cob-icon i { font-size:1rem; color:var(--azul-principal); }
+  .cob-info { flex:1; min-width:0; }
+  .cob-nombre { font-size:0.86rem; font-weight:600; color:var(--gris-texto); }
+  .cob-detalle { font-size:0.75rem; color:var(--gris-medio); }
+  .cob-monto { font-size:0.9rem; font-weight:700; color:var(--azul-principal); white-space:nowrap; }
+  .cobertura-total { margin-top:16px; padding:12px 14px; background:var(--azul-suave); border-radius:10px; display:flex; justify-content:space-between; align-items:center; }
+  .cobertura-total-label { font-size:0.84rem; font-weight:600; color:var(--azul-medio); }
+  .cobertura-total-monto { font-size:1.1rem; font-weight:800; color:var(--azul-principal); }
+
+  /* ── BENEFICIARIOS ── */
+  .beneficiario-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--gris-borde); }
+  .beneficiario-item:last-child { border-bottom:none; }
+  .beneficiario-avatar { width:42px; height:42px; border-radius:50%; background:var(--azul-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.9rem; color:var(--azul-principal); font-weight:700; }
+  .ben-info { flex:1; min-width:0; }
+  .ben-nombre { font-size:0.88rem; font-weight:600; color:var(--gris-texto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ben-parentesco { font-size:0.75rem; color:var(--gris-medio); }
+  .ben-porcentaje { font-size:0.82rem; font-weight:700; background:var(--azul-suave); color:var(--azul-principal); padding:3px 10px; border-radius:50px; white-space:nowrap; }
+  .ben-primario { font-size:0.7rem; font-weight:600; background:var(--verde-suave); color:var(--verde); padding:2px 8px; border-radius:50px; white-space:nowrap; }
+
+  /* ── SERVICIOS ── */
+  .servicio-chip { display:flex; align-items:center; gap:10px; background:var(--blanco); border:1px solid var(--gris-borde); border-radius:10px; padding:12px 14px; box-shadow:var(--sombra-card); transition:border-color .2s,transform .15s; height:100%; }
+  .servicio-chip:hover { border-color:var(--azul-principal); transform:translateY(-2px); }
+  .sc-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sc-icon i { font-size:1.15rem; }
+  .sc-info { flex:1; min-width:0; }
+  .sc-nombre { font-size:0.86rem; font-weight:600; color:var(--gris-texto); margin-bottom:1px; }
+  .sc-desc { font-size:0.74rem; color:var(--gris-medio); line-height:1.3; }
+  .sc-check { margin-left:auto; width:24px; height:24px; border-radius:50%; background:var(--verde-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sc-check i { font-size:0.75rem; color:var(--verde); }
+
+  /* ── PAGOS ── */
+  .pago-alerta-card { background:var(--amarillo-suave); border:1px solid #f6c96b; border-left:4px solid var(--amarillo); border-radius:12px; padding:20px; display:flex; gap:14px; align-items:flex-start; }
+  .pa-icon { width:44px; height:44px; border-radius:50%; background:var(--amarillo); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .pa-icon i { font-size:1.2rem; color:white; }
+  .pa-body { flex:1; }
+  .pa-titulo { font-size:0.9rem; font-weight:700; color:#7a5c00; margin-bottom:4px; }
+  .pa-detalle { font-size:0.82rem; color:#7a5c00; margin-bottom:12px; line-height:1.5; }
+  .pago-ok-card { background:var(--verde-suave); border:1px solid #a9dfbf; border-left:4px solid var(--verde); border-radius:12px; padding:20px; display:flex; gap:14px; align-items:center; }
+  .po-icon { width:44px; height:44px; border-radius:50%; background:var(--verde); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .po-icon i { font-size:1.2rem; color:white; }
+  .po-titulo { font-size:0.9rem; font-weight:700; color:var(--verde); margin-bottom:2px; }
+  .po-detalle { font-size:0.82rem; color:var(--verde); }
+  .pagos-mini-row { display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-radius:8px; margin-bottom:6px; background:var(--blanco); border:1px solid var(--gris-borde); gap:8px; flex-wrap:wrap; }
+  .pmr-mes { font-size:0.84rem; font-weight:600; color:var(--gris-texto); }
+  .pmr-fecha { font-size:0.75rem; color:var(--gris-medio); }
+  .pmr-monto { font-size:0.86rem; font-weight:700; color:var(--gris-texto); }
+  .pmr-badge { font-size:0.7rem; font-weight:600; padding:3px 9px; border-radius:50px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px; }
+  .pmr-pagado { background:var(--verde-suave); color:var(--verde); }
+  .pmr-pendiente { background:var(--amarillo-suave); color:var(--amarillo); }
+
+  /* ── BOTONES ── */
+  .btn-sh-primary { background-color:var(--azul-principal); color:var(--blanco); border:none; border-radius:8px; padding:10px 18px; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition:background .2s,transform .15s; text-decoration:none; cursor:pointer; }
+  .btn-sh-primary:hover { background-color:var(--azul-medio); transform:translateY(-1px); color:var(--blanco); }
+  .btn-sh-outline { background-color:transparent; color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:8px; padding:8px 16px; font-size:0.82rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; transition:background .2s; text-decoration:none; cursor:pointer; white-space:nowrap; }
+  .btn-sh-outline:hover { background-color:var(--azul-suave); color:var(--azul-principal); }
+  .btn-amarillo { background-color:var(--amarillo); color:white; border:none; border-radius:8px; padding:10px 18px; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:7px; transition:opacity .2s,transform .15s; text-decoration:none; cursor:pointer; }
+  .btn-amarillo:hover { opacity:.9; transform:translateY(-1px); color:white; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width:767px) {
+    .plan-section { padding:24px 12px 48px; }
+    .plan-datos-grid { grid-template-columns:1fr 1fr !important; }
+    .vigencia-stats { grid-template-columns:1fr 1fr !important; }
+  }
+  @media (max-width:400px) {
+    .plan-datos-grid { grid-template-columns:1fr !important; }
+    .vigencia-stats { grid-template-columns:1fr !important; }
+  }
 </style>
 
 <!-- HEADER -->
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-file-earmark-text"></i></div>
   <h1>Mi Plan Funerario</h1>
-  <p>Detalles de su cobertura y contrato</p>
+  <p>Consulte los detalles, cobertura y servicios de su plan de previsión</p>
 </div>
 
 <section class="plan-section">
-  <div class="container-fluid">
+  <div class="container-lg">
 
     @if (loading()) {
       <div class="text-center py-5">
@@ -61,117 +159,357 @@
         </div>
       }
 
-      <!-- INFO DEL CONTRATO -->
-      <div class="row g-3 mb-4">
-        <div class="col-12">
-          <div class="info-card">
-            <div class="card-section-title d-flex justify-content-between align-items-center flex-wrap gap-2">
-              <span><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal);"></i>Información del Contrato</span>
-              <span [class]="estadoBadgeClass()">
-                <i class="bi bi-dot"></i>{{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
-              </span>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-hash"></i>Número de contrato</div>
-              <div class="df-valor">{{ contrato()!.numeroContrato }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-shield-check"></i>Plan</div>
-              <div class="df-valor">{{ contrato()!.planNombre || '—' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-calendar3"></i>Fecha de inicio</div>
-              <div class="df-valor">{{ contrato()!.fechaInicio | date:'dd/MM/yyyy' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-calendar-x"></i>Vencimiento</div>
-              <div class="df-valor">{{ contrato()!.fechaVencimiento ? (contrato()!.fechaVencimiento! | date:'dd/MM/yyyy') : 'Sin vencimiento' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-cash"></i>Cuota mensual</div>
-              <div class="df-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-            </div>
-            <div class="dato-fila">
-              <div class="df-label"><i class="bi bi-wallet2"></i>Notas</div>
-              <div class="df-valor">{{ contrato()!.notas || '—' }}</div>
-            </div>
+      <!-- ── TARJETA PLAN + VIGENCIA ── -->
+      <div class="row g-4 mb-4">
 
-            <!-- PDF DOWNLOAD -->
-            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #f0f0f0;">
-              <button class="btn-descargar-pdf" (click)="descargarPdf()" [disabled]="descargandoPdf()">
+        <!-- Plan Hero Card -->
+        <div class="col-12 col-lg-7">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-file-earmark-text me-2" style="color:var(--azul-principal)"></i>Tipo de Plan</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="plan-hero-card">
+            <div class="plan-badge-activo">
+              <i class="bi bi-circle-fill"></i>
+              {{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
+            </div>
+            <div class="plan-tipo-label">Plan de Previsión Funeraria</div>
+            <div class="plan-nombre">{{ contrato()!.planNombre || 'Plan Funerario' }}</div>
+            <div class="plan-contrato">Contrato N.° {{ contrato()!.numeroContrato }}</div>
+            <div class="plan-datos-grid">
+              <div class="plan-dato">
+                <div class="pd-label"><i class="bi bi-person me-1"></i>Titular</div>
+                <div class="pd-valor">{{ contrato()!.titularNombre || '—' }}</div>
+              </div>
+              <div class="plan-dato">
+                <div class="pd-label"><i class="bi bi-people me-1"></i>Beneficiarios</div>
+                <div class="pd-valor">{{ beneficiarios().length }} persona{{ beneficiarios().length !== 1 ? 's' : '' }}</div>
+              </div>
+              <div class="plan-dato">
+                <div class="pd-label"><i class="bi bi-calendar-check me-1"></i>Fecha de inicio</div>
+                <div class="pd-valor">{{ contrato()!.fechaInicio | date:'dd MMM yyyy' }}</div>
+              </div>
+              <div class="plan-dato">
+                <div class="pd-label"><i class="bi bi-cash me-1"></i>Cuota mensual</div>
+                <div class="pd-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              </div>
+            </div>
+            <div class="plan-hero-actions">
+              <button class="btn-pdf" (click)="descargarPdf()" [disabled]="descargandoPdf()">
                 @if (descargandoPdf()) {
-                  <span class="spinner-border spinner-border-sm me-2"></span>Descargando...
+                  <span class="spinner-border spinner-border-sm"></span> Descargando...
                 } @else {
-                  <i class="bi bi-file-earmark-pdf me-2"></i>Descargar Contrato PDF
+                  <i class="bi bi-file-earmark-pdf"></i> Descargar Contrato PDF
                 }
               </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- BENEFICIARIOS -->
-      @if (beneficiarios().length > 0) {
-        <div class="seccion-titulo">
-          <h2><i class="bi bi-people me-2" style="color:var(--azul-principal);"></i>Beneficiarios</h2>
-          <div class="linea-azul"></div>
-        </div>
-        <div class="info-card mb-4">
-          @for (b of beneficiarios(); track b.id) {
-            <div class="benef-row-pf">
-              <div class="benef-avatar">
-                <i class="bi bi-person-fill"></i>
+        <!-- Vigencia -->
+        <div class="col-12 col-lg-5 d-flex flex-column">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-hourglass-split me-2" style="color:var(--azul-principal)"></i>Vigencia</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="info-card flex-grow-1">
+            <div class="dato-fila">
+              <span class="df-label">Fecha de inicio</span>
+              <span class="df-valor">{{ contrato()!.fechaInicio | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="dato-fila">
+              <span class="df-label">Vencimiento</span>
+              <span class="df-valor">
+                {{ contrato()!.fechaVencimiento ? (contrato()!.fechaVencimiento! | date:'dd/MM/yyyy') : 'Sin vencimiento' }}
+              </span>
+            </div>
+            <div class="dato-fila">
+              <span class="df-label">Duración total</span>
+              <span class="df-valor">{{ duracionTotal() ?? '—' }}</span>
+            </div>
+            <div class="dato-fila">
+              <span class="df-label">Estado</span>
+              <span class="df-valor">
+                <span [class]="estadoBadgeClass()">
+                  <i class="bi bi-dot"></i>{{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
+                </span>
+              </span>
+            </div>
+            @if (contrato()!.notas) {
+              <div class="dato-fila">
+                <span class="df-label">Notas</span>
+                <span class="df-valor">{{ contrato()!.notas }}</span>
               </div>
-              <div class="benef-datos">
-                <div class="benef-nombre">{{ b.nombreCompleto }}</div>
-                <div class="benef-meta">
-                  @if (b.parentesco) { <span><i class="bi bi-diagram-3 me-1"></i>{{ b.parentesco }}</span> }
-                  @if (b.porcentajeCobertura) { <span><i class="bi bi-percent me-1"></i>{{ b.porcentajeCobertura }}% cobertura</span> }
-                  @if (b.esTitular) { <span class="badge-titular">Titular</span> }
+            }
+            @if (contrato()!.fechaVencimiento) {
+              <div class="vigencia-barra-wrap">
+                <div class="vigencia-barra-labels">
+                  <span>{{ contrato()!.fechaInicio | date:'MMM yyyy' }}</span>
+                  <span>{{ vigenciaPct() }}% completado</span>
+                  <span>{{ contrato()!.fechaVencimiento! | date:'MMM yyyy' }}</span>
+                </div>
+                <div class="vigencia-barra">
+                  <div class="vigencia-barra-fill" [style.width.%]="vigenciaPct()"></div>
                 </div>
               </div>
+              <div class="vigencia-stats">
+                <div class="vigencia-stat">
+                  <div class="vs-valor">{{ aniosTranscurridos() }}</div>
+                  <div class="vs-label">Años transcurridos</div>
+                </div>
+                <div class="vigencia-stat">
+                  <div class="vs-valor">{{ aniosRestantes() ?? '—' }}</div>
+                  <div class="vs-label">Años restantes</div>
+                </div>
+                <div class="vigencia-stat">
+                  <div class="vs-valor">{{ mensualidadesPagadas() }}</div>
+                  <div class="vs-label">Mensualidades pagadas</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COBERTURA + BENEFICIARIOS ── -->
+      <div class="row g-4 mb-4">
+
+        <!-- Cobertura -->
+        <div class="col-12 col-lg-6 d-flex flex-column">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-shield-check me-2" style="color:var(--azul-principal)"></i>Cobertura</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="info-card flex-grow-1">
+            <div class="card-section-title">
+              <i class="bi bi-file-text" style="color:var(--azul-principal)"></i> Descripción
             </div>
-          }
+            <div class="cobertura-item">
+              <div class="cob-icon"><i class="bi bi-card-text"></i></div>
+              <div class="cob-info">
+                <div class="cob-nombre">Descripción del Plan</div>
+                <div class="cob-detalle">{{ contrato()!.notas || contrato()!.planNombre || '—' }}</div>
+              </div>
+            </div>
+            <div class="cobertura-item">
+              <div class="cob-icon"><i class="bi bi-calendar-month"></i></div>
+              <div class="cob-info">
+                <div class="cob-nombre">Mensualidad</div>
+                <div class="cob-detalle">Pago mensual pactado</div>
+              </div>
+              <div class="cob-monto">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            </div>
+            <div class="cobertura-total">
+              <span class="cobertura-total-label">Precio Total</span>
+              <span class="cobertura-total-monto">
+                {{ contrato()!.precioContratado ? (contrato()!.precioContratado! | currency:'MXN':'symbol-narrow':'1.2-2') : '—' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Beneficiarios -->
+        <div class="col-12 col-lg-6 d-flex flex-column">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-people me-2" style="color:var(--azul-principal)"></i>Beneficiarios</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="info-card flex-grow-1">
+            <div class="card-section-title">
+              <i class="bi bi-person-check" style="color:var(--azul-principal)"></i> Personas designadas
+            </div>
+            @if (beneficiarios().length === 0) {
+              <p style="font-size:0.85rem;color:var(--gris-medio);text-align:center;padding:20px 0;">
+                <i class="bi bi-person-x" style="font-size:1.6rem;display:block;margin-bottom:8px;color:var(--gris-borde);"></i>
+                Aún no tiene beneficiarios asignados.
+              </p>
+            } @else {
+              @for (b of beneficiarios(); track b.id) {
+                <div class="beneficiario-item">
+                  <div class="beneficiario-avatar">{{ inicialesDeNombre(b.nombreCompleto) }}</div>
+                  <div class="ben-info">
+                    <div class="ben-nombre">{{ b.nombreCompleto }}</div>
+                    <div class="ben-parentesco">
+                      @if (b.parentesco) { <i class="bi bi-diagram-3 me-1"></i>{{ b.parentesco }} }
+                    </div>
+                  </div>
+                  @if (b.porcentajeCobertura) {
+                    <span class="ben-porcentaje">{{ b.porcentajeCobertura }}%</span>
+                  }
+                  @if (b.esTitular) {
+                    <span class="ben-primario ms-1">Titular</span>
+                  }
+                </div>
+              }
+            }
+            @if (beneficiariosDisponibles() !== null) {
+              @if (beneficiariosDisponibles()! > 0) {
+                <div style="margin-top:12px;padding:8px 12px;background:var(--azul-suave);border-radius:8px;font-size:0.8rem;color:var(--azul-medio);display:flex;align-items:center;gap:8px;">
+                  <i class="bi bi-person-plus"></i>
+                  Puede agregar {{ beneficiariosDisponibles() }} beneficiario{{ beneficiariosDisponibles()! !== 1 ? 's' : '' }} más según su plan.
+                </div>
+              } @else {
+                <div style="margin-top:12px;padding:8px 12px;background:var(--verde-suave);border-radius:8px;font-size:0.8rem;color:var(--verde);display:flex;align-items:center;gap:8px;">
+                  <i class="bi bi-check-circle"></i>
+                  Todos los beneficiarios están asignados ({{ beneficiarios().length }}/{{ contrato()!.planNumeroBeneficiarios }}).
+                </div>
+              }
+            }
+            <div style="margin-top:16px;">
+              <a routerLink="/portal/beneficiarios" class="btn-sh-outline w-100 justify-content-center">
+                <i class="bi bi-pencil"></i> Actualizar beneficiarios
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SERVICIOS INCLUIDOS ── -->
+      @if (mostrarServicios()) {
+        <div class="seccion-titulo">
+          <h2><i class="bi bi-check2-circle me-2" style="color:var(--azul-principal)"></i>Servicios Incluidos</h2>
+          <div class="linea-azul"></div>
+          <p class="mt-1">Los siguientes servicios están cubiertos por su plan de previsión funeraria</p>
+        </div>
+        <div class="row g-3">
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:#eafaf1;"><i class="bi bi-box-seam" style="color:var(--verde);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Ataúd</div>
+                <div class="sc-desc">Selección del modelo incluido en el plan</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:#fdf0ef;"><i class="bi bi-fire" style="color:var(--rojo);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Cremación</div>
+                <div class="sc-desc">Servicio completo de cremación e incineración</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:var(--morado-suave);"><i class="bi bi-geo-alt" style="color:var(--morado);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Inhumación</div>
+                <div class="sc-desc">Sepultura en panteón convenido con el plan</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:var(--azul-suave);"><i class="bi bi-house-door" style="color:var(--azul-principal);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Sala velatoria</div>
+                <div class="sc-desc">Hasta 24 hrs en instalaciones equipadas</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:var(--amarillo-suave);"><i class="bi bi-truck" style="color:var(--amarillo);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Traslado</div>
+                <div class="sc-desc">Nacional hasta 500 km con unidad especializada</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-4">
+            <div class="servicio-chip">
+              <div class="sc-icon" style="background:var(--verde-suave);"><i class="bi bi-briefcase" style="color:var(--verde);"></i></div>
+              <div class="sc-info">
+                <div class="sc-nombre">Asesoría legal</div>
+                <div class="sc-desc">Gestión de trámites, acta de defunción y más</div>
+              </div>
+              <div class="sc-check"><i class="bi bi-check-lg"></i></div>
+            </div>
+          </div>
         </div>
       }
 
-    }
+      <!-- ── PAGOS PENDIENTES ── -->
+      <div class="mb-4">
+        <div class="seccion-titulo">
+          <h2><i class="bi bi-credit-card me-2" style="color:var(--amarillo)"></i>Pagos Pendientes</h2>
+          <div class="linea-azul" style="background:var(--amarillo)"></div>
+        </div>
 
-    <!-- SERVICIOS INCLUIDOS (Estáticos – representativos) -->
-    <div class="seccion-titulo">
-      <h2><i class="bi bi-list-check me-2" style="color:var(--azul-principal);"></i>Servicios Incluidos</h2>
-      <div class="linea-azul"></div>
-    </div>
-    <div class="info-card">
-      <div class="servicio-item">
-        <div class="servicio-icon"><i class="bi bi-house-heart"></i></div>
-        <div>
-          <div style="font-size:0.88rem;font-weight:600;">Velación</div>
-          <div style="font-size:0.8rem;color:var(--gris-medio);">Sala de velación hasta 24 horas</div>
-        </div>
+        @if (cobrosPendientes().length > 0) {
+          <div class="pago-alerta-card mb-3">
+            <div class="pa-icon"><i class="bi bi-exclamation-lg"></i></div>
+            <div class="pa-body">
+              <div class="pa-titulo">
+                Tiene {{ cobrosPendientes().length }} pago{{ cobrosPendientes().length > 1 ? 's' : '' }} pendiente{{ cobrosPendientes().length > 1 ? 's' : '' }}
+              </div>
+              <div class="pa-detalle">
+                La mensualidad más próxima vence el
+                <strong>{{ cobrosPendientes()[0].fechaVencimiento | date:'dd/MM/yyyy' }}</strong>
+                por <strong>{{ cobrosPendientes()[0].monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong>.
+                Realice su pago a tiempo para mantener su plan activo.
+              </div>
+              <a routerLink="/portal/cobros" class="btn-amarillo">
+                <i class="bi bi-credit-card"></i> Ir a Cobros y Pagos
+              </a>
+            </div>
+          </div>
+        } @else if (cobros().length > 0) {
+          <div class="pago-ok-card mb-3">
+            <div class="po-icon"><i class="bi bi-check-lg"></i></div>
+            <div>
+              <div class="po-titulo">¡Pagos al corriente!</div>
+              <div class="po-detalle">No tiene pagos pendientes en este momento.</div>
+            </div>
+          </div>
+        }
+
+        @if (cobrosRecientes().length > 0) {
+          <div class="info-card">
+            <div class="card-section-title">
+              <i class="bi bi-clock-history" style="color:var(--azul-principal)"></i> Últimos movimientos
+            </div>
+            <div>
+              @for (cobro of cobrosRecientes(); track cobro.id) {
+                <div class="pagos-mini-row">
+                  <div>
+                    <div class="pmr-mes">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                    <div class="pmr-fecha">
+                      @if (cobro.estadoCobro === 'PAGADO' && cobro.fechaPago) {
+                        Pagado: {{ cobro.fechaPago | date:'dd/MM/yyyy' }}
+                      } @else {
+                        Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
+                      }
+                    </div>
+                  </div>
+                  <div class="pmr-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                  <span [class]="cobroBadgeClass(cobro)">
+                    @if (cobro.estadoCobro === 'PAGADO') {
+                      <i class="bi bi-check"></i> Pagado
+                    } @else {
+                      <i class="bi bi-clock"></i> Pendiente
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+            <div class="mt-3">
+              <a routerLink="/portal/cobros" class="btn-sh-outline">
+                <i class="bi bi-list-ul"></i> Ver historial completo
+              </a>
+            </div>
+          </div>
+        }
       </div>
-      <div class="servicio-item">
-        <div class="servicio-icon"><i class="bi bi-truck"></i></div>
-        <div>
-          <div style="font-size:0.88rem;font-weight:600;">Traslado</div>
-          <div style="font-size:0.8rem;color:var(--gris-medio);">Traslado local del fallecido</div>
-        </div>
-      </div>
-      <div class="servicio-item">
-        <div class="servicio-icon"><i class="bi bi-flower1"></i></div>
-        <div>
-          <div style="font-size:0.88rem;font-weight:600;">Arreglo Floral</div>
-          <div style="font-size:0.8rem;color:var(--gris-medio);">Arreglo floral básico</div>
-        </div>
-      </div>
-      <div class="servicio-item">
-        <div class="servicio-icon"><i class="bi bi-file-earmark-text"></i></div>
-        <div>
-          <div style="font-size:0.88rem;font-weight:600;">Trámites</div>
-          <div style="font-size:0.8rem;color:var(--gris-medio);">Gestión de acta de defunción y trámites legales</div>
-        </div>
-      </div>
-    </div>
+
+    }
 
   </div>
 </section>
+
