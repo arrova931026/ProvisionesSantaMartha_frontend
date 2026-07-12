@@ -1,50 +1,168 @@
 <style>
+  /* ── Resumen cards ── */
   .cobros-section { padding: 36px 16px 56px; }
-  .resumen-card { background:var(--blanco); border-radius:14px; border:1px solid var(--gris-borde); box-shadow:0 2px 12px rgba(0,0,0,0.04); padding:18px 20px; display:flex; align-items:center; gap:14px; }
-  .resumen-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .resumen-icon i { font-size:1.3rem; }
-  .resumen-valor { font-size:1.35rem; font-weight:700; font-family:'Inter',sans-serif; line-height:1.1; }
-  .resumen-label { font-size:0.74rem; color:var(--gris-medio); }
-  .r-verde .resumen-icon { background:var(--verde-suave); } .r-verde .resumen-icon i { color:var(--verde); } .r-verde .resumen-valor { color:var(--verde); }
-  .r-amarillo .resumen-icon { background:var(--amarillo-suave); } .r-amarillo .resumen-icon i { color:var(--amarillo); } .r-amarillo .resumen-valor { color:var(--amarillo); }
-  .r-rojo .resumen-icon { background:var(--rojo-suave); } .r-rojo .resumen-icon i { color:var(--rojo); } .r-rojo .resumen-valor { color:var(--rojo); }
-  .cobro-item { background:var(--blanco); border-radius:12px; border:1px solid var(--gris-borde); padding:16px 18px; display:flex; align-items:center; gap:14px; transition:box-shadow 0.2s; }
-  .cobro-item:hover { box-shadow:0 4px 16px rgba(58,143,196,0.1); }
-  .cobro-num { width:36px; height:36px; border-radius:8px; background:var(--azul-suave); color:var(--azul-principal); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
-  .cobro-info { flex:1; }
-  .cobro-info .fecha { font-size:0.82rem; color:var(--gris-medio); }
-  .cobro-monto { font-size:1rem; font-weight:700; font-family:'Inter',sans-serif; color:var(--gris-texto); }
-  .empty-state { text-align:center; padding:48px 24px; }
-  .empty-state i { font-size:2.5rem; color:var(--gris-borde); }
+  .resumen-card { background:var(--blanco); border:1px solid var(--gris-borde); border-radius:12px; padding:20px 16px; box-shadow:0 4px 24px rgba(0,0,0,0.06); text-align:center; height:100%; transition:transform .2s,box-shadow .2s; }
+  .resumen-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(58,143,196,.12); }
+  .resumen-card .r-icon { width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px; }
+  .resumen-card .r-icon i { font-size:1.2rem; }
+  .resumen-card .r-valor { font-size:clamp(1.2rem,4vw,1.6rem);font-weight:700;font-family:'Inter',sans-serif;margin-bottom:4px; }
+  .resumen-card .r-label { font-size:.75rem;color:var(--gris-medio);line-height:1.3; }
+  .r-azul .r-icon { background:var(--azul-suave); } .r-azul .r-icon i { color:var(--azul-principal); } .r-azul .r-valor { color:var(--azul-principal); }
+  .r-verde .r-icon { background:var(--verde-suave); } .r-verde .r-icon i { color:var(--verde); } .r-verde .r-valor { color:var(--verde); }
+  .r-amarillo .r-icon { background:var(--amarillo-suave); } .r-amarillo .r-icon i { color:var(--amarillo); } .r-amarillo .r-valor { color:var(--amarillo); }
+  .r-rojo .r-icon { background:var(--rojo-suave); } .r-rojo .r-icon i { color:var(--rojo); } .r-rojo .r-valor { color:var(--rojo); }
+
+  /* ── Contrato ── */
+  .contrato-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px 20px;box-shadow:0 4px 24px rgba(0,0,0,.06);border-top:3px solid var(--azul-principal); }
+  .badge-estado { display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:.8rem;font-weight:600; }
+  .badge-activo { background:var(--verde-suave);color:var(--verde); }
+  .badge-pendiente { background:var(--amarillo-suave);color:var(--amarillo); }
+  .badge-vencido { background:var(--rojo-suave);color:var(--rojo); }
+  .contrato-dato { border-bottom:1px solid var(--gris-borde);padding:10px 0; }
+  .contrato-dato:last-child { border-bottom:none; }
+  .contrato-dato .dato-label { font-size:.75rem;color:var(--gris-medio);margin-bottom:2px; }
+  .contrato-dato .dato-valor { font-size:.9rem;font-weight:600;color:var(--gris-texto); }
+
+  /* ── Mensualidades ── */
+  .mensualidades-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:20px;box-shadow:0 4px 24px rgba(0,0,0,.06); }
+  .mes-item { display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--gris-borde);gap:10px;flex-wrap:nowrap; }
+  .mes-item:last-child { border-bottom:none; }
+  .mes-info { flex:1;min-width:0; }
+  .mes-info .mes-nombre { font-size:.86rem;font-weight:600;color:var(--gris-texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .mes-info .mes-fecha { font-size:.75rem;color:var(--gris-medio); }
+  .mes-monto { font-size:.9rem;font-weight:700;color:var(--gris-texto);white-space:nowrap; }
+  .mes-badge { font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:50px;white-space:nowrap;flex-shrink:0; }
+  .mes-pagado { background:var(--verde-suave);color:var(--verde); }
+  .mes-pendiente { background:var(--amarillo-suave);color:var(--amarillo); }
+  .mes-vencido { background:var(--rojo-suave);color:var(--rojo); }
+
+  /* ── Métodos de pago ── */
+  .pago-section-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.06);overflow:hidden; }
+  .metodos-tabs { display:flex;border-bottom:2px solid var(--gris-borde);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none; }
+  .metodos-tabs::-webkit-scrollbar { display:none; }
+  .tab-metodo { flex:1;min-width:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 10px;gap:6px;cursor:pointer;border:none;background:transparent;border-bottom:3px solid transparent;margin-bottom:-2px;transition:background .2s,border-color .2s;font-family:'Inter',sans-serif; }
+  .tab-metodo:hover { background:var(--gris-fondo); }
+  .tab-metodo.activo { border-bottom-color:var(--azul-principal);background:var(--azul-suave); }
+  .tab-metodo .tab-icon { width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+  .tab-metodo .tab-label { font-size:.75rem;font-weight:600;color:var(--gris-texto);line-height:1.2;text-align:center; }
+  .tab-metodo.activo .tab-label { color:var(--azul-principal); }
+  .pago-panel { display:none;padding:28px 24px; }
+  .pago-panel.activo { display:block; }
+
+  /* Mercado Pago */
+  .mp-card { background:linear-gradient(135deg,#009EE3 0%,#0077B6 100%);border-radius:12px;padding:28px 24px;color:white;text-align:center; }
+  .mp-logo { font-size:2.2rem;font-weight:800;letter-spacing:-1px;margin-bottom:8px; }
+  .mp-logo span { color:#A3D9F5; }
+  .mp-monto { font-size:2rem;font-weight:700;margin-bottom:6px; }
+  .mp-concepto { font-size:.8rem;opacity:.75;margin-bottom:24px; }
+  .btn-mp { background:#FFDF00;color:#333;border:none;border-radius:50px;padding:14px 32px;font-size:.95rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:transform .15s,box-shadow .2s;box-shadow:0 4px 16px rgba(0,0,0,.2);font-family:'Inter',sans-serif;width:100%;justify-content:center;max-width:320px; }
+  .btn-mp:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  .mp-seguro { font-size:.75rem;opacity:.7;margin-top:12px; }
+
+  /* Transferencia */
+  .transferencia-info { background:var(--azul-suave);border:1px solid var(--gris-borde);border-radius:10px;padding:20px;margin-bottom:20px; }
+  .banco-dato { display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gris-borde);gap:12px;flex-wrap:wrap; }
+  .banco-dato:last-child { border-bottom:none; }
+  .banco-dato .b-label { font-size:.78rem;color:var(--gris-medio);font-weight:500;flex-shrink:0; }
+  .banco-dato .b-valor { font-size:.88rem;font-weight:700;color:var(--gris-texto);word-break:break-all; }
+  .banco-dato .b-valor.copiable { color:var(--azul-principal);cursor:pointer;display:flex;align-items:center;gap:5px; }
+  .banco-dato .b-valor.copiable:hover { text-decoration:underline; }
+  .alerta-referencia { background:var(--amarillo-suave);border:1px solid #f6c96b;border-radius:8px;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;margin-top:16px; }
+  .alerta-referencia i { color:var(--amarillo);font-size:1rem;flex-shrink:0;margin-top:2px; }
+  .alerta-referencia span { font-size:.8rem;color:#7a5c00;line-height:1.5; }
+
+  /* OXXO */
+  .oxxo-card { border:2px dashed #DA291C;border-radius:12px;overflow:hidden; }
+  .oxxo-header { background:#DA291C;padding:16px 20px;display:flex;align-items:center;gap:14px; }
+  .oxxo-header .oxxo-logo { font-size:1.4rem;font-weight:900;color:white;letter-spacing:-1px;font-family:'Inter',sans-serif; }
+  .oxxo-header .oxxo-titulo { color:white;font-size:.85rem;font-weight:600;line-height:1.3; }
+  .oxxo-body { padding:20px; }
+  .oxxo-cuenta { background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:8px;padding:16px;margin-bottom:16px; }
+  .oxxo-instrucciones { list-style:none;padding:0;margin:0; }
+  .oxxo-instrucciones li { display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--gris-borde);font-size:.82rem;color:var(--gris-texto); }
+  .oxxo-instrucciones li:last-child { border-bottom:none; }
+  .oxxo-instrucciones li .paso-num { width:22px;height:22px;border-radius:50%;background:#DA291C;color:white;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
+  .btn-oxxo { background:#DA291C;color:white;border:none;border-radius:8px;padding:12px 20px;font-size:.88rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%;margin-top:16px;transition:background .2s;font-family:'Inter',sans-serif; }
+  .btn-oxxo:hover { background:#b71c1c; }
+
+  /* Botones */
+  .btn-sh-outline { background-color:transparent;color:var(--azul-principal);border:1px solid var(--azul-principal);border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:background .2s;text-decoration:none;cursor:pointer;white-space:nowrap; }
+  .btn-sh-outline:hover { background-color:var(--azul-suave);color:var(--azul-principal); }
+  .btn-sh-primary { background-color:var(--azul-principal);color:var(--blanco);border:none;border-radius:8px;padding:10px 18px;font-size:.85rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background .2s,transform .15s;text-decoration:none;cursor:pointer;width:100%; }
+  .btn-sh-primary:hover { background-color:var(--azul-medio);transform:translateY(-1px);color:var(--blanco); }
+
+  /* Toast */
+  .toast-copiado { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:10px 20px;border-radius:50px;font-size:.82rem;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s; }
+  .toast-copiado.visible { opacity:1; }
+
+  /* ── Modal Comprobante ── */
+  .modal-comp-backdrop { position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1050;display:flex;align-items:flex-end;justify-content:center; }
+  @media (min-width:576px) { .modal-comp-backdrop { align-items:center; } }
+  .modal-comp { background:var(--blanco);border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.18); }
+  @media (min-width:576px) { .modal-comp { border-radius:16px;max-height:90vh; } }
+  .modal-comp-header { display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--gris-borde);flex-shrink:0; }
+  .modal-comp-header h5 { font-size:.95rem;margin:0;color:var(--gris-texto); }
+  .modal-comp-close { background:none;border:none;cursor:pointer;color:var(--gris-medio);font-size:1.1rem;line-height:1;padding:4px; }
+  .modal-comp-close:hover { color:var(--rojo); }
+  .modal-comp-body { flex:1;overflow-y:auto;padding:20px; }
+  .modal-comp-footer { display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--gris-borde);flex-shrink:0; }
+  .modal-comp-footer button { flex:1;border-radius:8px;padding:11px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif; }
+  .btn-modal-cancel { background:var(--gris-fondo);color:var(--gris-texto); }
+  .btn-modal-cancel:hover { background:var(--gris-borde); }
+  .btn-modal-accept { background:var(--verde);color:#fff; }
+  .btn-modal-accept:hover { background:#219a52; }
+  .btn-modal-accept:disabled { opacity:.55;cursor:not-allowed; }
+  .comp-opcion-btn { display:flex;align-items:center;gap:14px;width:100%;padding:18px 16px;background:var(--blanco);border:1.5px solid var(--gris-borde);border-radius:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .2s,background .2s;margin-bottom:12px; }
+  .comp-opcion-btn:hover { border-color:var(--azul-principal);background:var(--azul-suave); }
+  .comp-opcion-btn .comp-op-icon { width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .comp-opcion-btn .comp-op-icon i { font-size:1.3rem; }
+  .comp-opcion-btn .comp-op-info { text-align:left; }
+  .comp-opcion-btn .comp-op-title { font-size:.9rem;font-weight:700;color:var(--gris-texto); }
+  .comp-opcion-btn .comp-op-sub { font-size:.76rem;color:var(--gris-medio); }
+  .comp-video-wrap { position:relative;background:#000;border-radius:10px;overflow:hidden;margin-bottom:16px; }
+  .comp-video-wrap video { display:block;width:100%;max-height:52vh;object-fit:cover; }
+  .comp-canvas-wrap { background:#1a1a1a;border-radius:10px;overflow:hidden;max-height:52vh; }
+  .comp-canvas { display:block;width:100%;height:auto;touch-action:none;user-select:none; }
+  .comp-preview-img { width:100%;border-radius:10px;display:block;margin-bottom:16px; }
+  .comp-edit-hint { font-size:.75rem;color:var(--gris-medio);text-align:center;margin-bottom:10px; }
+  .comp-toolbar { display:flex;gap:8px;margin-bottom:14px; }
+  .comp-toolbar button { flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border:1px solid var(--gris-borde);border-radius:8px;background:var(--blanco);font-size:.8rem;font-weight:600;cursor:pointer;color:var(--gris-texto);font-family:'Inter',sans-serif; }
+  .comp-toolbar button:hover { background:var(--azul-suave);border-color:var(--azul-principal);color:var(--azul-principal); }
+  .comp-error { color:var(--rojo);font-size:.8rem;margin-top:8px;text-align:center; }
+  .comp-wa-note { background:var(--verde-suave);border:1px solid #a3e4bc;border-radius:8px;padding:10px 14px;font-size:.78rem;color:#1a5e35;line-height:1.5;margin-bottom:16px; }
+  .comp-pdf-preview { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--gris-fondo);border:1px solid var(--gris-borde);border-radius:10px;margin-bottom:16px; }
+  .comp-pdf-preview i { font-size:3rem;color:#e74c3c;margin-bottom:10px; }
+  .comp-pdf-preview span { font-size:.9rem;color:var(--gris-texto);font-weight:600; }
+  .comp-pdf-preview small { font-size:.75rem;color:var(--gris-medio);margin-top:4px; }
 </style>
 
 <!-- HEADER -->
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-credit-card"></i></div>
   <h1>Cobros y Pagos</h1>
-  <p>Historial y estado de sus mensualidades</p>
+  <p>Consulte, gestione y realice sus pagos desde un solo lugar</p>
 </div>
 
 <section class="cobros-section">
-  <div class="container-fluid">
+  <div class="container-lg">
 
     @if (loading()) {
       <div class="text-center py-5">
         <div class="spinner-border text-primary"></div>
         <p class="mt-3 text-muted">Cargando cobros...</p>
       </div>
-    } @else if (cobros().length === 0) {
 
-      <!-- SIN CONTRATO SELECCIONADO -->
+    } @else if (!contratoActivo()) {
+
+      <!-- SIN CONTRATO -->
       <div class="info-card mb-4">
         <div class="card-section-title"><i class="bi bi-info-circle" style="color:var(--azul-principal);"></i> Sin contrato activo</div>
-        <p style="font-size:0.88rem; color:var(--gris-medio); margin:0;">
-          Para ver sus cobros, su perfil de persona debe estar asociado a un contrato.
-          Contacte a su agente si aún no tiene un contrato registrado.
+        <p style="font-size:.88rem;color:var(--gris-medio);margin:0;">
+          Su perfil aún no tiene un contrato registrado. Contacte a su agente para iniciar su plan.
         </p>
       </div>
 
-      <!-- MÉTODOS DE PAGO -->
+      <!-- MÉTODOS DE PAGO (informativos) -->
       <div class="seccion-titulo">
         <h2><i class="bi bi-wallet2 me-2" style="color:var(--azul-principal);"></i>Métodos de Pago Disponibles</h2>
         <div class="linea-azul"></div>
@@ -55,8 +173,8 @@
             <div style="width:48px;height:48px;border-radius:12px;background:#e8f6fd;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
               <i class="bi bi-phone" style="font-size:1.4rem;color:#009EE3;"></i>
             </div>
-            <div style="font-weight:700;font-size:0.95rem;">Mercado Pago</div>
-            <div style="font-size:0.8rem;color:var(--gris-medio);">Pago en línea o en efectivo</div>
+            <div style="font-weight:700;font-size:.95rem;">Mercado Pago</div>
+            <div style="font-size:.8rem;color:var(--gris-medio);">Tarjeta de crédito, débito o cuenta MP</div>
           </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-4">
@@ -64,8 +182,8 @@
             <div style="width:48px;height:48px;border-radius:12px;background:#eaf3fb;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
               <i class="bi bi-bank" style="font-size:1.4rem;color:var(--azul-principal);"></i>
             </div>
-            <div style="font-weight:700;font-size:0.95rem;">Transferencia Bancaria</div>
-            <div style="font-size:0.8rem;color:var(--gris-medio);">CLABE o número de cuenta</div>
+            <div style="font-weight:700;font-size:.95rem;">Transferencia Bancaria</div>
+            <div style="font-size:.8rem;color:var(--gris-medio);">BANAMEX · Armando Rojas Valdez</div>
           </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-4">
@@ -73,69 +191,482 @@
             <div style="width:48px;height:48px;border-radius:12px;background:#fef0ef;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
               <i class="bi bi-shop" style="font-size:1.4rem;color:#DA291C;"></i>
             </div>
-            <div style="font-weight:700;font-size:0.95rem;">Pago en OXXO</div>
-            <div style="font-size:0.8rem;color:var(--gris-medio);">Con referencia de pago</div>
+            <div style="font-weight:700;font-size:.95rem;">Depósito en OXXO</div>
+            <div style="font-size:.8rem;color:var(--gris-medio);">BANAMEX · Armando Rojas Valdez</div>
           </div>
         </div>
       </div>
 
     } @else {
 
-      <!-- RESUMEN -->
+      <!-- ── RESUMEN ── -->
       <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-4">
+        <div class="col-6 col-md-3">
+          <div class="resumen-card r-azul">
+            <div class="r-icon"><i class="bi bi-calendar3"></i></div>
+            <div class="r-valor">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            <div class="r-label">Mensualidad actual</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
           <div class="resumen-card r-verde">
-            <div class="resumen-icon"><i class="bi bi-check-circle-fill"></i></div>
-            <div>
-              <div class="resumen-valor">{{ totalPagado | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-              <div class="resumen-label">Total pagado</div>
-            </div>
+            <div class="r-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="r-valor">{{ pagosRealizados }}</div>
+            <div class="r-label">Pagos realizados</div>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
+        <div class="col-6 col-md-3">
           <div class="resumen-card r-amarillo">
-            <div class="resumen-icon"><i class="bi bi-clock"></i></div>
-            <div>
-              <div class="resumen-valor">{{ totalPendiente | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-              <div class="resumen-label">Pendiente de pago</div>
-            </div>
+            <div class="r-icon"><i class="bi bi-clock"></i></div>
+            <div class="r-valor">{{ pagosPendientes }}</div>
+            <div class="r-label">Pagos pendientes</div>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
+        <div class="col-6 col-md-3">
           <div class="resumen-card r-rojo">
-            <div class="resumen-icon"><i class="bi bi-exclamation-circle-fill"></i></div>
-            <div>
-              <div class="resumen-valor">{{ cobrosAtrasados.length }}</div>
-              <div class="resumen-label">Cobros vencidos</div>
-            </div>
+            <div class="r-icon"><i class="bi bi-exclamation-circle"></i></div>
+            <div class="r-valor">{{ saldoVencido | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            <div class="r-label">Saldo vencido</div>
           </div>
         </div>
       </div>
 
-      <!-- LISTADO -->
-      <div class="seccion-titulo">
-        <h2><i class="bi bi-list-ul me-2" style="color:var(--azul-principal);"></i>Historial de Cobros</h2>
-        <div class="linea-azul"></div>
-      </div>
-      <div class="d-flex flex-column gap-2">
-        @for (cobro of cobros(); track cobro.id) {
-          <div class="cobro-item">
-            <div class="cobro-num">{{ cobro.numeroMensualidad }}</div>
-            <div class="cobro-info">
-              <div style="font-size:0.88rem;font-weight:600;">Mensualidad {{ cobro.numeroMensualidad }}</div>
-              <div class="fecha">Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}</div>
-            </div>
-            <div class="cobro-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-            <div>
-              <span [class]="estadoBadgeClass(cobro.estadoCobro)">
-                <i [class]="'bi ' + estadoIcon(cobro.estadoCobro)"></i>
-                {{ cobro.estadoCobro }}
+      <!-- ── ESTADO DEL CONTRATO + MENSUALIDADES ── -->
+      <div class="row g-4 mb-4">
+
+        <!-- Estado del contrato -->
+        <div class="col-12 col-lg-5 d-flex flex-column">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal);"></i>Estado del Contrato</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="contrato-card">
+            <div class="mb-3">
+              <span [class]="contratoEstadoBadge(contratoActivo()?.estadoClave)">
+                <i class="bi bi-circle-fill" style="font-size:.45rem;"></i>
+                {{ contratoActivo()?.estadoNombre ?? contratoActivo()?.estadoClave }}
               </span>
             </div>
-          </div>
-        }
-      </div>
-    }
+            <div class="contrato-dato">
+              <div class="dato-label">Número de contrato</div>
+              <div class="dato-valor">{{ contratoActivo()?.numeroContrato }}</div>
+            </div>
+            <div class="contrato-dato">
+              <div class="dato-label">Titular</div>
+              <div class="dato-valor">{{ contratoActivo()?.titularNombre }}</div>
+            </div>
+            <div class="contrato-dato">
+              <div class="dato-label">Plan contratado</div>
+              <div class="dato-valor">{{ contratoActivo()?.planNombre }}</div>
+            </div>
 
+            @if (proximoPago) {
+              <div class="contrato-dato">
+                <div class="dato-label">Próximo cobro</div>
+                <div class="dato-valor" style="color:var(--amarillo);">
+                  {{ proximoPago.fechaVencimiento | date:'dd/MM/yyyy' }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Mensualidades -->
+        <div class="col-12 col-lg-7">
+          <div class="seccion-titulo">
+            <h2><i class="bi bi-calendar-check me-2" style="color:var(--azul-principal);"></i>Mensualidades</h2>
+            <div class="linea-azul"></div>
+          </div>
+          <div class="mensualidades-card">
+            @for (cobro of mensualidadesVisibles; track cobro.id) {
+              <div class="mes-item">
+                <div class="mes-info">
+                  <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                  <div class="mes-fecha">
+                    @if (cobro.estadoCobro === 'PAGADO') {
+                      Pagado: {{ cobro.fechaPago | date:'dd/MM/yyyy' }}
+                    } @else {
+                      Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
+                    }
+                  </div>
+                </div>
+                <div class="mes-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                <span [class]="estadoBadgeClass(cobro.estadoCobro)">
+                  <i [class]="'bi ' + estadoIcon(cobro.estadoCobro) + ' me-1'"></i>{{ cobro.estadoCobro }}
+                </span>
+              </div>
+            }
+            @if (cobros().length > 6) {
+              <div class="pt-2">
+                <button class="btn-sh-outline w-100 justify-content-center" (click)="mostrarTodasMensualidades.set(!mostrarTodasMensualidades())">
+                  @if (mostrarTodasMensualidades()) {
+                    <i class="bi bi-chevron-up me-1"></i> Ocultar mensualidades anteriores
+                  } @else {
+                    <i class="bi bi-calendar3 me-1"></i> Mostrar todas las mensualidades
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REALIZAR PAGO ── -->
+      <div class="mb-4">
+        <div class="seccion-titulo">
+          <h2><i class="bi bi-wallet2 me-2" style="color:var(--verde);"></i>Realizar Pago</h2>
+          <div class="linea-azul" style="background:var(--verde);"></div>
+        </div>
+
+        <div class="pago-section-card">
+
+          <!-- Tabs -->
+          <div class="metodos-tabs">
+            <button class="tab-metodo" [class.activo]="tabActiva() === 'mp'" (click)="cambiarTab('mp')">
+              <div class="tab-icon" style="background:#E3F4FD;">
+                <i class="bi bi-phone" style="color:#009EE3;font-size:1.2rem;"></i>
+              </div>
+              <span class="tab-label">Mercado<br>Pago</span>
+            </button>
+            <button class="tab-metodo" [class.activo]="tabActiva() === 'transferencia'" (click)="cambiarTab('transferencia')">
+              <div class="tab-icon" style="background:var(--azul-suave);">
+                <i class="bi bi-bank" style="color:var(--azul-principal);font-size:1.2rem;"></i>
+              </div>
+              <span class="tab-label">Transferencia<br>bancaria</span>
+            </button>
+            <button class="tab-metodo" [class.activo]="tabActiva() === 'oxxo'" (click)="cambiarTab('oxxo')">
+              <div class="tab-icon" style="background:#fdecea;">
+                <i class="bi bi-shop" style="color:#DA291C;font-size:1.2rem;"></i>
+              </div>
+              <span class="tab-label">Depósito<br>Oxxo</span>
+            </button>
+          </div>
+
+          <!-- Panel: Mercado Pago -->
+          <div class="pago-panel" [class.activo]="tabActiva() === 'mp'">
+            <div class="mp-card">
+              <div class="mp-logo">mercado<span>pago</span></div>
+              <div class="mp-monto">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+              @if (proximoPago) {
+                <div class="mp-concepto">
+                  Mensualidad #{{ proximoPago.numeroMensualidad }} — {{ contratoActivo()?.numeroContrato }}
+                </div>
+              }
+              <p>Paga de forma rápida y segura con tu cuenta Mercado Pago, tarjeta de crédito o débito.</p>
+              <button class="btn-mp" disabled>
+                <i class="bi bi-bag-check-fill"></i> Pagar con Mercado Pago
+              </button>
+              <div class="mp-seguro"><i class="bi bi-shield-lock me-1"></i>Integración con MP Checkout Pro — próximamente disponible</div>
+            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">
+              <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-credit-card"></i> Tarjeta de crédito</span>
+              <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-credit-card-2-front"></i> Tarjeta de débito</span>
+              <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-phone"></i> Cuenta MP</span>
+              <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-qr-code"></i> CoDi / SPEI</span>
+            </div>
+          </div>
+
+          <!-- Panel: Transferencia Bancaria -->
+          <div class="pago-panel" [class.activo]="tabActiva() === 'transferencia'">
+            <p style="font-size:.85rem;color:var(--gris-medio);margin-bottom:20px;">
+              Realice su transferencia a la siguiente cuenta y envíenos el comprobante por WhatsApp.
+            </p>
+            <div class="transferencia-info">
+              <div class="banco-dato">
+                <span class="b-label">Banco</span>
+                <span class="b-valor">BANAMEX (Citibanamex)</span>
+              </div>
+              <div class="banco-dato">
+                <span class="b-label">Beneficiario</span>
+                <span class="b-valor">Armando Rojas Valdez</span>
+              </div>
+              <div class="banco-dato">
+                <span class="b-label">Número de tarjeta</span>
+                <span class="b-valor copiable" (click)="copiar('5256784379967994')">
+                  5256 7843 7996 7994 <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                </span>
+              </div>
+              <div class="banco-dato">
+                <span class="b-label">Monto</span>
+                <span class="b-valor" style="color:var(--verde);">
+                  {{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}
+                </span>
+              </div>
+              <div class="banco-dato">
+                <span class="b-label">Concepto / Referencia</span>
+                <span class="b-valor copiable" (click)="copiar(referenciaParaTransferencia)">
+                  {{ referenciaParaTransferencia }} <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                </span>
+              </div>
+            </div>
+            <div class="alerta-referencia">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>
+                <strong>Importante:</strong> Use exactamente el concepto indicado
+                (<strong>{{ referenciaParaTransferencia }}</strong>) para identificar su pago correctamente.
+                El formato es: <em>NumContrato-HH:MM-MM/DD/YYYY</em>.
+              </span>
+            </div>
+            <div class="mt-3" align="center">
+              <button type="button" class="btn-sh-primary" style="max-width:320px;margin:0 auto;" (click)="abrirModalComprobante()">
+                <i class="bi bi-whatsapp"></i> Enviar comprobante por WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel: Depósito OXXO -->
+          <div class="pago-panel" [class.activo]="tabActiva() === 'oxxo'">
+            <p style="font-size:.85rem;color:var(--gris-medio);margin-bottom:20px;">
+              Deposite en efectivo en cualquier tienda OXXO o ventanilla BANAMEX a la siguiente cuenta.
+            </p>
+            <div class="oxxo-card">
+              <div class="oxxo-header">
+                <div class="oxxo-logo">OXXO</div>
+                <div class="oxxo-titulo">
+                  Depósito en efectivo<br>
+                  <span style="font-size:.78rem;opacity:.85;">Sociedad Humanista Santa Martha</span>
+                </div>
+                <div style="margin-left:auto;text-align:right;color:white;">
+                  <div style="font-size:.72rem;opacity:.8;">Monto a pagar</div>
+                  <div style="font-size:1.3rem;font-weight:800;">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                </div>
+              </div>
+              <div class="oxxo-body">
+                <div class="oxxo-cuenta">
+                  <div class="banco-dato">
+                    <span class="b-label">Banco</span>
+                    <span class="b-valor">BANAMEX (Citibanamex)</span>
+                  </div>
+                  <div class="banco-dato">
+                    <span class="b-label">Beneficiario</span>
+                    <span class="b-valor">Armando Rojas Valdez</span>
+                  </div>
+                  <div class="banco-dato">
+                    <span class="b-label">Número de tarjeta</span>
+                    <span class="b-valor copiable" (click)="copiar('5256784379967994')">
+                      5256 7843 7996 7994 <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                    </span>
+                  </div>
+                  <div class="banco-dato">
+                    <span class="b-label">Referencia / Concepto</span>
+                    <span class="b-valor copiable" (click)="copiar(referenciaParaTransferencia)">
+                      {{ referenciaParaTransferencia }} <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                    </span>
+                  </div>
+                </div>
+                <ul class="oxxo-instrucciones">
+                  <li>
+                    <span class="paso-num">1</span>
+                    <span>Acuda a la tienda OXXO más cercana y solicite un depósito a tarjeta BANAMEX.</span>
+                  </li>
+                  <li>
+                    <span class="paso-num">2</span>
+                    <span>Proporcione el número de tarjeta <strong>5256 7843 7996 7994</strong> a nombre de Armando Rojas Valdez.</span>
+                  </li>
+                  <li>
+                    <span class="paso-num">3</span>
+                    <span>Indique el concepto: <strong>{{ referenciaParaTransferencia }}</strong> para identificar su pago.</span>
+                  </li>
+                  <li>
+                    <span class="paso-num">4</span>
+                    <span>Deposite <strong>{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong> MXN más la comisión OXXO aplicable.</span>
+                  </li>
+                  <li>
+                    <span class="paso-num">5</span>
+                    <span>Conserve su ticket y envíe el comprobante por WhatsApp para su registro.</span>
+                  </li>
+                </ul>
+                <a [href]="'https://api.whatsapp.com/send?phone=5217821574801&text=Hola,%20adjunto%20comprobante%20de%20dep%C3%B3sito%20OXXO%20del%20contrato%20' + contratoActivo()?.numeroContrato + '%20referencia:%20' + referenciaParaTransferencia"
+                   target="_blank" class="btn-oxxo" style="text-decoration:none;">
+                  <i class="bi bi-whatsapp"></i> Enviar comprobante por WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── HISTORIAL DE COBROS ── -->
+      <div class="mb-4">
+        <div class="seccion-titulo">
+          <h2><i class="bi bi-list-ul me-2" style="color:var(--azul-principal);"></i>Historial de Cobros</h2>
+          <div class="linea-azul"></div>
+        </div>
+        <div class="d-flex flex-column gap-2">
+          @for (cobro of cobros(); track cobro.id) {
+            <div class="mensualidades-card" style="padding:14px 18px;">
+              <div class="mes-item" style="border:none;padding:0;">
+                <div class="cobro-num" style="width:36px;height:36px;border-radius:8px;background:var(--azul-suave);color:var(--azul-principal);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;">
+                  {{ cobro.numeroMensualidad }}
+                </div>
+                <div class="mes-info">
+                  <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                  <div class="mes-fecha">
+                    @if (cobro.estadoCobro === 'PAGADO') {
+                      Pagado: {{ cobro.fechaPago | date:'dd/MM/yyyy' }}
+                    } @else {
+                      Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
+                    }
+                  </div>
+                </div>
+                <div class="mes-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                <span [class]="estadoBadgeClass(cobro.estadoCobro)">
+                  <i [class]="'bi ' + estadoIcon(cobro.estadoCobro) + ' me-1'"></i>{{ cobro.estadoCobro }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    }
   </div>
 </section>
+
+<!-- ── MODAL COMPROBANTE ──────────────────────────────────────────────────── -->
+@if (modalComprobanteAbierto()) {
+  <div class="modal-comp-backdrop" (click)="cerrarModalComprobante()">
+    <div class="modal-comp" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal-comp-header">
+        <h5><i class="bi bi-whatsapp me-2" style="color:#25D366;"></i>
+          @switch (modoModalComp()) {
+            @case ('opciones') { Adjuntar comprobante }
+            @case ('camara')   { Tomar foto }
+            @case ('editar')   { Recortar imagen }
+            @case ('preview')  { Vista previa }
+          }
+        </h5>
+        <button class="modal-comp-close" (click)="cerrarModalComprobante()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-comp-body">
+
+        <!-- ── OPCIONES ── -->
+        @if (modoModalComp() === 'opciones') {
+          <p style="font-size:.83rem;color:var(--gris-medio);margin-bottom:18px;">
+            Seleccione cómo quiere adjuntar su comprobante de pago para enviarlo por WhatsApp.
+          </p>
+          @if (isMobile) {
+            <button class="comp-opcion-btn" (click)="iniciarCamaraComp()">
+              <div class="comp-op-icon" style="background:#e8f8ef;">
+                <i class="bi bi-camera" style="color:var(--verde);"></i>
+              </div>
+              <div class="comp-op-info">
+                <div class="comp-op-title">Tomar foto</div>
+                <div class="comp-op-sub">Use la cámara de su dispositivo</div>
+              </div>
+              <i class="bi bi-chevron-right ms-auto" style="color:var(--gris-borde);"></i>
+            </button>
+          }
+          <label class="comp-opcion-btn" style="cursor:pointer;">
+            <div class="comp-op-icon" style="background:var(--azul-suave);">
+              <i class="bi bi-image" style="color:var(--azul-principal);"></i>
+            </div>
+            <div class="comp-op-info">
+              <div class="comp-op-title">{{ isMobile ? 'Seleccionar imagen' : 'Examinar archivo' }}</div>
+              <div class="comp-op-sub">{{ isMobile ? 'JPG, PNG o WEBP desde su galería' : 'JPG, PNG, WEBP o PDF' }}</div>
+            </div>
+            <i class="bi bi-chevron-right ms-auto" style="color:var(--gris-borde);"></i>
+            <input type="file" [attr.accept]="isMobile ? 'image/*' : 'image/*,application/pdf'" style="display:none;" (change)="seleccionarArchivoComp($event)">
+          </label>
+          @if (errorComp()) {
+            <p class="comp-error"><i class="bi bi-exclamation-circle me-1"></i>{{ errorComp() }}</p>
+          }
+        }
+
+        <!-- ── CÁMARA ── -->
+        @if (modoModalComp() === 'camara') {
+          <div class="comp-video-wrap">
+            <video id="compVideo" autoplay playsinline muted style="width:100%;max-height:52vh;object-fit:cover;display:block;border-radius:10px;"></video>
+          </div>
+          <button class="btn-sh-primary" (click)="capturarFotoComp()">
+            <i class="bi bi-camera-fill"></i> Capturar foto
+          </button>
+          <button class="btn-sh-outline mt-2 w-100 justify-content-center" (click)="modoModalComp.set('opciones'); _detenerCamaraComp()">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+          </button>
+        }
+
+        <!-- ── EDITOR CROP ── -->
+        @if (modoModalComp() === 'editar') {
+          <p class="comp-edit-hint"><i class="bi bi-crop me-1"></i>Arrastra las esquinas o bordes para recortar</p>
+          <div class="comp-toolbar">
+            <button (click)="rotarComprobante()">
+              <i class="bi bi-arrow-clockwise"></i> Rotar
+            </button>
+            <button (click)="modoModalComp.set('opciones')">
+              <i class="bi bi-arrow-left"></i> Volver
+            </button>
+          </div>
+          <div class="comp-canvas-wrap">
+            <canvas id="compEditCanvas" class="comp-canvas"
+                    [style.cursor]="compCropCursor()"
+                    (pointerdown)="compCropPointerDown($event)"
+                    (pointermove)="compCropPointerMove($event)"
+                    (pointerup)="compCropPointerUp($event)"
+                    (pointercancel)="compCropPointerUp($event)"></canvas>
+          </div>
+        }
+
+        <!-- ── PREVIEW ── -->
+        @if (modoModalComp() === 'preview') {
+          @if (!isMobile) {
+            <div class="comp-wa-note">
+              <i class="bi bi-info-circle me-1"></i>
+              En escritorio: se descargará el comprobante y se abrirá WhatsApp Web para que lo adjunte manualmente.
+            </div>
+          }
+          @if (compEsPDF()) {
+            <div class="comp-pdf-preview">
+              <i class="bi bi-file-earmark-pdf-fill"></i>
+              <span>Comprobante PDF listo</span>
+              <small>Se adjuntará al mensaje de WhatsApp</small>
+            </div>
+          } @else if (compPreviewUrl()) {
+            <img [src]="compPreviewUrl()!" class="comp-preview-img" alt="Vista previa del comprobante">
+          }
+          @if (!compEsPDF()) {
+            <div class="comp-toolbar">
+              <button (click)="modoModalComp.set('editar'); _compNeedCanvasRefresh = true">
+                <i class="bi bi-crop"></i> Volver a recortar
+              </button>
+            </div>
+          }
+        }
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-comp-footer">
+        <button class="btn-modal-cancel" (click)="cerrarModalComprobante()">
+          <i class="bi bi-x me-1"></i>Cancelar
+        </button>
+        @if (modoModalComp() === 'editar') {
+          <button class="btn-modal-accept" (click)="aplicarEdicionComp()">
+            <i class="bi bi-check2 me-1"></i>Aplicar recorte
+          </button>
+        }
+        @if (modoModalComp() === 'preview') {
+          <button class="btn-modal-accept" [disabled]="enviandoComp()" (click)="enviarComprobanteWhatsApp()">
+            @if (enviandoComp()) {
+              <span class="spinner-border spinner-border-sm me-1"></span> Enviando...
+            } @else {
+              <i class="bi bi-whatsapp me-1"></i>Aceptar y enviar
+            }
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Toast copiado -->
+<div class="toast-copiado" [class.visible]="toastVisible()">✓ Copiado al portapapeles</div>
+
