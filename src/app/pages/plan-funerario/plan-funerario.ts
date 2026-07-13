@@ -54,15 +54,27 @@ export class PlanFunerarioComponent implements OnInit {
     this.cobros().filter(c => c.estadoCobro === 'PAGADO').length
   );
 
+  /** Vencidos (todos) + 1 si hay un próximo pendiente — misma lógica que cobros */
+  readonly cantidadPendientes = computed(() => {
+    const vencidos = this.cobros().filter(c => c.estadoCobro === 'VENCIDO').length;
+    const tieneProximo = this.cobros().some(c => c.estadoCobro === 'PENDIENTE');
+    return vencidos + (tieneProximo ? 1 : 0);
+  });
+
   readonly cobrosPendientes = computed(() =>
     this.cobros().filter(c => c.estadoCobro === 'PENDIENTE' || c.estadoCobro === 'VENCIDO')
   );
 
-  readonly cobrosRecientes = computed(() =>
-    [...this.cobros()]
-      .sort((a, b) => new Date(b.fechaVencimiento).getTime() - new Date(a.fechaVencimiento).getTime())
-      .slice(0, 4)
-  );
+  /** Igual que mensualidadesVisibles en cobros: vencidos/pendientes primero, pagados al final */
+  readonly cobrosRecientes = computed(() => {
+    const pendientes = this.cobros()
+      .filter(c => c.estadoCobro !== 'PAGADO')
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
+    const pagados = this.cobros()
+      .filter(c => c.estadoCobro === 'PAGADO')
+      .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad);
+    return [...pendientes, ...pagados].slice(0, 5);
+  });
 
   readonly duracionTotal = computed(() => {
     const c = this.contrato();
@@ -130,6 +142,13 @@ export class PlanFunerarioComponent implements OnInit {
     });
   }
 
+  contratoEstadoBadge(): string {
+    const estado = this.contrato()?.estadoClave;
+    if (estado === 'VIGENTE' || estado === 'ACTIVO') return 'badge-estado badge-activo';
+    if (estado === 'PENDIENTE') return 'badge-estado badge-pendiente';
+    return 'badge-estado badge-vencido';
+  }
+
   estadoBadgeClass(): string {
     const estado = this.contrato()?.estadoClave;
     const map: Record<string, string> = {
@@ -144,7 +163,39 @@ export class PlanFunerarioComponent implements OnInit {
   }
 
   cobroBadgeClass(cobro: CobroProgramado): string {
-    return cobro.estadoCobro === 'PAGADO' ? 'pmr-badge pmr-pagado' : 'pmr-badge pmr-pendiente';
+    const map: Record<string, string> = {
+      'PAGADO':     'mes-badge mes-pagado',
+      'PENDIENTE':  'mes-badge mes-pendiente',
+      'VENCIDO':    'mes-badge mes-vencido',
+      'CANCELADO':  'mes-badge mes-vencido',
+      'PROGRAMADA': 'mes-badge mes-programada'
+    };
+    return map[this.estadoVisualCobro(cobro)] ?? 'mes-badge';
+  }
+
+  cobrosIcono(estado: string): string {
+    const map: Record<string, string> = {
+      'PAGADO':     'bi-check',
+      'PENDIENTE':  'bi-clock',
+      'VENCIDO':    'bi-exclamation-circle-fill',
+      'CANCELADO':  'bi-x-circle',
+      'PROGRAMADA': 'bi-calendar2'
+    };
+    return map[estado] ?? 'bi-circle';
+  }
+
+  /** ID del primer cobro PENDIENTE (próximo a vencer) */
+  private get _proximoPendienteId(): number | null {
+    const primero = this.cobros()
+      .filter(c => c.estadoCobro === 'PENDIENTE')
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad)[0];
+    return primero?.id ?? null;
+  }
+
+  /** PENDIENTE próximo → 'PENDIENTE'; posteriores → 'PROGRAMADA'; demás sin cambio */
+  estadoVisualCobro(cobro: CobroProgramado): string {
+    if (cobro.estadoCobro !== 'PENDIENTE') return cobro.estadoCobro;
+    return cobro.id === this._proximoPendienteId ? 'PENDIENTE' : 'PROGRAMADA';
   }
 
   inicialesDeNombre(nombre: string): string {

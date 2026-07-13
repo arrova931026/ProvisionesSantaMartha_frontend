@@ -8,4 +8,5 @@ export interface CobroProgramado {
   estadoCobro: string;        // ← estado.clave del backend: PENDIENTE | PAGADO | VENCIDO
   fechaPago?: string;
   referenciaPago?: string;
+  metodoPago?: string;        // ← metodo.nombre del backend (viene de tabla pagos, ver nota)
 }

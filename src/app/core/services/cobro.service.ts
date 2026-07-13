@@ -12,6 +12,12 @@ export class CobroService {
     return this.http.get<CobroProgramado[]>(`${this.base}/contrato/${contratoId}`);
   }
 
+  crearPreferenciaMP(cobroId: number) {
+    return this.http.post<{ id: string; initPoint: string; sandboxInitPoint: string }>(
+      `${environment.apiUrl}/pagos/cobros/${cobroId}/preferencia-mp`, {}
+    );
+  }
+
   pendientesPorContrato(contratoId: number) {
     return this.http.get<CobroProgramado[]>(`${this.base}/contrato/${contratoId}/pendientes`);
   }

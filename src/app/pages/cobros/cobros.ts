@@ -1,4 +1,7 @@
-import { Component, inject, signal, OnInit, computed, AfterViewChecked } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, AfterViewChecked, AfterViewInit } from '@angular/core';
+import JsBarcode from 'jsbarcode';
+import { ActivatedRoute } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { CobroService } from '../../core/services/cobro.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,10 +14,11 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
   imports: [CurrencyPipe, DatePipe],
   templateUrl: './cobros.html'
 })
-export class CobrosComponent implements OnInit, AfterViewChecked {
+export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked {
   private readonly cobroService = inject(CobroService);
   private readonly contratoService = inject(ContratoService);
   private readonly authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly cobros = signal<CobroProgramado[]>([]);
   readonly contratoActivo = signal<ContratoResponse | null>(null);
@@ -24,6 +28,7 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
   readonly mostrarHistorialCompleto = signal(false);
   readonly tabActiva = signal<'mp' | 'transferencia' | 'oxxo'>('mp');
   readonly toastVisible = signal(false);
+  readonly loadingMP = signal(false);
 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
   readonly modalComprobanteAbierto = signal(false);
@@ -40,6 +45,7 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
   private _compImgEl: HTMLImageElement | null = null;
   private _compFinalBlob: Blob | null = null;
   _compNeedCanvasRefresh = false;
+  private _barcodeRendered = false;
   private _compCropNorm = { x: 0.04, y: 0.04, w: 0.92, h: 0.92 };
   private _compCropDragHandle: string | null = null;
   private _compCropDragStart = { x: 0, y: 0 };
@@ -54,9 +60,11 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
   get pagosRealizados(): number {
     return this.cobros().filter(c => c.estadoCobro === 'PAGADO').length;
   }
-  /** Cobros PENDIENTE + VENCIDO = aún no pagados */
+  /** Mensualidades vencidas (todas) + 1 si hay un próximo pago pendiente */
   get pagosPendientes(): number {
-    return this.cobros().filter(c => c.estadoCobro === 'PENDIENTE' || c.estadoCobro === 'VENCIDO').length;
+    const vencidos = this.cobros().filter(c => c.estadoCobro === 'VENCIDO').length;
+    const tieneProximo = this.cobros().some(c => c.estadoCobro === 'PENDIENTE');
+    return vencidos + (tieneProximo ? 1 : 0);
   }
   /** Suma de cobros cuya fecha límite ya pasó y no han sido pagados */
   get saldoVencido(): number {
@@ -131,13 +139,43 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
   cargarCobros(contratoId: number) {
     this.loading.set(true);
     this.cobroService.listarPorContrato(contratoId).subscribe({
-      next: data => { this.cobros.set(data); this.loading.set(false); },
+      next: data => {
+        this.cobros.set(data);
+        this.loading.set(false);
+        this._scrollAlFragmento();
+      },
       error: () => { this.errorMsg.set('Error al cargar cobros.'); this.loading.set(false); }
     });
   }
 
+  private _scrollAlFragmento() {
+    const fragment = this.route.snapshot.fragment;
+    if (!fragment) return;
+    setTimeout(() => {
+      const el = document.getElementById(fragment);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  }
+
   cambiarTab(tab: 'mp' | 'transferencia' | 'oxxo') {
     this.tabActiva.set(tab);
+  }
+
+  pagarConMP() {
+    const cobro = this.proximoPago;
+    if (!cobro) return;
+    this.loadingMP.set(true);
+    this.cobroService.crearPreferenciaMP(cobro.id).subscribe({
+      next: ({ initPoint, sandboxInitPoint }) => {
+        // En desarrollo se usa sandboxInitPoint para poder pagar con usuarios de prueba de MP.
+        // En producción se usa initPoint (checkout real).
+        window.location.href = environment.production ? initPoint : sandboxInitPoint;
+      },
+      error: () => {
+        this.loadingMP.set(false);
+        this.errorMsg.set('No se pudo conectar con Mercado Pago. Intente de nuevo.');
+      }
+    });
   }
 
   toggleTodasMensualidades() {
@@ -172,16 +210,24 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
       const d = new Date(iso + (iso.includes('T') ? '' : 'T00:00:00'));
       return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
     };
-    const filas = cobros.map(c => {
-      const fecha = fmtFecha(c.estadoCobro === 'PAGADO' ? (c.fechaPago ?? c.fechaVencimiento) : c.fechaVencimiento);
-      const color = c.estadoCobro === 'PAGADO' ? '#27ae60' : c.estadoCobro === 'VENCIDO' ? '#e74c3c' : '#f39c12';
-      return `<tr>
-        <td style="text-align:center">${c.numeroMensualidad}</td>
-        <td>${fecha ?? ''}</td>
-        <td style="text-align:right">$${Number(c.monto).toFixed(2)} MXN</td>
-        <td style="text-align:center;color:${color};font-weight:700">${c.estadoCobro}</td>
-      </tr>`;
-    }).join('');
+    const filas = [...cobros]
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad)
+      .map(c => {
+        const estadoVis = this.estadoVisual(c);
+        const fecha = fmtFecha(c.estadoCobro === 'PAGADO' ? (c.fechaPago ?? c.fechaVencimiento) : c.fechaVencimiento);
+        const colorMap: Record<string, string> = {
+          'PAGADO': '#27ae60', 'VENCIDO': '#e74c3c', 'PENDIENTE': '#f39c12', 'PROGRAMADA': '#2a6099'
+        };
+        const color = colorMap[estadoVis] ?? '#888';
+        return `<tr>
+          <td style="text-align:center">#${c.numeroMensualidad}</td>
+          <td>${fecha}</td>
+          <td>Mensualidad #${c.numeroMensualidad}</td>
+          <td style="text-align:right">$${Number(c.monto).toFixed(2)} MXN</td>
+          <td style="text-align:center">${c.metodoPago ?? '\u2014'}</td>
+          <td style="text-align:center;color:${color};font-weight:700">${estadoVis}</td>
+        </tr>`;
+      }).join('');
     const pagados = cobros.filter(c => c.estadoCobro === 'PAGADO').length;
     const pendientes = cobros.filter(c => c.estadoCobro !== 'PAGADO').length;
     const totalPagado = cobros.filter(c => c.estadoCobro === 'PAGADO').reduce((s, c) => s + Number(c.monto), 0);
@@ -222,7 +268,7 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
   <div><div class="val" style="color:#f39c12">${pendientes}</div><div class="lbl">Pendientes</div></div>
   <div><div class="val">$${totalPagado.toFixed(2)}</div><div class="lbl">Total pagado MXN</div></div>
 </div>
-<table><thead><tr><th style="width:40px">#</th><th>Fecha</th><th style="text-align:right">Monto</th><th style="text-align:center">Estado</th></tr></thead>
+<table><thead><tr><th>Folio</th><th>Fecha</th><th>Concepto</th><th style="text-align:right">Monto</th><th style="text-align:center">Método</th><th style="text-align:center">Estado</th></tr></thead>
 <tbody>${filas}</tbody></table>
 <div class="footer">Sociedad Humanista Santa Martha S.A. de C.V. — ${hoy}</div>
 <script>setTimeout(()=>window.print(),400)</script>
@@ -238,22 +284,44 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
     });
   }
 
+  /** ID del primer cobro PENDIENTE (el próximo a vencer) */
+  private get _proximoPendienteId(): number | null {
+    const primero = this.cobros()
+      .filter(c => c.estadoCobro === 'PENDIENTE')
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad)[0];
+    return primero?.id ?? null;
+  }
+
+  /**
+   * Estado visual para mostrar en el badge:
+   * - VENCIDO  → VENCIDO  (rojo)
+   * - PAGADO   → PAGADO   (verde)
+   * - PENDIENTE próximo → PENDIENTE (amarillo)
+   * - PENDIENTE posteriores → PROGRAMADA (azul)
+   */
+  estadoVisual(cobro: CobroProgramado): string {
+    if (cobro.estadoCobro !== 'PENDIENTE') return cobro.estadoCobro;
+    return cobro.id === this._proximoPendienteId ? 'PENDIENTE' : 'PROGRAMADA';
+  }
+
   estadoBadgeClass(estado: string): string {
     const map: Record<string, string> = {
-      'PAGADO': 'mes-badge mes-pagado',
-      'PENDIENTE': 'mes-badge mes-pendiente',
-      'VENCIDO': 'mes-badge mes-vencido',
-      'CANCELADO': 'mes-badge mes-vencido'
+      'PAGADO':     'mes-badge mes-pagado',
+      'PENDIENTE':  'mes-badge mes-pendiente',
+      'VENCIDO':    'mes-badge mes-vencido',
+      'CANCELADO':  'mes-badge mes-vencido',
+      'PROGRAMADA': 'mes-badge mes-programada'
     };
     return map[estado] ?? 'mes-badge';
   }
 
   estadoIcon(estado: string): string {
     const map: Record<string, string> = {
-      'PAGADO': 'bi-check',
-      'PENDIENTE': 'bi-clock',
-      'VENCIDO': 'bi-exclamation-circle-fill',
-      'CANCELADO': 'bi-x-circle'
+      'PAGADO':     'bi-check',
+      'PENDIENTE':  'bi-clock',
+      'VENCIDO':    'bi-exclamation-circle-fill',
+      'CANCELADO':  'bi-x-circle',
+      'PROGRAMADA': 'bi-calendar2'
     };
     return map[estado] ?? 'bi-circle';
   }
@@ -266,11 +334,107 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
+  ngAfterViewInit() {
+    this._renderizarCodigoBarra();
+  }
+
   ngAfterViewChecked() {
     if (this._compNeedCanvasRefresh && this.modoModalComp() === 'editar') {
       this._compNeedCanvasRefresh = false;
       this._actualizarCanvasComp();
     }
+    if (!this._barcodeRendered) {
+      this._renderizarCodigoBarra();
+    }
+  }
+
+  // ── Ficha OXXO ────────────────────────────────────────────────────────────
+
+  private _renderizarCodigoBarra() {
+    const canvas = document.getElementById('oxxoBarcodeCanvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    this._barcodeRendered = true;
+    try {
+      JsBarcode(canvas, '5256784379967994', {
+        format: 'CODE128',
+        lineColor: '#111111',
+        width: 2.2,
+        height: 68,
+        displayValue: false,
+        margin: 14,
+        background: '#ffffff'
+      });
+    } catch { /* canvas no visible aún */ }
+  }
+
+  descargarFichaOxxo() {
+    const srcCanvas = document.getElementById('oxxoBarcodeCanvas') as HTMLCanvasElement | null;
+    if (!srcCanvas || srcCanvas.width === 0) return;
+
+    const mxn = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
+      .format(this.mensualidadActual);
+
+    const W = Math.max(srcCanvas.width, 480);
+    const H = srcCanvas.height + 200;
+    const out = document.createElement('canvas');
+    out.width  = W;
+    out.height = H;
+    const ctx = out.getContext('2d')!;
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header OXXO
+    ctx.fillStyle = '#DA291C';
+    ctx.fillRect(0, 0, W, 52);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('OXXO', 18, 34);
+    ctx.font = '13px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText('Depósito a tarjeta BANAMEX', W - 16, 34);
+
+    // Código de barras centrado
+    const bx = Math.floor((W - srcCanvas.width) / 2);
+    ctx.drawImage(srcCanvas, bx, 60);
+
+    // Número de tarjeta
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('5256  7843  7996  7994', W / 2, 60 + srcCanvas.height + 32);
+
+    // Beneficiario
+    ctx.fillStyle = '#555555';
+    ctx.font = '12px Arial';
+    ctx.fillText('BANAMEX (Citibanamex)  ·  Armando Rojas Valdez', W / 2, 60 + srcCanvas.height + 54);
+
+    // Monto
+    ctx.fillStyle = '#DA291C';
+    ctx.font = 'bold 17px Arial';
+    ctx.fillText(`Monto a depositar: ${mxn} MXN`, W / 2, 60 + srcCanvas.height + 80);
+
+    // Concepto
+    ctx.fillStyle = '#333333';
+    ctx.font = '12px Arial';
+    ctx.fillText(`Concepto: ${this.referenciaParaTransferencia}`, W / 2, 60 + srcCanvas.height + 102);
+
+    // Nota
+    ctx.fillStyle = '#888888';
+    ctx.font = '11px Arial';
+    ctx.fillText('Solicite al cajero "depósito a tarjeta BANAMEX" y escanee el código', W / 2, 60 + srcCanvas.height + 126);
+
+    // Borde
+    ctx.strokeStyle = '#DA291C';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+
+    const link = document.createElement('a');
+    link.download = 'ficha-oxxo-banamex.png';
+    link.href = out.toDataURL('image/png');
+    link.click();
   }
 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
@@ -579,7 +743,7 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
     const isPdf = this._compFinalBlob.type === 'application/pdf';
     const fileName = isPdf ? 'comprobante.pdf' : 'comprobante.jpg';
     const file = new File([this._compFinalBlob], fileName, { type: this._compFinalBlob.type });
-    const texto = `Hola, adjunto comprobante de pago.\nContrato: ${this.contratoActivo()?.numeroContrato ?? ''}\nReferencia: ${this.referenciaParaTransferencia}`;
+    const texto = `Te comparto el comprobante de pago del socio ${this.contratoActivo()?.titularNombre ?? ''}`;
     try {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Comprobante de pago', text: texto });
@@ -589,7 +753,7 @@ export class CobrosComponent implements OnInit, AfterViewChecked {
         const a = document.createElement('a');
         a.href = objUrl; a.download = 'comprobante.jpg'; a.click();
         setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
-        const waUrl = `https://api.whatsapp.com/send?phone=5217821574801&text=${encodeURIComponent(texto)}`;
+        const waUrl = `https://api.whatsapp.com/send?phone=527821574801&text=${encodeURIComponent(texto)}`;
         window.open(waUrl, '_blank');
       }
     } catch { /* user cancelled share */ }

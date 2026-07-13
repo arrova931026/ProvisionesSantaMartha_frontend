@@ -87,6 +87,17 @@
   .sc-check { margin-left:auto; width:24px; height:24px; border-radius:50%; background:var(--verde-suave); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .sc-check i { font-size:0.75rem; color:var(--verde); }
 
+  /* ── Contrato card (igual que cobros.html) ── */
+  .contrato-card { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:24px 20px;box-shadow:0 4px 24px rgba(0,0,0,.06);border-top:3px solid var(--azul-principal); }
+  .badge-estado { display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;font-size:.8rem;font-weight:600; }
+  .badge-activo  { background:var(--verde-suave);color:var(--verde); }
+  .badge-pendiente { background:var(--amarillo-suave);color:var(--amarillo); }
+  .badge-vencido { background:var(--rojo-suave);color:var(--rojo); }
+  .contrato-dato { border-bottom:1px solid var(--gris-borde);padding:10px 0; }
+  .contrato-dato:last-child { border-bottom:none; }
+  .contrato-dato .dato-label { font-size:.75rem;color:var(--gris-medio);margin-bottom:2px; }
+  .contrato-dato .dato-valor { font-size:.9rem;font-weight:600;color:var(--gris-texto); }
+
   /* ── PAGOS ── */
   .pago-alerta-card { background:var(--amarillo-suave); border:1px solid #f6c96b; border-left:4px solid var(--amarillo); border-radius:12px; padding:20px; display:flex; gap:14px; align-items:flex-start; }
   .pa-icon { width:44px; height:44px; border-radius:50%; background:var(--amarillo); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -106,6 +117,20 @@
   .pmr-badge { font-size:0.7rem; font-weight:600; padding:3px 9px; border-radius:50px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px; }
   .pmr-pagado { background:var(--verde-suave); color:var(--verde); }
   .pmr-pendiente { background:var(--amarillo-suave); color:var(--amarillo); }
+
+  /* ── Mensualidades mini (reutiliza clases de cobros) ── */
+  .mes-badge { font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:50px;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:4px; }
+  .mes-pagado    { background:var(--verde-suave);color:var(--verde); }
+  .mes-pendiente { background:var(--amarillo-suave);color:var(--amarillo); }
+  .mes-vencido   { background:var(--rojo-suave);color:var(--rojo); }
+  .mes-programada{ background:#dde8f7;color:#2a6099; }
+  .mensualidades-mini { background:var(--blanco);border:1px solid var(--gris-borde);border-radius:12px;padding:16px 18px;box-shadow:0 4px 24px rgba(0,0,0,.06); }
+  .mes-item { display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--gris-borde);gap:10px;flex-wrap:nowrap; }
+  .mes-item:last-child { border-bottom:none; }
+  .mes-info { flex:1;min-width:0; }
+  .mes-nombre { font-size:.86rem;font-weight:600;color:var(--gris-texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .mes-fecha  { font-size:.75rem;color:var(--gris-medio); }
+  .mes-monto  { font-size:.88rem;font-weight:700;color:var(--gris-texto);white-space:nowrap; }
 
   /* ── BOTONES ── */
   .btn-sh-primary { background-color:var(--azul-principal); color:var(--blanco); border:none; border-radius:8px; padding:10px 18px; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition:background .2s,transform .15s; text-decoration:none; cursor:pointer; }
@@ -159,55 +184,60 @@
         </div>
       }
 
-      <!-- ── TARJETA PLAN + VIGENCIA ── -->
+      <!-- ── ESTADO DEL CONTRATO + VIGENCIA ── -->
       <div class="row g-4 mb-4">
 
-        <!-- Plan Hero Card -->
-        <div class="col-12 col-lg-7">
+        <!-- Estado del Contrato -->
+        <div class="col-12 col-lg-5 d-flex flex-column">
           <div class="seccion-titulo">
-            <h2><i class="bi bi-file-earmark-text me-2" style="color:var(--azul-principal)"></i>Tipo de Plan</h2>
+            <h2><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal)"></i>Estado del Contrato</h2>
             <div class="linea-azul"></div>
           </div>
-          <div class="plan-hero-card">
-            <div class="plan-badge-activo">
-              <i class="bi bi-circle-fill"></i>
-              {{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
+          <div class="contrato-card">
+            <div class="mb-3">
+              <span [class]="contratoEstadoBadge()">
+                <i class="bi bi-circle-fill" style="font-size:.45rem;"></i>
+                {{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
+              </span>
             </div>
-            <div class="plan-tipo-label">Plan de Previsión Funeraria</div>
-            <div class="plan-nombre">{{ contrato()!.planNombre || 'Plan Funerario' }}</div>
-            <div class="plan-contrato">Contrato N.° {{ contrato()!.numeroContrato }}</div>
-            <div class="plan-datos-grid">
-              <div class="plan-dato">
-                <div class="pd-label"><i class="bi bi-person me-1"></i>Titular</div>
-                <div class="pd-valor">{{ contrato()!.titularNombre || '—' }}</div>
-              </div>
-              <div class="plan-dato">
-                <div class="pd-label"><i class="bi bi-people me-1"></i>Beneficiarios</div>
-                <div class="pd-valor">{{ beneficiarios().length }} persona{{ beneficiarios().length !== 1 ? 's' : '' }}</div>
-              </div>
-              <div class="plan-dato">
-                <div class="pd-label"><i class="bi bi-calendar-check me-1"></i>Fecha de inicio</div>
-                <div class="pd-valor">{{ contrato()!.fechaInicio | date:'dd MMM yyyy' }}</div>
-              </div>
-              <div class="plan-dato">
-                <div class="pd-label"><i class="bi bi-cash me-1"></i>Cuota mensual</div>
-                <div class="pd-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-              </div>
+            <div class="contrato-dato">
+              <div class="dato-label">Número de contrato</div>
+              <div class="dato-valor">{{ contrato()!.numeroContrato }}</div>
             </div>
-            <div class="plan-hero-actions">
-              <button class="btn-pdf" (click)="descargarPdf()" [disabled]="descargandoPdf()">
-                @if (descargandoPdf()) {
-                  <span class="spinner-border spinner-border-sm"></span> Descargando...
-                } @else {
-                  <i class="bi bi-file-earmark-pdf"></i> Descargar Contrato PDF
-                }
-              </button>
+            <div class="contrato-dato">
+              <div class="dato-label">Titular</div>
+              <div class="dato-valor">{{ contrato()!.titularNombre || '—' }}</div>
             </div>
+            <div class="contrato-dato">
+              <div class="dato-label">Plan contratado</div>
+              <div class="dato-valor">{{ contrato()!.planNombre || '—' }}</div>
+            </div>
+            <div class="contrato-dato">
+              <div class="dato-label">Cuota mensual</div>
+              <div class="dato-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+            </div>
+            @if (cobrosPendientes().length > 0) {
+              <div class="contrato-dato">
+                <div class="dato-label">Próximo cobro</div>
+                <div class="dato-valor" style="color:var(--amarillo);">
+                  {{ cobrosPendientes()[0].fechaVencimiento | date:'dd/MM/yyyy' }}
+                </div>
+              </div>
+            }
+          </div>
+          <div class="mt-3">
+            <button class="btn-sh-primary w-100" (click)="descargarPdf()" [disabled]="descargandoPdf()">
+              @if (descargandoPdf()) {
+                <span class="spinner-border spinner-border-sm"></span> Descargando...
+              } @else {
+                <i class="bi bi-file-earmark-pdf"></i> Descargar Contrato PDF
+              }
+            </button>
           </div>
         </div>
 
         <!-- Vigencia -->
-        <div class="col-12 col-lg-5 d-flex flex-column">
+        <div class="col-12 col-lg-7 d-flex flex-column">
           <div class="seccion-titulo">
             <h2><i class="bi bi-hourglass-split me-2" style="color:var(--azul-principal)"></i>Vigencia</h2>
             <div class="linea-azul"></div>
@@ -230,8 +260,8 @@
             <div class="dato-fila">
               <span class="df-label">Estado</span>
               <span class="df-valor">
-                <span [class]="estadoBadgeClass()">
-                  <i class="bi bi-dot"></i>{{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
+                <span [class]="contratoEstadoBadge()">
+                  <i class="bi bi-circle-fill" style="font-size:.45rem;"></i>{{ contrato()!.estadoNombre ?? contrato()!.estadoClave }}
                 </span>
               </span>
             </div>
@@ -442,12 +472,12 @@
           <div class="linea-azul" style="background:var(--amarillo)"></div>
         </div>
 
-        @if (cobrosPendientes().length > 0) {
+        @if (cantidadPendientes() > 0) {
           <div class="pago-alerta-card mb-3">
             <div class="pa-icon"><i class="bi bi-exclamation-lg"></i></div>
             <div class="pa-body">
               <div class="pa-titulo">
-                Tiene {{ cobrosPendientes().length }} pago{{ cobrosPendientes().length > 1 ? 's' : '' }} pendiente{{ cobrosPendientes().length > 1 ? 's' : '' }}
+                Tiene {{ cantidadPendientes() }} pago{{ cantidadPendientes() > 1 ? 's' : '' }} pendiente{{ cantidadPendientes() > 1 ? 's' : '' }}
               </div>
               <div class="pa-detalle">
                 La mensualidad más próxima vence el
@@ -473,34 +503,30 @@
         @if (cobrosRecientes().length > 0) {
           <div class="info-card">
             <div class="card-section-title">
-              <i class="bi bi-clock-history" style="color:var(--azul-principal)"></i> Últimos movimientos
+              <i class="bi bi-calendar-check" style="color:var(--azul-principal)"></i> Últimas mensualidades
             </div>
-            <div>
+            <div class="mensualidades-mini">
               @for (cobro of cobrosRecientes(); track cobro.id) {
-                <div class="pagos-mini-row">
-                  <div>
-                    <div class="pmr-mes">Mensualidad #{{ cobro.numeroMensualidad }}</div>
-                    <div class="pmr-fecha">
-                      @if (cobro.estadoCobro === 'PAGADO' && cobro.fechaPago) {
-                        Pagado: {{ cobro.fechaPago | date:'dd/MM/yyyy' }}
+                <div class="mes-item">
+                  <div class="mes-info">
+                    <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                    <div class="mes-fecha">
+                      @if (cobro.estadoCobro === 'PAGADO') {
+                        Pagado: {{ cobro.fechaPago | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}
                       } @else {
-                        Vence: {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
+                        Vence: {{ cobro.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}
                       }
                     </div>
                   </div>
-                  <div class="pmr-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                  <div class="mes-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
                   <span [class]="cobroBadgeClass(cobro)">
-                    @if (cobro.estadoCobro === 'PAGADO') {
-                      <i class="bi bi-check"></i> Pagado
-                    } @else {
-                      <i class="bi bi-clock"></i> Pendiente
-                    }
+                    <i [class]="'bi ' + cobrosIcono(estadoVisualCobro(cobro)) + ' me-1'"></i>{{ estadoVisualCobro(cobro) }}
                   </span>
                 </div>
               }
             </div>
             <div class="mt-3">
-              <a routerLink="/portal/cobros" class="btn-sh-outline">
+              <a routerLink="/portal/cobros" fragment="seccion-historial" class="btn-sh-outline">
                 <i class="bi bi-list-ul"></i> Ver historial completo
               </a>
             </div>
