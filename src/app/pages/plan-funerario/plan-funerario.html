@@ -220,7 +220,7 @@
               <div class="contrato-dato">
                 <div class="dato-label">Próximo cobro</div>
                 <div class="dato-valor" style="color:var(--amarillo);">
-                  {{ cobrosPendientes()[0].fechaVencimiento | date:'dd/MM/yyyy' }}
+                  {{ cobrosPendientes()[0].fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}
                 </div>
               </div>
             }
@@ -245,12 +245,12 @@
           <div class="info-card flex-grow-1">
             <div class="dato-fila">
               <span class="df-label">Fecha de inicio</span>
-              <span class="df-valor">{{ contrato()!.fechaInicio | date:'dd/MM/yyyy' }}</span>
+              <span class="df-valor">{{ contrato()!.fechaInicio | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</span>
             </div>
             <div class="dato-fila">
               <span class="df-label">Vencimiento</span>
               <span class="df-valor">
-                {{ contrato()!.fechaVencimiento ? (contrato()!.fechaVencimiento! | date:'dd/MM/yyyy') : 'Sin vencimiento' }}
+                {{ contrato()!.fechaVencimiento ? (contrato()!.fechaVencimiento! | date:"dd 'de' MMMM 'de' yyyy":'':'es') : 'Sin vencimiento' }}
               </span>
             </div>
             <div class="dato-fila">

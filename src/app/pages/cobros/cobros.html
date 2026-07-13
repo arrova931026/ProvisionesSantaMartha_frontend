@@ -341,7 +341,7 @@
                   <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
                   <div class="mes-fecha">
                     @if (cobro.estadoCobro === 'PAGADO') {
-                      Pagado: {{ cobro.fechaPago | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}
+                      Pagado: {{ cobro.fechaPago ? (cobro.fechaPago | date:"dd 'de' MMMM 'de' yyyy":'':'es') : '&mdash;' }}
                     } @else {
                       Vence: {{ cobro.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}
                     }
@@ -375,7 +375,220 @@
           <div class="linea-azul" style="background:var(--verde);"></div>
         </div>
 
-        <div class="pago-section-card">
+        <!-- Sin adeudos actuales -->
+        @if (!proximoPago) {
+          <div class="info-card text-center py-5">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--verde-suave);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+              <i class="bi bi-check-circle-fill" style="font-size:2rem;color:var(--verde);"></i>
+            </div>
+            <h5 style="color:var(--verde);font-weight:700;margin-bottom:8px;">¡Felicidades, estás al corriente!</h5>
+            <p style="font-size:.88rem;color:var(--gris-medio);max-width:420px;margin:0 auto;">
+              No tienes adeudos pendientes en este momento. Todos tus pagos están al día.
+            </p>
+          </div>
+
+        } @else {
+
+          <!-- Próximo pago no urgente (>7 días): banner informativo -->
+          @if (!tieneAdeudoUrgente) {
+            <div class="info-card mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:48px;height:48px;border-radius:12px;background:var(--azul-suave);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="bi bi-calendar-check" style="font-size:1.4rem;color:var(--azul-principal);"></i>
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:.95rem;color:var(--gris-texto);">Próxima mensualidad en {{ diasHastaProximoPago }} días</div>
+                  <div style="font-size:.82rem;color:var(--gris-medio);">
+                    Mensualidad #{{ proximoPago.numeroMensualidad }} &mdash;
+                    vence el <strong>{{ proximoPago.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>
+                    por <strong>{{ proximoPago.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong>.
+                    Puede adelantar el pago ahora si lo desea.
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Paneles de pago (siempre visibles cuando hay un próximo cobro) -->
+          <div class="pago-section-card">
+
+            <!-- Tabs -->
+            <div class="metodos-tabs">
+              <button class="tab-metodo" [class.activo]="tabActiva() === 'mp'" (click)="cambiarTab('mp')">
+                <div class="tab-icon" style="background:#E3F4FD;">
+                  <i class="bi bi-phone" style="color:#009EE3;font-size:1.2rem;"></i>
+                </div>
+                <span class="tab-label">Mercado<br>Pago</span>
+              </button>
+              <button class="tab-metodo" [class.activo]="tabActiva() === 'transferencia'" (click)="cambiarTab('transferencia')">
+                <div class="tab-icon" style="background:var(--azul-suave);">
+                  <i class="bi bi-bank" style="color:var(--azul-principal);font-size:1.2rem;"></i>
+                </div>
+                <span class="tab-label">Transferencia<br>bancaria</span>
+              </button>
+              <button class="tab-metodo" [class.activo]="tabActiva() === 'oxxo'" (click)="cambiarTab('oxxo')">
+                <div class="tab-icon" style="background:#fdecea;">
+                  <i class="bi bi-shop" style="color:#DA291C;font-size:1.2rem;"></i>
+                </div>
+                <span class="tab-label">Depósito<br>Oxxo</span>
+              </button>
+            </div>
+
+            <!-- Panel: Mercado Pago -->
+            <div class="pago-panel" [class.activo]="tabActiva() === 'mp'">
+              <div class="mp-card">
+                <div class="mp-logo">mercado<span>pago</span></div>
+                <div class="mp-monto">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                <div class="mp-concepto">
+                  Mensualidad #{{ proximoPago.numeroMensualidad }} — {{ contratoActivo()?.numeroContrato }}
+                </div>
+                <p>Paga de forma rápida y segura con tu cuenta Mercado Pago, tarjeta de crédito o débito.</p>
+                <button class="btn-mp" (click)="pagarConMP()" [disabled]="loadingMP()">
+                  @if (loadingMP()) {
+                    <span class="spinner-border spinner-border-sm"></span> Procesando...
+                  } @else {
+                    <i class="bi bi-bag-check-fill"></i> Pagar con Mercado Pago
+                  }
+                </button>
+                <div class="mp-seguro"><i class="bi bi-shield-lock me-1"></i>Pago seguro procesado por Mercado Pago</div>
+              </div>
+              @if (errorMsg()) {
+                <div class="alert alert-danger mt-3 py-2 px-3" style="font-size:.84rem;border-radius:8px;">
+                  <i class="bi bi-exclamation-circle me-1"></i>{{ errorMsg() }}
+                </div>
+              }
+              <div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">
+                <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-credit-card"></i> Tarjeta de crédito</span>
+                <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-credit-card-2-front"></i> Tarjeta de débito</span>
+                <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-phone"></i> Cuenta MP</span>
+                <span style="font-size:.75rem;color:var(--gris-medio);display:flex;align-items:center;gap:5px;"><i class="bi bi-qr-code"></i> CoDi / SPEI</span>
+              </div>
+            </div>
+
+            <!-- Panel: Transferencia Bancaria -->
+            <div class="pago-panel" [class.activo]="tabActiva() === 'transferencia'">
+              <p style="font-size:.85rem;color:var(--gris-medio);margin-bottom:20px;">
+                Realice su transferencia a la siguiente cuenta y envíenos el comprobante por WhatsApp.
+              </p>
+              <div class="transferencia-info">
+                <div class="banco-dato">
+                  <span class="b-label">Banco</span>
+                  <span class="b-valor">BANAMEX (Citibanamex)</span>
+                </div>
+                <div class="banco-dato">
+                  <span class="b-label">Beneficiario</span>
+                  <span class="b-valor">Sociedad Humanista Santa Martha SA. de CV.</span>
+                </div>
+                <div class="banco-dato">
+                  <span class="b-label">Número de tarjeta</span>
+                  <span class="b-valor copiable" (click)="copiar('5256784379967994')">
+                    5256 7843 7996 7994 <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                  </span>
+                </div>
+                <div class="banco-dato">
+                  <span class="b-label">Monto</span>
+                  <span class="b-valor" style="color:var(--verde);">
+                    {{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}
+                  </span>
+                </div>
+                <div class="banco-dato">
+                  <span class="b-label">Concepto / Referencia</span>
+                  <span class="b-valor copiable" (click)="copiar(referenciaParaTransferencia)">
+                    {{ referenciaParaTransferencia }} <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="alerta-referencia">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>
+                  <strong>Importante:</strong> Use exactamente el concepto indicado
+                  (<strong>{{ referenciaParaTransferencia }}</strong>) para identificar su pago correctamente.
+                  El formato es: <em>NumContrato-HH:MM-MM/DD/YYYY</em>.
+                </span>
+              </div>
+              <div class="mt-3" align="center">
+                <button type="button" class="btn-sh-primary" style="max-width:320px;margin:0 auto;" (click)="abrirModalComprobante()">
+                  <i class="bi bi-whatsapp"></i> Enviar comprobante por WhatsApp
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel: Depósito OXXO -->
+            <div class="pago-panel" [class.activo]="tabActiva() === 'oxxo'">
+              <p style="font-size:.85rem;color:var(--gris-medio);margin-bottom:20px;">
+                Deposite en efectivo en cualquier tienda OXXO o ventanilla BANAMEX a la siguiente cuenta.
+              </p>
+              <div class="oxxo-card">
+                <div class="oxxo-header">
+                  <div class="oxxo-logo">OXXO</div>
+                  <div class="oxxo-titulo">
+                    Depósito en efectivo<br>
+                    <span style="font-size:.78rem;opacity:.85;">Sociedad Humanista Santa Martha</span>
+                  </div>
+                  <div style="margin-left:auto;text-align:right;color:white;">
+                    <div style="font-size:.72rem;opacity:.8;">Monto a pagar</div>
+                    <div style="font-size:1.3rem;font-weight:800;">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
+                  </div>
+                </div>
+                <div class="oxxo-body">
+                  <div class="oxxo-cuenta">
+                    <div class="banco-dato">
+                      <span class="b-label">Banco</span>
+                      <span class="b-valor">BANAMEX (Citibanamex)</span>
+                    </div>
+                    <div class="banco-dato">
+                      <span class="b-label">Beneficiario</span>
+                      <span class="b-valor">Sociedad Humanista Santa Martha SA. de CV.</span>
+                    </div>
+                    <div class="banco-dato">
+                      <span class="b-label">Número de tarjeta</span>
+                      <span class="b-valor copiable" (click)="copiar('5256784379967994')">
+                        5256 7843 7996 7994 <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                      </span>
+                    </div>
+                    <div class="banco-dato">
+                      <span class="b-label">Referencia / Concepto</span>
+                      <span class="b-valor copiable" (click)="copiar(referenciaParaTransferencia)">
+                        {{ referenciaParaTransferencia }} <i class="bi bi-copy" style="font-size:.8rem;"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <ul class="oxxo-instrucciones">
+                    <li><span class="paso-num">1</span><span>Acuda a la tienda OXXO más cercana y solicite un depósito a tarjeta BANAMEX.</span></li>
+                    <li><span class="paso-num">2</span><span>Proporcione el número de tarjeta <strong>5256 7843 7996 7994</strong> a nombre de Armando Rojas Valdez.</span></li>
+                    <li><span class="paso-num">3</span><span>Indique el concepto: <strong>{{ referenciaParaTransferencia }}</strong> para identificar su pago.</span></li>
+                    <li><span class="paso-num">4</span><span>Deposite <strong>{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong> MXN más la comisión OXXO aplicable.</span></li>
+                    <li><span class="paso-num">5</span><span>Conserve su ticket y envíe el comprobante por WhatsApp para su registro.</span></li>
+                  </ul>
+                  <button type="button" class="btn-oxxo" (click)="abrirModalComprobante()">
+                    <i class="bi bi-whatsapp"></i> Enviar comprobante por WhatsApp
+                  </button>
+                </div>
+              </div>
+
+              <!-- Ficha digital para cajero -->
+              <div class="ficha-cajero-wrap">
+                <div class="ficha-cajero-header">
+                  <i class="bi bi-upc-scan"></i>
+                  <span>Ficha digital para cajero</span>
+                </div>
+                <div class="ficha-cajero-body">
+                  <p class="ficha-hint">Muestre este código al cajero para escanear el número de tarjeta sin teclearlo. Solicite <strong>depósito a tarjeta BANAMEX</strong>.</p>
+                  <canvas id="oxxoBarcodeCanvas" class="ficha-barcode-canvas"></canvas>
+                  <div class="ficha-card-num">5256 7843 7996 7994</div>
+                  <div class="ficha-sub">BANAMEX (Citibanamex) · Armando Rojas Valdez</div>
+                  <button type="button" class="ficha-download-btn" (click)="descargarFichaOxxo()">
+                    <i class="bi bi-download"></i> Descargar ficha
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /.pago-section-card -->
+        }<!-- /@else tiene proximoPago -->
+      </div><!-- /.mb-4 Realizar Pago -->
+
+      <!-- ── HISTORIAL DE COBROS ── -->
 
           <!-- Tabs -->
           <div class="metodos-tabs">
@@ -570,9 +783,6 @@
 
           </div>
 
-        </div>
-      </div>
-
       <!-- ── HISTORIAL DE COBROS ── -->
       <div class="mb-4" id="seccion-historial">
         <div class="seccion-titulo">
@@ -598,7 +808,7 @@
                     <td class="col-folio">#{{ cobro.numeroMensualidad }}</td>
                     <td>
                       @if (cobro.estadoCobro === 'PAGADO') {
-                        {{ cobro.fechaPago | date:'dd/MM/yyyy' }}
+                        {{ cobro.fechaPago ? (cobro.fechaPago | date:'dd/MM/yyyy') : '&mdash;' }}
                       } @else {
                         {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
                       }

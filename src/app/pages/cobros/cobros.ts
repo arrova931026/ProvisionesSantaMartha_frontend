@@ -29,8 +29,27 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   readonly tabActiva = signal<'mp' | 'transferencia' | 'oxxo'>('mp');
   readonly toastVisible = signal(false);
   readonly loadingMP = signal(false);
-  readonly pagoExitoso  = signal(false);  // regresó de MP con pago=exitoso
-  readonly pagoConfirmado = signal(false); // el cobro ya aparece como PAGADO tras recarga
+  readonly pagoExitoso  = signal(false);
+  readonly pagoConfirmado = signal(false);
+  private _hideBannerOnNextLoad = false;
+
+  // ── Getters de urgencia de cobro ──────────────────────────────────────────
+  /** Días hasta el vencimiento del próximo cobro (negativo = vencido) */
+  get diasHastaProximoPago(): number | null {
+    const p = this.proximoPago;
+    if (!p) return null;
+    const hoy  = new Date(); hoy.setHours(0, 0, 0, 0);
+    const venc = new Date(p.fechaVencimiento + 'T00:00:00');
+    return Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  }
+  /** true si hay un cobro vencido o que vence en los próximos 7 días */
+  get tieneAdeudoUrgente(): boolean {
+    const p = this.proximoPago;
+    if (!p) return false;
+    if (p.estadoCobro === 'VENCIDO') return true;
+    const dias = this.diasHastaProximoPago;
+    return dias !== null && dias <= 7;
+  }
 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
   readonly modalComprobanteAbierto = signal(false);
@@ -110,14 +129,19 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
     return this.mostrarTodasMensualidades() ? lista : lista.slice(0, 6);
   }
 
-  /** Historial: muestra los primeros 4 pendientes; "ver más" muestra todos */
+  /** Historial: pendientes + últimas PAGADOS. "Ver más" muestra todos */
   get historialVisible(): CobroProgramado[] {
     if (this.mostrarHistorialCompleto()) {
       return this.cobros();
     }
-    return this.cobros()
+    const pending = this.cobros()
       .filter(c => c.estadoCobro !== 'PAGADO')
-      .slice(0, 4);
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
+    const paid = this.cobros()
+      .filter(c => c.estadoCobro === 'PAGADO')
+      .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad)
+      .slice(0, Math.max(1, 5 - pending.length));
+    return [...pending, ...paid];
   }
 
   ngOnInit() {
@@ -139,9 +163,11 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
           if (qpago === 'exitoso' && cobroIdStr && paymentId) {
             // Confirmar directamente con el payment ID de MP (más confiable que esperar el webhook)
             this.cobroService.confirmarPagoMP(+cobroIdStr, paymentId).subscribe({
-              next: () => this.cargarCobros(activo.id),
+              next: () => {
+                this._hideBannerOnNextLoad = true;
+                this.cargarCobros(activo.id);
+              },
               error: () => {
-                // Si falla la confirmación directa, reintentar tras 5 s (webhook puede llegar tarde)
                 setTimeout(() => this.cargarCobros(activo.id), 5000);
               }
             });
@@ -160,6 +186,10 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
       next: data => {
         this.cobros.set(data);
         this.loading.set(false);
+        if (this._hideBannerOnNextLoad) {
+          this._hideBannerOnNextLoad = false;
+          this.pagoExitoso.set(false);
+        }
         this._scrollAlFragmento();
       },
       error: () => { this.errorMsg.set('Error al cargar cobros.'); this.loading.set(false); }
