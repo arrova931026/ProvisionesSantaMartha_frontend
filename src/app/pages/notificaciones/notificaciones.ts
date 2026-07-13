@@ -118,9 +118,11 @@ export class NotificacionesComponent implements OnInit {
     return map[tipo] ?? 'bi-bell-fill';
   }
 
-  iconoClase(tipo: string): string {
+  iconoClase(tipo: string, titulo = ''): string {
+    if (tipo === 'PAGO') {
+      return titulo.toLowerCase().includes('vencid') ? 'ni-rojo' : 'ni-naranja';
+    }
     const map: Record<string, string> = {
-      'PAGO':     'ni-verde',
       'SISTEMA':  'ni-azul',
       'COBERTURA':'ni-azul',
       'PROMOCION':'ni-morado'
@@ -128,9 +130,11 @@ export class NotificacionesComponent implements OnInit {
     return map[tipo] ?? 'ni-azul';
   }
 
-  tagClase(tipo: string): string {
+  tagClase(tipo: string, titulo = ''): string {
+    if (tipo === 'PAGO') {
+      return titulo.toLowerCase().includes('vencid') ? 'tag-pago-vencido' : 'tag-pago-proximo';
+    }
     const map: Record<string, string> = {
-      'PAGO':     'tag-pago-proximo',
       'SISTEMA':  'tag-sistema',
       'COBERTURA':'tag-cobertura',
       'PROMOCION':'tag-promo'

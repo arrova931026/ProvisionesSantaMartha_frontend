@@ -43,6 +43,9 @@
         <li class="nav-item">
           <a class="nav-link" routerLink="/portal/notificaciones" routerLinkActive="active" (click)="cerrarMenu()">
             <i class="bi bi-bell me-1"></i>Notificaciones
+            @if (badgeCount() > 0) {
+              <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:#dc2626;color:#fff;font-size:.65rem;font-weight:700;border-radius:50px;margin-left:4px;vertical-align:middle;line-height:1;">{{ badgeCount() }}</span>
+            }
           </a>
         </li>
         <li class="nav-item">
