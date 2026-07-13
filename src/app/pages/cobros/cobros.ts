@@ -29,6 +29,8 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   readonly tabActiva = signal<'mp' | 'transferencia' | 'oxxo'>('mp');
   readonly toastVisible = signal(false);
   readonly loadingMP = signal(false);
+  readonly pagoExitoso  = signal(false);  // regresó de MP con pago=exitoso
+  readonly pagoConfirmado = signal(false); // el cobro ya aparece como PAGADO tras recarga
 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
   readonly modalComprobanteAbierto = signal(false);
@@ -122,12 +124,20 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
     const personaId = this.authService.currentUser()?.personaId;
     if (!personaId) { this.loading.set(false); return; }
 
+    // Detectar retorno desde MercadoPago con pago exitoso
+    const qpago = this.route.snapshot.queryParamMap.get('pago');
+    if (qpago === 'exitoso') this.pagoExitoso.set(true);
+
     this.contratoService.listarPorPersona(personaId).subscribe({
       next: contratos => {
         const activo = contratos.find(c => c.activo) ?? contratos[0] ?? null;
         this.contratoActivo.set(activo);
         if (activo) {
           this.cargarCobros(activo.id);
+          // Si venimos de MP, recargar a los 4 s para dar tiempo al webhook
+          if (qpago === 'exitoso') {
+            setTimeout(() => this.cargarCobros(activo.id), 4000);
+          }
         } else {
           this.loading.set(false);
         }
