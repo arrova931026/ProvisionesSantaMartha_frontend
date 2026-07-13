@@ -125,7 +125,9 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
     if (!personaId) { this.loading.set(false); return; }
 
     // Detectar retorno desde MercadoPago con pago exitoso
-    const qpago = this.route.snapshot.queryParamMap.get('pago');
+    const qpago      = this.route.snapshot.queryParamMap.get('pago');
+    const cobroIdStr = this.route.snapshot.queryParamMap.get('cobro');
+    const paymentId  = this.route.snapshot.queryParamMap.get('collection_id');
     if (qpago === 'exitoso') this.pagoExitoso.set(true);
 
     this.contratoService.listarPorPersona(personaId).subscribe({
@@ -134,9 +136,15 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
         this.contratoActivo.set(activo);
         if (activo) {
           this.cargarCobros(activo.id);
-          // Si venimos de MP, recargar a los 4 s para dar tiempo al webhook
-          if (qpago === 'exitoso') {
-            setTimeout(() => this.cargarCobros(activo.id), 4000);
+          if (qpago === 'exitoso' && cobroIdStr && paymentId) {
+            // Confirmar directamente con el payment ID de MP (más confiable que esperar el webhook)
+            this.cobroService.confirmarPagoMP(+cobroIdStr, paymentId).subscribe({
+              next: () => this.cargarCobros(activo.id),
+              error: () => {
+                // Si falla la confirmación directa, reintentar tras 5 s (webhook puede llegar tarde)
+                setTimeout(() => this.cargarCobros(activo.id), 5000);
+              }
+            });
           }
         } else {
           this.loading.set(false);

@@ -18,6 +18,14 @@ export class CobroService {
     );
   }
 
+  confirmarPagoMP(cobroId: number, paymentId: string) {
+    return this.http.post<void>(
+      `${environment.apiUrl}/pagos/cobros/${cobroId}/confirmar-mp`,
+      {},
+      { params: { paymentId } }
+    );
+  }
+
   pendientesPorContrato(contratoId: number) {
     return this.http.get<CobroProgramado[]>(`${this.base}/contrato/${contratoId}/pendientes`);
   }
