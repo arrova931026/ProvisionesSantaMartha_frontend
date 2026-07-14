@@ -114,16 +114,9 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   // ── Mensualidades visibles ──
-  // Muestra no-pagados primero (asc), luego los pagados más recientes al final.
+  // Todas en orden cronológico #1 → #N. El contenedor tiene scroll fijo.
   get mensualidadesVisibles(): CobroProgramado[] {
-    const pendientes = this.cobros()
-      .filter(c => c.estadoCobro !== 'PAGADO' && c.estadoCobro !== 'CANCELADO')
-      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
-    const pagados = this.cobros()
-      .filter(c => c.estadoCobro === 'PAGADO')
-      .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad);
-    const lista = [...pendientes, ...pagados];
-    return this.mostrarTodasMensualidades() ? lista : lista.slice(0, 6);
+    return [...this.cobros()].sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
   }
 
   /** Historial: no-pagados + últimos PAGADOS. "Ver más" muestra todos */
@@ -189,6 +182,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
           this.pagoExitoso.set(false);
         }
         this._scrollAlFragmento();
+        this._scrollMensualidades();
       },
       error: () => { this.errorMsg.set('Error al cargar cobros.'); this.loading.set(false); }
     });
@@ -201,6 +195,24 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
       const el = document.getElementById(fragment);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 120);
+  }
+
+  /** Auto-scroll del panel Mensualidades al item relevante tras cargar. */
+  private _scrollMensualidades() {
+    setTimeout(() => {
+      const container = document.getElementById('mensualidades-scrollable');
+      if (!container) return;
+      const sorted = [...this.cobros()].sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
+      // Prioridad: primer VENCIDO → si no, último PAGADO
+      const target = sorted.find(c => c.estadoCobro === 'VENCIDO')
+        ?? [...sorted].reverse().find(c => c.estadoCobro === 'PAGADO');
+      if (!target) return;
+      const itemEl = document.getElementById('mes-cobro-' + target.id);
+      if (!itemEl) return;
+      const cRect = container.getBoundingClientRect();
+      const iRect = itemEl.getBoundingClientRect();
+      container.scrollTop = Math.max(0, container.scrollTop + (iRect.top - cRect.top) - 8);
+    }, 250);
   }
 
   cambiarTab(tab: 'mp' | 'transferencia' | 'oxxo') {

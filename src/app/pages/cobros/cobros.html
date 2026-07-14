@@ -334,9 +334,9 @@
             <h2><i class="bi bi-calendar-check me-2" style="color:var(--azul-principal);"></i>Mensualidades</h2>
             <div class="linea-azul"></div>
           </div>
-          <div class="mensualidades-card flex-grow-1" [class.scroll-expandido]="mostrarTodasMensualidades()" id="mensualidades-scrollable">
+          <div class="mensualidades-card flex-grow-1 scroll-expandido" id="mensualidades-scrollable">
             @for (cobro of mensualidadesVisibles; track cobro.id) {
-              <div class="mes-item">
+              <div class="mes-item" [id]="'mes-cobro-' + cobro.id">
                 <div class="mes-info">
                   <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
                   <div class="mes-fecha">
@@ -351,17 +351,6 @@
                 <span [class]="estadoBadgeClass(estadoVisual(cobro))">
                   <i [class]="'bi ' + estadoIcon(estadoVisual(cobro)) + ' me-1'"></i>{{ estadoVisual(cobro) }}
                 </span>
-              </div>
-            }
-            @if (cobros().length > 6) {
-              <div class="pt-2">
-                <button class="btn-sh-outline w-100 justify-content-center" (click)="toggleTodasMensualidades()">
-                  @if (mostrarTodasMensualidades()) {
-                    <i class="bi bi-chevron-up me-1"></i> Ocultar mensualidades anteriores
-                  } @else {
-                    <i class="bi bi-calendar3 me-1"></i> Mostrar todas las mensualidades
-                  }
-                </button>
               </div>
             }
           </div>
