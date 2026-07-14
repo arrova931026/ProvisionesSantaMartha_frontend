@@ -193,7 +193,10 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   private cargarFoto() {
     this.personaService.obtenerUrlFoto().subscribe({
       next: ({ url }) => {
-        if (url) this.fotoUrl.set(this.apiBase + url + '?t=' + Date.now());
+        if (url) {
+          const full = /^https?:\/\//.test(url) ? url : this.apiBase + url;
+          this.fotoUrl.set(full + '?t=' + Date.now());
+        }
       },
       error: () => {}
     });
@@ -279,7 +282,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     this.errorFoto.set('');
     this.personaService.subirFoto(this.archivoSeleccionado).subscribe({
       next: ({ url }) => {
-        this.fotoUrl.set(this.apiBase + url + '?t=' + Date.now());
+        const full = /^https?:\/\//.test(url) ? url : this.apiBase + url;
+        this.fotoUrl.set(full + '?t=' + Date.now());
         this.subiendoFoto.set(false);
         this.cerrarModalFoto();
         this.successMsg.set('Foto de perfil actualizada correctamente.');
