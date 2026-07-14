@@ -42,13 +42,12 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
     const venc = new Date(p.fechaVencimiento + 'T00:00:00');
     return Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
   }
-  /** true si hay un cobro vencido o que vence en los próximos 7 días */
+  /** true si el próximo cobro es VENCIDO o PENDIENTE (≤7 días) */
   get tieneAdeudoUrgente(): boolean {
     const p = this.proximoPago;
     if (!p) return false;
-    if (p.estadoCobro === 'VENCIDO') return true;
-    const dias = this.diasHastaProximoPago;
-    return dias !== null && dias <= 7;
+    const vis = this.estadoVisual(p);
+    return vis === 'VENCIDO' || vis === 'PENDIENTE';
   }
 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
@@ -81,25 +80,24 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   get pagosRealizados(): number {
     return this.cobros().filter(c => c.estadoCobro === 'PAGADO').length;
   }
-  /** Mensualidades vencidas (todas) + 1 si hay un próximo pago pendiente */
+  /** Cobros mostrados visualmente como PENDIENTE (vencen en ≤7 días) */
   get pagosPendientes(): number {
-    const vencidos = this.cobros().filter(c => c.estadoCobro === 'VENCIDO').length;
-    const tieneProximo = this.cobros().some(c => c.estadoCobro === 'PENDIENTE');
-    return vencidos + (tieneProximo ? 1 : 0);
+    return this.cobros().filter(c => this.estadoVisual(c) === 'PENDIENTE').length;
   }
-  /** Suma de cobros cuya fecha límite ya pasó y no han sido pagados */
+  /** Suma de los montos de todos los cobros visualmente VENCIDO */
   get saldoVencido(): number {
-    const hoy = new Date();
     return this.cobros()
-      .filter(c => c.estadoCobro !== 'PAGADO' && new Date(c.fechaVencimiento) < hoy)
+      .filter(c => this.estadoVisual(c) === 'VENCIDO')
       .reduce((s, c) => s + c.monto, 0);
   }
   get cobrosAtrasados(): CobroProgramado[] {
-    const hoy = new Date();
-    return this.cobros().filter(c => c.estadoCobro !== 'PAGADO' && new Date(c.fechaVencimiento) < hoy);
+    return this.cobros().filter(c => this.estadoVisual(c) === 'VENCIDO');
   }
+  /** Primer cobro no pagado (VENCIDO > PENDIENTE > PROGRAMADA), para la sección de pago */
   get proximoPago(): CobroProgramado | null {
-    return this.cobros().find(c => c.estadoCobro === 'PENDIENTE' || c.estadoCobro === 'VENCIDO') ?? null;
+    return this.cobros()
+      .filter(c => { const v = this.estadoVisual(c); return v !== 'PAGADO' && v !== 'CANCELADO'; })
+      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad)[0] ?? null;
   }
 
   // ── Referencia de pago dinámica ──
@@ -116,32 +114,32 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   // ── Mensualidades visibles ──
-  // Muestra pendientes/vencidas primero (ascendente = próximas primero),
-  // luego las pagadas más recientes al final.
+  // Muestra no-pagados primero (asc), luego los pagados más recientes al final.
   get mensualidadesVisibles(): CobroProgramado[] {
     const pendientes = this.cobros()
-      .filter(c => c.estadoCobro !== 'PAGADO')
+      .filter(c => c.estadoCobro !== 'PAGADO' && c.estadoCobro !== 'CANCELADO')
       .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
     const pagados = this.cobros()
       .filter(c => c.estadoCobro === 'PAGADO')
-      .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad); // más reciente primero
+      .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad);
     const lista = [...pendientes, ...pagados];
     return this.mostrarTodasMensualidades() ? lista : lista.slice(0, 6);
   }
 
-  /** Historial: pendientes + últimas PAGADOS. "Ver más" muestra todos */
+  /** Historial: no-pagados + últimos PAGADOS. "Ver más" muestra todos */
   get historialVisible(): CobroProgramado[] {
     if (this.mostrarHistorialCompleto()) {
       return this.cobros();
     }
+    const LIMIT = 6;
     const pending = this.cobros()
-      .filter(c => c.estadoCobro !== 'PAGADO')
+      .filter(c => c.estadoCobro !== 'PAGADO' && c.estadoCobro !== 'CANCELADO')
       .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad);
     const paid = this.cobros()
       .filter(c => c.estadoCobro === 'PAGADO')
       .sort((a, b) => b.numeroMensualidad - a.numeroMensualidad)
-      .slice(0, Math.max(1, 5 - pending.length));
-    return [...pending, ...paid];
+      .slice(0, Math.max(1, LIMIT - pending.length));
+    return [...pending, ...paid].slice(0, LIMIT);
   }
 
   ngOnInit() {
@@ -332,24 +330,14 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
     });
   }
 
-  /** ID del primer cobro PENDIENTE (el próximo a vencer) */
-  private get _proximoPendienteId(): number | null {
-    const primero = this.cobros()
-      .filter(c => c.estadoCobro === 'PENDIENTE')
-      .sort((a, b) => a.numeroMensualidad - b.numeroMensualidad)[0];
-    return primero?.id ?? null;
-  }
-
   /**
-   * Estado visual para mostrar en el badge:
-   * - VENCIDO  → VENCIDO  (rojo)
-   * - PAGADO   → PAGADO   (verde)
-   * - PENDIENTE próximo → PENDIENTE (amarillo)
-   * - PENDIENTE posteriores → PROGRAMADA (azul)
+   * Estado visual del cobro.
+   * El backend ya aplica la regla de 7 días y retorna el estado correcto
+   * (PAGADO | CANCELADO | VENCIDO | PENDIENTE | PROGRAMADA).
+   * Este método solo expone el valor para que el template lo consuma.
    */
   estadoVisual(cobro: CobroProgramado): string {
-    if (cobro.estadoCobro !== 'PENDIENTE') return cobro.estadoCobro;
-    return cobro.id === this._proximoPendienteId ? 'PENDIENTE' : 'PROGRAMADA';
+    return cobro.estadoCobro;
   }
 
   estadoBadgeClass(estado: string): string {
