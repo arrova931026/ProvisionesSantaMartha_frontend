@@ -76,8 +76,8 @@
         <div class="wc-header">
           <i class="bi bi-folder2-open wc-icon"></i>
           <div>
-            <h2>Documentos requeridos</h2>
-            <p>Cargue cada uno de los documentos para poder continuar.</p>
+            <h2>Documentos del titular</h2>
+            <p>Requeridos para Mutualista y Previsión de Humanos; no se solicitan para Mascotas.</p>
           </div>
         </div>
 
@@ -111,13 +111,13 @@
         @if (!todosDocsSubidos()) {
           <p class="docs-nota">
             <i class="bi bi-info-circle me-1"></i>
-            Faltan {{ docs().filter(d => !d.subido).length }} documento(s) por cargar.
+            Si elige un plan humano o mutualista, deberá completar los {{ docs().filter(d => !d.subido).length }} documento(s) pendientes.
           </p>
         }
 
         <div class="wizard-actions">
           <a routerLink="/portal/mis-datos" class="btn-secundario">Cancelar</a>
-          <button class="btn-primario" (click)="irPaso2()" [disabled]="!todosDocsSubidos()">
+          <button class="btn-primario" (click)="irPaso2()">
             Continuar <i class="bi bi-arrow-right ms-1"></i>
           </button>
         </div>
@@ -203,6 +203,14 @@
             Continuar <i class="bi bi-arrow-right ms-1"></i>
           </button>
         </div>
+        @if (!videoSubido() && !subiendoVideo()) {
+          <div class="skip-video-row">
+            <span>¿Prefiere continuar sin grabarlo?</span>
+            <button type="button" class="btn-omitir-video" (click)="omitirVideoConsentimiento()">
+              Omitir video
+            </button>
+          </div>
+        }
       </div>
     }
 
@@ -219,33 +227,165 @@
           </div>
         </div>
 
-        @if (planes().length === 0) {
-          <p class="text-center text-muted py-4">No hay planes disponibles en este momento.</p>
-        }
+        <nav class="plan-tabs" aria-label="Tipos de previsión">
+          @for (tipo of tiposPlan; track tipo.clave) {
+            <button type="button" class="plan-tab" [class.activa]="tipoPlanActivo() === tipo.clave"
+                    (click)="seleccionarTipoPlan(tipo.clave)">
+              @if (tipo.clave === 'MASCOTAS') {
+                <span class="pet-paw-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+              } @else {
+                <i class="bi {{ tipo.icono }}" aria-hidden="true"></i>
+              }
+              {{ tipo.nombre }}
+            </button>
+          }
+        </nav>
 
-        <div class="planes-grid">
-          @for (plan of planes(); track plan.id) {
-            <div class="plan-card" [class.seleccionado]="planSeleccionado()?.id === plan.id"
-                 (click)="seleccionarPlan(plan)">
-              @if (planSeleccionado()?.id === plan.id) {
-                <div class="plan-check"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="plan-mobile-position" aria-label="Tipos de plan">
+          @for (tipo of tiposPlan; track tipo.clave) {
+            <button type="button" class="mobile-plan-tab" [class.activa]="tipoPlanActivo() === tipo.clave"
+                    [attr.aria-current]="tipoPlanActivo() === tipo.clave ? 'step' : null"
+                    (click)="seleccionarTipoPlan(tipo.clave)">
+              @if (tipo.clave === 'MASCOTAS') {
+                <span class="pet-paw-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+              } @else {
+                <i class="bi {{ tipo.icono }}" aria-hidden="true"></i>
               }
-              <h3 class="plan-nombre">{{ plan.nombre }}</h3>
-              @if (plan.descripcion) {
-                <p class="plan-desc">{{ plan.descripcion }}</p>
-              }
-              <div class="plan-precio">
-                <span class="plan-precio-label">Precio total</span>
-                <span class="plan-precio-valor">{{ formatMoney(plan.precioTotal) }}</span>
-              </div>
-              <div class="plan-detalle">
-                <span><i class="bi bi-calendar3 me-1"></i>{{ plan.duracionMeses }} meses</span>
-                <span><i class="bi bi-people me-1"></i>{{ plan.numeroBeneficiarios }} beneficiario(s)</span>
-                <span><i class="bi bi-cash me-1"></i>{{ formatMoney(plan.mensualidad) }}/mes</span>
-              </div>
-            </div>
+              <span>{{ tipo.nombreMovil }}</span>
+            </button>
           }
         </div>
+
+        <section class="plan-category-panel" [class.category-humanos]="tipoPlanActivo() === 'HUMANOS'"
+                 [class.category-mascotas]="tipoPlanActivo() === 'MASCOTAS'"
+                 (touchstart)="iniciarDeslizamientoPlan($event)"
+                 (touchend)="terminarDeslizamientoPlan($event)">
+          <div class="plan-category-heading">
+            <div class="plan-category-icon" [class.mascotas-logo]="tipoPlanActivo() === 'MASCOTAS'">
+              @if (tipoPlanActivo() === 'MASCOTAS') {
+                <span class="pet-paw-logo pet-paw-logo-large" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+              } @else {
+                <i class="bi {{ tiposPlan.find(t => t.clave === tipoPlanActivo())?.icono }}" aria-hidden="true"></i>
+              }
+            </div>
+            <div>
+              <span class="plan-eyebrow">{{ tiposPlan.find(t => t.clave === tipoPlanActivo())?.subtitulo }}</span>
+              <h3>{{ tiposPlan.find(t => t.clave === tipoPlanActivo())?.nombre }}</h3>
+            </div>
+          </div>
+
+          @if (tipoPlanActivo() === 'MUTUALISTA') {
+            <div class="frequency-block">
+              <div class="frequency-title">
+                <span>Elige tu forma de aportación</span>
+                <span class="frequency-equivalence">Todas suman {{ formatMoney(aportacionAnual()) }} al año</span>
+              </div>
+              <div class="frequency-options" role="group" aria-label="Frecuencia de pago">
+                <button type="button" [class.activa]="frecuenciaPago() === 'ANUAL'" [attr.aria-pressed]="frecuenciaPago() === 'ANUAL'" (click)="seleccionarFrecuenciaPago('ANUAL')">
+                  <span>Anual</span><strong>{{ formatMoney(cuotaPorFrecuencia('ANUAL')) }}</strong>
+                </button>
+                <button type="button" [class.activa]="frecuenciaPago() === 'MENSUAL'" [attr.aria-pressed]="frecuenciaPago() === 'MENSUAL'" (click)="seleccionarFrecuenciaPago('MENSUAL')">
+                  <span>Mensual</span><strong>{{ formatMoney(cuotaPorFrecuencia('MENSUAL')) }}</strong>
+                </button>
+                <button type="button" [class.activa]="frecuenciaPago() === 'QUINCENAL'" [attr.aria-pressed]="frecuenciaPago() === 'QUINCENAL'" (click)="seleccionarFrecuenciaPago('QUINCENAL')">
+                  <span>Quincenal</span><strong>{{ formatMoney(cuotaPorFrecuencia('QUINCENAL')) }}</strong>
+                </button>
+                <button type="button" [class.activa]="frecuenciaPago() === 'SEMANAL'" [attr.aria-pressed]="frecuenciaPago() === 'SEMANAL'" (click)="seleccionarFrecuenciaPago('SEMANAL')">
+                  <span>Semanal</span><strong>{{ formatMoney(cuotaPorFrecuencia('SEMANAL')) }}</strong>
+                </button>
+              </div>
+              @if (!frecuenciaPago()) {
+                <p class="frequency-hint">Aportación anual base: {{ formatMoney(aportacionAnual()) }}. Puedes elegir otra frecuencia si lo prefieres.</p>
+              }
+            </div>
+          }
+
+          @if (tipoPlanActivo() === 'MUTUALISTA') {
+            <section class="mutualista-coverage" aria-labelledby="mutualista-coverage-title">
+              <div class="coverage-heading">
+                <span class="coverage-mark" aria-hidden="true">SH</span>
+                <div>
+                  <span class="plan-eyebrow">Cobertura mutualista</span>
+                  <h4 id="mutualista-coverage-title">Servicios incluidos</h4>
+                </div>
+              </div>
+              <div class="coverage-grid">
+                <article class="coverage-card">
+                  <h5><i class="bi bi-flower1" aria-hidden="true"></i> Servicio de cremación</h5>
+                  <ul>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Recolección del cuerpo</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Embalsamamiento del cuerpo</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Equipo de velación a domicilio</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Servicio de carroza</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Gestoría de trámites</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Cremación</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Urna básica y constancia de cremación</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Personal para maniobras</li>
+                  </ul>
+                </article>
+                <article class="coverage-card">
+                  <h5><i class="bi bi-flower2" aria-hidden="true"></i> Servicio de inhumación</h5>
+                  <ul>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Ataúd metálico estándar o de madera MDF</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Recolección del cuerpo</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Embalsamamiento del cuerpo</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Gestoría de trámites</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Equipo de velación a domicilio</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Carroza para sepelio</li>
+                    <li><i class="bi bi-check2" aria-hidden="true"></i>Personal para maniobras</li>
+                  </ul>
+                </article>
+              </div>
+            </section>
+          }
+
+          @if (planesVisibles().length === 0) {
+            <p class="empty-plans">
+              @if (tipoPlanActivo() === 'MUTUALISTA') {
+                No hay un plan Mutualista activo en el catálogo. Ejecute la carga de catálogo antes de crear contratos.
+              } @else {
+                Por el momento no hay planes publicados en esta sección.
+              }
+            </p>
+          }
+          <div class="planes-grid">
+            @for (plan of planesVisibles(); track plan.tipoPlan + ':' + plan.id) {
+                <button type="button" class="plan-card" [class.human-plan-card]="plan.tipoPlan === 'HUMANOS'"
+                    [class.seleccionado]="esPlanSeleccionado(plan)"
+                    [attr.aria-pressed]="esPlanSeleccionado(plan)" (click)="seleccionarPlan(plan)">
+                  @if (esPlanSeleccionado(plan)) {
+                  <span class="plan-check"><i class="bi bi-check-circle-fill"></i></span>
+                }
+                <span class="plan-card-eyebrow">{{ tipoPlanActivo() === 'MASCOTAS' ? 'Cremación para mascotas' : (tipoPlanActivo() === 'MUTUALISTA' ? 'Protección mutualista' : 'Previsión funeraria') }}</span>
+                <span class="plan-nombre">{{ plan.nombre.replace('Mascotas - ', '') }}</span>
+                @if (plan.descripcion) {
+                  <span class="plan-desc">{{ plan.descripcion }}</span>
+                }
+                <span class="plan-precio">
+                  <span class="plan-precio-label">{{ tipoPlanActivo() === 'MUTUALISTA' ? 'Aportación anual' : 'Inversión total' }}</span>
+                  <strong class="plan-precio-valor">{{ formatMoney(precioPlan(plan)) }}</strong>
+                </span>
+                @if (tipoPlanActivo() === 'MUTUALISTA') {
+                  <span class="plan-detalle"><i class="bi bi-arrow-repeat"></i>{{ formatMoney(montoCuota(plan)) }} / {{ frecuenciaTexto() }}</span>
+                } @else {
+                  @if (plan.tipoPlan === 'HUMANOS') {
+                    <span class="plan-detalle"><i class="bi bi-calendar3"></i>{{ plan.duracionMeses }} meses</span>
+                    <span class="plan-detalle"><i class="bi bi-people"></i>{{ plan.numeroBeneficiarios }} beneficiario(s)</span>
+                    <span class="plan-detalle"><i class="bi bi-cash"></i>{{ formatMoney(plan.mensualidad) }} / mes</span>
+                  } @else {
+                    <span class="plan-detalle"><i class="bi bi-heart"></i>Recolección, cremación, urna y constancia</span>
+                  }
+                }
+                @if (plan.articulosIncluidos.length && plan.tipoPlan !== 'MUTUALISTA') {
+                  <span class="included-group-title">Servicios incluidos</span>
+                  @for (servicio of plan.articulosIncluidos; track servicio.nombre) {
+                    <span class="included-service"><i class="bi bi-check2"></i>{{ servicio.nombre }}</span>
+                  }
+                }
+              </button>
+            }
+          </div>
+        </section>
 
         <div class="wizard-actions">
           <button class="btn-secundario" (click)="paso.set(2)">
@@ -275,6 +415,12 @@
           </div>
         </div>
 
+        @if (maxBeneficiarios() === 0) {
+          <div class="no-beneficiaries-note">
+            <i class="bi bi-paw"></i>
+            <span>Este servicio para mascotas no requiere beneficiarios humanos.</span>
+          </div>
+        } @else {
         <form [formGroup]="benefForm">
           <div formArrayName="beneficiarios">
             @for (g of benefControls; track $index) {
@@ -331,6 +477,7 @@
           <button class="btn-agregar-benef" (click)="agregarBeneficiarioForm()">
             <i class="bi bi-plus-circle me-2"></i>Agregar beneficiario
           </button>
+        }
         }
 
         <div class="wizard-actions">
@@ -735,7 +882,38 @@
   gap: 16px;
   margin-bottom: 24px;
 }
+.plan-tabs { display: flex; justify-content: center; gap: 8px; border-bottom: 1px solid #e4e9ec; margin: 0 0 22px; }
+.plan-tab {
+  display: inline-flex; align-items: center; gap: 9px; padding: 12px 18px;
+  color: #64727d; background: transparent; border: 0; border-bottom: 2px solid transparent;
+  font: inherit; font-weight: 650; cursor: pointer; transition: color .18s, border-color .18s;
+}
+.plan-tab i { font-size: 1.05rem; }
+.plan-tab:hover, .plan-tab.activa { color: #155d78; border-bottom-color: #1c8297; }
+.plan-mobile-position, .plan-mobile-caption { display: none; }
+.plan-category-panel { min-width: 0; }
+.plan-category-heading { display: flex; align-items: center; gap: 12px; margin: 2px 0 20px; }
+.plan-category-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: #e8f3f2; color: #197586; font-size: 1.2rem; }
+.plan-eyebrow { color: #73818a; font-size: .68rem; font-weight: 750; text-transform: uppercase; }
+.plan-category-heading h3 { margin: 1px 0 0; color: #19343b; font-size: 1.15rem; font-weight: 750; }
+.frequency-block { margin: 0 0 20px; padding: 15px 16px; border: 1px solid #dce6e7; border-radius: 12px; background: #f7faf9; }
+.frequency-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 11px; color: #233e44; font-size: .88rem; font-weight: 700; }
+.frequency-equivalence { color: #77868a; font-size: .76rem; font-weight: 500; }
+.frequency-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.frequency-options button { display: grid; gap: 3px; padding: 9px 8px; border: 1px solid #d6e0e0; border-radius: 8px; color: #54656a; background: #fff; text-align: left; cursor: pointer; }
+.frequency-options button span { font-size: .74rem; }
+.frequency-options button strong { color: #19343b; font-size: .94rem; }
+.frequency-options button.activa { border-color: #247b88; background: #e8f4f2; box-shadow: inset 0 0 0 1px #247b88; }
+.empty-plans { margin: 18px 0; padding: 22px; border: 1px dashed #cbd6d9; border-radius: 10px; color: #748087; text-align: center; }
 .plan-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  color: inherit;
+  background: #fff;
+  text-align: left;
+  font: inherit;
   border: 2px solid #dee2e6;
   border-radius: 14px;
   padding: 18px 16px;
@@ -746,12 +924,18 @@
 .plan-card:hover { border-color: var(--azul-medio, #3a8fc7); box-shadow: 0 4px 14px rgba(30,111,163,.12); }
 .plan-card.seleccionado { border-color: var(--azul-principal, #1e6fa3); background: #f0f8ff; }
 .plan-check { position: absolute; top: 10px; right: 10px; color: var(--azul-principal, #1e6fa3); font-size: 1.1rem; }
+.plan-card-eyebrow { margin-bottom: 6px; color: #78858b; font-size: .67rem; font-weight: 750; text-transform: uppercase; }
 .plan-nombre { font-size: 1rem; font-weight: 700; color: var(--texto-principal, #1a2b3c); margin: 0 0 6px; }
 .plan-desc { font-size: 0.8rem; color: #6c757d; margin-bottom: 10px; }
 .plan-precio { display: flex; flex-direction: column; margin-bottom: 10px; }
 .plan-precio-label { font-size: 0.72rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.04em; }
-.plan-precio-valor { font-size: 1.4rem; font-weight: 700; color: var(--azul-principal, #1e6fa3); }
-.plan-detalle { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: #495057; }
+.plan-precio-valor { font-size: 1.4rem; font-weight: 750; color: #155d78; }
+.plan-detalle { display: flex; align-items: center; gap: 7px; margin: 2px 0; font-size: 0.8rem; color: #495057; }
+.included-group-title { margin: 13px 0 5px; color: #29464c; font-size: .76rem; font-weight: 750; }
+.included-service { display: flex; align-items: flex-start; gap: 7px; margin: 3px 0; color: #59686d; font-size: .76rem; line-height: 1.35; }
+.included-service i { flex: 0 0 auto; color: #2a8a79; }
+.no-beneficiaries-note { display: flex; align-items: center; gap: 12px; padding: 18px; border: 1px solid #dce6e7; border-radius: 10px; color: #435d62; background: #f7faf9; }
+.no-beneficiaries-note i { color: #418b8d; font-size: 1.35rem; }
 
 /* ── Beneficiarios ───────────────────────────────────────── */
 .benef-card {
@@ -842,6 +1026,27 @@
   transition: background .2s;
 }
 .btn-secundario:hover { background: #f8f9fa; }
+.skip-video-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 14px;
+  color: #7b838a;
+  font-size: 0.82rem;
+}
+.btn-omitir-video {
+  border: 0;
+  background: transparent;
+  color: #58758a;
+  padding: 3px 5px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-omitir-video:hover { color: var(--azul-principal, #1e6fa3); text-decoration: underline; }
+.btn-omitir-video:focus-visible { outline: 2px solid var(--azul-principal, #1e6fa3); outline-offset: 2px; border-radius: 3px; }
 
 /* ── Modal documento ─────────────────────────────────────── */
 .modal-backdrop {
@@ -1157,4 +1362,15 @@
 .video-validacion-msg { font-size:0.83rem; border-radius:8px; padding:10px 14px; margin-top:12px; text-align:left; line-height:1.5; }
 .video-validacion-msg.validado { background:#f0fff4; border:1px solid #28a745; color:#155724; }
 .video-validacion-msg.advertencia { background:#fff8e1; border:1px solid #ffc107; color:#856404; }
+@media (max-width: 640px) {
+  .plan-tabs { display: none; }
+  .plan-mobile-position { display: flex; justify-content: center; gap: 6px; margin: 0 0 16px; }
+  .plan-category-heading { display: none; }
+  .plan-category-panel { touch-action: pan-y; }
+  .planes-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .plan-card { border-radius: 12px; padding: 17px 15px; }
+  .frequency-block { padding: 13px 12px; }
+  .frequency-title { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .frequency-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>

@@ -16,11 +16,16 @@ interface Plan {
   id: number;
   nombre: string;
   descripcion?: string;
+  tipoPlan: PlanTipo;
   precioTotal: number;
   mensualidad: number;
   duracionMeses: number;
   numeroBeneficiarios: number;
+  articulosIncluidos: { nombre: string; descripcion?: string; modalidad?: 'CREMACION' | 'INHUMACION' | null }[];
 }
+
+type PlanTipo = 'MUTUALISTA' | 'HUMANOS' | 'MASCOTAS';
+type FrecuenciaPago = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL' | 'ANUAL';
 
 interface Parentesco {
   id: number;
@@ -102,6 +107,15 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   // ── Paso 2: planes ──
   readonly planes = signal<Plan[]>([]);
   readonly planSeleccionado = signal<Plan | null>(null);
+  readonly tipoPlanActivo = signal<PlanTipo>('HUMANOS');
+  readonly frecuenciaPago = signal<FrecuenciaPago | null>(null);
+  readonly tiposPlan: { clave: PlanTipo; nombre: string; nombreMovil: string; subtitulo: string; icono: string }[] = [
+    { clave: 'MUTUALISTA', nombre: 'Mutualista', nombreMovil: 'Mutualista', subtitulo: 'Aportación solidaria', icono: 'bi-heart-pulse' },
+    { clave: 'HUMANOS', nombre: 'Previsión de Humanos', nombreMovil: 'Previsión', subtitulo: 'Protección para tu familia', icono: 'bi-people' },
+    { clave: 'MASCOTAS', nombre: 'Previsión de Mascotas', nombreMovil: 'Mascotas', subtitulo: 'Cuidado para tu compañero', icono: 'bi-paw' }
+  ];
+  readonly planesVisibles = computed(() => this.planes().filter(plan => plan.tipoPlan === this.tipoPlanActivo()));
+  private touchStartX: number | null = null;
 
   // ── Paso 3: beneficiarios ──
   readonly parentescos = signal<Parentesco[]>([]);
@@ -140,28 +154,23 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     forkJoin({
       persona: this.personaService.obtener(pid),
       pendientes: this.documentoService.obtenerPendientes(pid).pipe(catchError(() => of<DocumentosPendientesResponse>({ completo: false, faltantes: [] }))),
-      planes: this.http.get<Plan[]>(`${environment.apiUrl}/planes`).pipe(catchError(() => of<Plan[]>([]))),
+      planes: this.http.get<Plan[]>(`${environment.apiUrl}/planes`).pipe(catchError(() => {
+        this.errorMsg.set('No se pudieron cargar los planes. Verifique su sesión y vuelva a intentarlo.');
+        return of<Plan[]>([]);
+      })),
       parentescos: this.http.get<Parentesco[]>(`${environment.apiUrl}/catalogos/parentescos`).pipe(catchError(() => of<Parentesco[]>([])))
     }).subscribe({
       next: ({ persona, pendientes, planes, parentescos }) => {
         this.persona.set(persona);
         this.planes.set(planes);
+        if (this.frecuenciaPago() && !this.planSeleccionado()) {
+          const planMutualista = planes.find(plan => plan.tipoPlan?.trim().toUpperCase() === 'MUTUALISTA');
+          if (planMutualista) this.seleccionarPlan(planMutualista);
+        }
         // Solo permitir Cónyuge e Hijo(a) como parentescos válidos
         this.parentescos.set(parentescos.filter(p => ['CONYUGE', 'HIJO'].includes(p.clave)));
 
-        // Verificar elegibilidad de edad
-        if (persona.fechaNacimiento) {
-          const born = new Date(persona.fechaNacimiento);
-          const now = new Date();
-          let age = now.getFullYear() - born.getFullYear();
-          const m = now.getMonth() - born.getMonth();
-          if (m < 0 || (m === 0 && now.getDate() < born.getDate())) age--;
-          if (age >= 65) {
-            this.errorElegibilidad.set(
-              'No es posible crear el contrato: ha superado la edad máxima permitida de 64 años 11 meses.'
-            );
-          }
-        } else {
+        if (!persona.fechaNacimiento) {
           this.errorElegibilidad.set('Su fecha de nacimiento no está registrada. Complétela en Mis Datos antes de continuar.');
         }
 
@@ -641,6 +650,76 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     this.planSeleccionado.set(plan);
   }
 
+  seleccionarFrecuenciaPago(frecuencia: FrecuenciaPago) {
+    this.frecuenciaPago.set(frecuencia);
+    const planMutualista = this.planes().find(plan => plan.tipoPlan?.trim().toUpperCase() === 'MUTUALISTA');
+    if (!planMutualista) {
+      this.planSeleccionado.set(null);
+      this.errorMsg.set('No se encontró un plan Mutualista disponible en el catálogo. Recargue la página o contacte al administrador.');
+      return;
+    }
+    this.errorMsg.set('');
+    this.seleccionarPlan(planMutualista);
+  }
+
+  esPlanSeleccionado(plan: Plan): boolean {
+    return this.planSeleccionado() === plan;
+  }
+
+  seleccionarTipoPlan(tipo: PlanTipo) {
+    const cambioTipo = this.tipoPlanActivo() !== tipo;
+    this.tipoPlanActivo.set(tipo);
+    if (this.planSeleccionado()?.tipoPlan !== tipo) this.planSeleccionado.set(null);
+    if (cambioTipo) this.frecuenciaPago.set(null);
+  }
+
+  iniciarDeslizamientoPlan(event: TouchEvent) {
+    this.touchStartX = event.changedTouches[0]?.screenX ?? null;
+  }
+
+  terminarDeslizamientoPlan(event: TouchEvent) {
+    if (this.touchStartX === null) return;
+    const delta = event.changedTouches[0].screenX - this.touchStartX;
+    this.touchStartX = null;
+    if (Math.abs(delta) < 45) return;
+    const indiceActual = this.tiposPlan.findIndex(tipo => tipo.clave === this.tipoPlanActivo());
+    const indiceNuevo = Math.max(0, Math.min(this.tiposPlan.length - 1, indiceActual + (delta < 0 ? 1 : -1)));
+    if (indiceNuevo !== indiceActual) this.seleccionarTipoPlan(this.tiposPlan[indiceNuevo].clave);
+  }
+
+  private static readonly CUOTAS_POR_ANIO: Record<FrecuenciaPago, number> = {
+    SEMANAL: 48,
+    QUINCENAL: 24,
+    MENSUAL: 12,
+    ANUAL: 1
+  };
+
+  /** Aportación anual del plan mutualista (viene de la base de datos). */
+  aportacionAnual(): number {
+    return this.planes().find(p => p.tipoPlan?.trim().toUpperCase() === 'MUTUALISTA')?.precioTotal ?? 0;
+  }
+
+  /** Monto por cuota según la frecuencia, derivado del precioTotal del plan. */
+  cuotaPorFrecuencia(frecuencia: FrecuenciaPago): number {
+    return this.aportacionAnual() / CrearContratoComponent.CUOTAS_POR_ANIO[frecuencia];
+  }
+
+  montoCuota(plan: Plan): number {
+    if (plan.tipoPlan !== 'MUTUALISTA') return plan.mensualidad;
+    const frecuencia = this.frecuenciaPago() ?? 'ANUAL';
+    return this.cuotaPorFrecuencia(frecuencia);
+  }
+
+  precioPlan(plan: Plan): number {
+    if (plan.tipoPlan !== 'MUTUALISTA') return plan.precioTotal;
+    const frecuencia = this.frecuenciaPago() ?? 'ANUAL';
+    return this.cuotaPorFrecuencia(frecuencia) * CrearContratoComponent.CUOTAS_POR_ANIO[frecuencia];
+  }
+
+  frecuenciaTexto(frecuencia: FrecuenciaPago = this.frecuenciaPago() ?? 'ANUAL'): string {
+    return { SEMANAL: 'semana', QUINCENAL: 'quincena', MENSUAL: 'mes', ANUAL: 'año' }[frecuencia];
+  }
+
   // ─── Paso 3 helpers ───────────────────────────────────────────────────────
 
   agregarBeneficiarioForm() {
@@ -668,10 +747,6 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
 
   irPaso2() {
     this.errorMsg.set('');
-    if (!this.todosDocsSubidos()) {
-      this.errorMsg.set('Por favor, cargue todos los documentos requeridos antes de continuar.');
-      return;
-    }
     this.paso.set(2);
     this._iniciarCamaraVideo();
     if (this.isMobile) {
@@ -689,10 +764,42 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     this.paso.set(3);
   }
 
+  omitirVideoConsentimiento() {
+    this.errorMsg.set('');
+    this.errorVideo.set('');
+    if (this.videoCountdownTimer) {
+      clearInterval(this.videoCountdownTimer);
+      this.videoCountdownTimer = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.onstop = null;
+      this.mediaRecorder.stop();
+    }
+    this.mediaRecorder = null;
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach(track => track.stop());
+      this.videoStream = null;
+    }
+    if (this.videoUrl()) URL.revokeObjectURL(this.videoUrl()!);
+    this.videoUrl.set(null);
+    this.videoBlob.set(null);
+    this.videoChunks = [];
+    this.videoSubido.set(false);
+    this.videoEstado.set('listo');
+    this.segundosRestantes.set(30);
+    this.paso.set(3);
+  }
+
   irPaso4() {
     this.errorMsg.set('');
-    if (!this.planSeleccionado()) {
+    const plan = this.planSeleccionado();
+    if (!plan) {
       this.errorMsg.set('Seleccione un plan funerario antes de continuar.');
+      return;
+    }
+    if (this.planSeleccionado()?.tipoPlan !== 'MASCOTAS' && !this.todosDocsSubidos()) {
+      this.errorMsg.set('Complete los documentos del titular para planes humanos o mutualistas.');
+      this.paso.set(1);
       return;
     }
     while (this.benefArray.length < this.maxBeneficiarios()) {
@@ -820,6 +927,27 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
 
   terminarContrato() {
     this.errorMsg.set('');
+    const planElegido = this.planSeleccionado();
+    if (!planElegido) {
+      this.errorMsg.set('Seleccione un plan antes de continuar.');
+      return;
+    }
+    if (planElegido.tipoPlan !== 'MASCOTAS') {
+      const fechaNacimiento = this.persona()?.fechaNacimiento;
+      if (!fechaNacimiento) {
+        this.errorMsg.set('Registre su fecha de nacimiento en Mis Datos antes de contratar este plan.');
+        return;
+      }
+      const born = new Date(fechaNacimiento);
+      const now = new Date();
+      let age = now.getFullYear() - born.getFullYear();
+      const monthDelta = now.getMonth() - born.getMonth();
+      if (monthDelta < 0 || (monthDelta === 0 && now.getDate() < born.getDate())) age--;
+      if (age >= 65) {
+        this.errorMsg.set('Los planes de previsión humana y mutualista están disponibles hasta los 64 años 11 meses.');
+        return;
+      }
+    }
     const errBenef = this._validarBeneficiarios();
     if (errBenef) {
       this.errorMsg.set(errBenef);
@@ -838,8 +966,9 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       personaId: pid,
       planId: plan.id,
       fechaInicio: hoy,
-      precioContratado: plan.precioTotal,
-      mensualidadPactada: plan.mensualidad
+      precioContratado: this.precioPlan(plan),
+      mensualidadPactada: this.montoCuota(plan),
+      frecuenciaPago: plan.tipoPlan === 'MUTUALISTA' ? this.frecuenciaPago() ?? 'ANUAL' : 'MENSUAL'
     }).pipe(
       switchMap(contrato => {
         const validos = this.benefArray.controls

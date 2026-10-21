@@ -6,7 +6,7 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { CobroService } from '../../core/services/cobro.service';
-import { ContratoResponse } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
 import { BeneficiarioResponse } from '../../core/models/beneficiario.model';
 import { CobroProgramado } from '../../core/models/cobro.model';
 
@@ -16,6 +16,7 @@ import { CobroProgramado } from '../../core/models/cobro.model';
   templateUrl: './plan-funerario.html'
 })
 export class PlanFunerarioComponent implements OnInit {
+  readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
   private readonly auth = inject(AuthService);
   private readonly contratoService = inject(ContratoService);
   private readonly cobroService = inject(CobroService);

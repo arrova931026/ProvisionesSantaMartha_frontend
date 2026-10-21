@@ -6,7 +6,7 @@ import { CobroService } from '../../core/services/cobro.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CobroProgramado } from '../../core/models/cobro.model';
-import { ContratoResponse } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 
 @Component({
@@ -15,6 +15,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
   templateUrl: './cobros.html'
 })
 export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked {
+  readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
   private readonly cobroService = inject(CobroService);
   private readonly contratoService = inject(ContratoService);
   private readonly authService = inject(AuthService);
@@ -280,7 +281,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
         return `<tr>
           <td style="text-align:center">#${c.numeroMensualidad}</td>
           <td>${fecha}</td>
-          <td>Mensualidad #${c.numeroMensualidad}</td>
+          <td>Cuota #${c.numeroMensualidad}</td>
           <td style="text-align:right">$${Number(c.monto).toFixed(2)} MXN</td>
           <td style="text-align:center">${c.metodoPago ?? '\u2014'}</td>
           <td style="text-align:center;color:${color};font-weight:700">${estadoVis}</td>
@@ -318,7 +319,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
 <div class="info">
   <div><label>Titular</label><strong>${contrato.titularNombre ?? ''}</strong></div>
   <div><label>Plan contratado</label><strong>${contrato.planNombre ?? ''}</strong></div>
-  <div><label>Mensualidad</label><strong>$${Number(contrato.mensualidadPactada ?? 0).toFixed(2)} MXN</strong></div>
+  <div><label>Cuota por ${etiquetaFrecuenciaPago(contrato.frecuenciaPago)}</label><strong>$${Number(contrato.mensualidadPactada ?? 0).toFixed(2)} MXN</strong></div>
 </div>
 <div class="summary">
   <div><div class="val">${cobros.length}</div><div class="lbl">Total cobros</div></div>

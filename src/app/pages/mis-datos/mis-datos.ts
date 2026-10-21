@@ -7,7 +7,7 @@ import { PersonaService } from '../../core/services/persona.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { BeneficiarioService } from '../../core/services/beneficiario.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models/persona.model';
-import { ContratoResponse } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
 import { Beneficiario } from '../../core/models/beneficiario.model';
 import { AuthService } from '../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -25,6 +25,7 @@ type OcrStep =
   templateUrl: './mis-datos.html'
 })
 export class MisDatosComponent implements OnInit, OnDestroy {
+  readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
   private readonly personaService = inject(PersonaService);
   private readonly contratoService = inject(ContratoService);
   private readonly beneficiarioService = inject(BeneficiarioService);

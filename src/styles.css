@@ -41,6 +41,48 @@ h1, h2, h3, h4, h5 {
   font-weight: 600;
 }
 
+.plan-category-icon.mascotas-logo { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid #f0bd8e; border-radius: 16px; background: linear-gradient(145deg, #fff4e9, #ffe3ca); color: #bd6124; box-shadow: 0 5px 14px rgba(189,97,36,.12); font-size: 1.45rem; }
+.pet-paw-logo { position: relative; display: inline-block; flex: 0 0 23px; width: 23px; height: 20px; color: #bd6124; }
+.pet-paw-logo span { position: absolute; display: block; background: currentColor; }
+.pet-paw-logo span:nth-child(1) { top: 4px; left: 1px; width: 6px; height: 7px; border-radius: 50%; }
+.pet-paw-logo span:nth-child(2) { top: 0; left: 6px; width: 6px; height: 7px; border-radius: 50%; }
+.pet-paw-logo span:nth-child(3) { top: 0; left: 12px; width: 6px; height: 7px; border-radius: 50%; }
+.pet-paw-logo span:nth-child(4) { top: 4px; left: 17px; width: 6px; height: 7px; border-radius: 50%; }
+.pet-paw-logo span:nth-child(5) { top: 9px; left: 5px; width: 14px; height: 10px; border-radius: 50% 50% 45% 45%; }
+.pet-paw-logo-large { transform: scale(1.45); }
+.mutualista-coverage { margin: 20px 0 24px; }
+.coverage-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 13px; }
+.coverage-mark { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #ead6aa; border-radius: 12px; color: #78541e; background: #fbf1dc; font-size: .72rem; font-weight: 800; letter-spacing: .04em; }
+.coverage-heading h4 { margin: 2px 0 0; color: #243b3d; font-size: 1rem; font-weight: 750; }
+.frequency-hint { margin: 9px 0 0; color: #6f7d79; font-size: .76rem; }
+.frequency-pending { color: #78858b; font-size: .9rem; font-weight: 600; }
+.coverage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.coverage-card { padding: 17px 18px; border: 1px solid #e3e5d9; border-top: 3px solid #c8904b; border-radius: 10px; background: linear-gradient(155deg, #fff 0%, #fbfaf5 100%); }
+.coverage-card h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: #293f3d; font-size: .9rem; font-weight: 750; }
+.coverage-card h5 i { color: #b67936; font-size: 1rem; }
+.coverage-card ul { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.coverage-card li { display: flex; align-items: flex-start; gap: 8px; color: #5b6965; font-size: .8rem; line-height: 1.4; }
+.coverage-card li i { flex: 0 0 auto; color: #52806b; }
+.plan-card.human-plan-card { overflow: hidden; border: 1px solid #d7e1d8; border-top: 3px solid #b78a4b; border-radius: 10px; background: linear-gradient(155deg, #fff 0%, #f7faf7 100%); box-shadow: 0 5px 18px rgba(38,65,54,.06); }
+.plan-card.human-plan-card:hover { transform: translateY(-3px); border-color: #7a9a80; border-top-color: #b78a4b; box-shadow: 0 12px 26px rgba(38,65,54,.13); }
+.plan-card.human-plan-card.seleccionado { border-color: #477556; border-top-color: #b78a4b; background: linear-gradient(155deg, #fff 0%, #eef5ee 100%); box-shadow: 0 0 0 2px rgba(71,117,86,.13), 0 10px 24px rgba(38,65,54,.12); }
+.human-plan-card .plan-check { color: #477556; }
+.human-plan-card .plan-nombre { color: #243e31; font-family: Georgia, 'Times New Roman', serif; font-size: 1.13rem; }
+.human-plan-card .plan-card-eyebrow { color: #8a6a3d; }
+.human-plan-card .plan-precio-valor { color: #315f45; font-size: 1.55rem; }
+.mobile-plan-tab { display: inline-flex; flex: 1 1 0; min-width: 0; min-height: 42px; justify-content: center; align-items: center; gap: 6px; padding: 7px 5px; border: 1px solid transparent; border-radius: 10px; color: #7d8585; background: #f4f5f2; font: inherit; font-size: .72rem; cursor: pointer; transition: color .2s, background .2s, border-color .2s, box-shadow .2s; }
+.mobile-plan-tab i { color: #9a9f99; font-size: .92rem; }
+.mobile-plan-tab.activa { border-color: #efc49f; color: #a7531e; background: #fff3e9; font-weight: 750; animation: marker-pulse 2.8s ease-in-out infinite; }
+.mobile-plan-tab.activa i { color: #d56c2b; }
+@media (max-width: 640px) {
+   .coverage-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+   .coverage-card { padding: 15px; }
+}
+@keyframes marker-pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(213,108,43,0); } 50% { opacity: .9; box-shadow: 0 0 0 4px rgba(213,108,43,.09); } }
+@media (prefers-reduced-motion: reduce) {
+   .mobile-plan-tab.activa { animation: none; }
+}
+
 /* ══════════════════════════════════════
    NAVBAR SHARED
 ══════════════════════════════════════ */
@@ -154,4 +196,51 @@ h1, h2, h3, h4, h5 {
 .badge-amarillo { background-color: var(--amarillo-suave); color: var(--amarillo); border: 1px solid #f9e79f; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
 .badge-rojo { background-color: var(--rojo-suave); color: var(--rojo); border: 1px solid #f1948a; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
 .badge-azul { background-color: var(--azul-suave); color: var(--azul-principal); border: 1px solid #85c1e9; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+/* ══════════════════════════════════════
+   PANEL ADMIN — BARRA MÓVIL INFERIOR
+══════════════════════════════════════ */
+.mod-tabs-mobile { display: none; }
+@media (max-width: 768px) {
+  .mod-tabs-mobile {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--blanco);
+    border-top: 1px solid var(--gris-borde);
+    z-index: 1055;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  }
+  .mod-tab-m {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 2px;
+    border: none;
+    background: transparent;
+    color: var(--gris-medio);
+    font-size: 0.64rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+  .mod-tab-m i { font-size: 1.15rem; }
+  .mod-tab-m.activo { color: var(--azul-principal); }
 
+  /* Sub-tabs de Tarifas: scroll horizontal */
+  .mod-tabs--sub {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+  .mod-tabs--sub::-webkit-scrollbar { display: none; }
+  .mod-tabs--sub .mod-tab { flex: 0 0 auto; padding: 8px 14px; font-size: 0.76rem; }
+}

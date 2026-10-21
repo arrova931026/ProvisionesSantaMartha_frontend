@@ -294,7 +294,7 @@
               <span style="font-style:italic;opacity:0.75;">Todavía no hay un plan funerario activo</span>
             }
             @if (contrato()!.mensualidadPactada) {
-              ${{ contrato()!.mensualidadPactada | number:'1.2-2' }} / mes
+              ${{ contrato()!.mensualidadPactada | number:'1.2-2' }} / {{ etiquetaFrecuenciaPago(contrato()!.frecuenciaPago) }}
             }
           </div>
           <a routerLink="/portal/plan-funerario"
@@ -742,7 +742,7 @@
                 }
               </div>
               <div class="dato-fila">
-                <div class="df-label"><i class="bi bi-currency-dollar"></i> Mensualidad</div>
+                <div class="df-label"><i class="bi bi-currency-dollar"></i> Cuota {{ etiquetaFrecuenciaPago(contrato()?.frecuenciaPago) }}</div>
                 @if (contrato()?.mensualidadPactada) {
                   <div class="df-valor">${{ contrato()!.mensualidadPactada | number:'1.2-2' }} MXN</div>
                 } @else {

@@ -213,7 +213,7 @@
               <div class="dato-valor">{{ contrato()!.planNombre || '—' }}</div>
             </div>
             <div class="contrato-dato">
-              <div class="dato-label">Cuota mensual</div>
+              <div class="dato-label">Cuota {{ etiquetaFrecuenciaPago(contrato()!.frecuenciaPago) }}</div>
               <div class="dato-valor">{{ contrato()!.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
             </div>
             @if (cobrosPendientes().length > 0) {
@@ -293,7 +293,7 @@
                 </div>
                 <div class="vigencia-stat">
                   <div class="vs-valor">{{ mensualidadesPagadas() }}</div>
-                  <div class="vs-label">Mensualidades pagadas</div>
+                  <div class="vs-label">Cuotas pagadas</div>
                 </div>
               </div>
             }
@@ -503,13 +503,13 @@
         @if (cobrosRecientes().length > 0) {
           <div class="info-card">
             <div class="card-section-title">
-              <i class="bi bi-calendar-check" style="color:var(--azul-principal)"></i> Últimas mensualidades
+              <i class="bi bi-calendar-check" style="color:var(--azul-principal)"></i> Últimos pagos
             </div>
             <div class="mensualidades-mini">
               @for (cobro of cobrosRecientes(); track cobro.id) {
                 <div class="mes-item">
                   <div class="mes-info">
-                    <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                    <div class="mes-nombre">Pago #{{ cobro.numeroMensualidad }}</div>
                     <div class="mes-fecha">
                       @if (cobro.estadoCobro === 'PAGADO') {
                         Pagado: {{ cobro.fechaPago | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}

@@ -238,10 +238,10 @@
                 <div style="flex:1;min-width:0;">
                   <div class="cva-titulo">
                     <i class="bi bi-x-circle-fill me-1"></i>
-                    ¡Mensualidad #{{ c.numeroMensualidad }} VENCIDA!
+                    ¡Pago #{{ c.numeroMensualidad }} VENCIDO!
                   </div>
                   <div class="cva-desc">
-                    Su mensualidad venció el <strong>{{ c.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>.
+                    Su pago venció el <strong>{{ c.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>.
                     El no pagar afecta la vigencia de su cobertura funeraria.
                     Por favor regularice su pago a la brevedad posible.
                   </div>
@@ -260,7 +260,7 @@
               <i class="bi bi-calendar-check-fill cpa-icono"></i>
               <div style="flex:1;min-width:0;">
                 <div class="cpa-titulo">
-                  Próximo pago: Mensualidad #{{ proximoPago()!.numeroMensualidad }}
+                  Próximo pago: Cuota #{{ proximoPago()!.numeroMensualidad }}
                 </div>
                 <div class="cpa-desc">
                   Vence el <strong>{{ proximoPago()!.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>

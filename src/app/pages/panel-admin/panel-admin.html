@@ -18,18 +18,6 @@
   .mod-tab { padding:8px 16px; border-radius:8px; border:1px solid var(--gris-borde); background:var(--blanco); font-size:0.8rem; font-weight:600; color:var(--gris-texto); cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 0.2s; }
   .mod-tab:hover { border-color:var(--azul-principal); color:var(--azul-principal); background:var(--azul-suave); }
   .mod-tab.activo { background:var(--azul-principal); border-color:var(--azul-principal); color:var(--blanco); }
-  .progreso-wrap { margin-bottom:14px; }
-  .progreso-label { display:flex; justify-content:space-between; font-size:0.76rem; color:var(--gris-medio); margin-bottom:4px; }
-  .progreso-bar { height:8px; background:var(--gris-borde); border-radius:50px; overflow:hidden; }
-  .progreso-fill { height:100%; border-radius:50px; transition:width 0.6s ease; }
-  .form-label-sh { font-size:0.8rem; font-weight:600; color:var(--gris-texto); margin-bottom:4px; }
-  .moroso-item { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--gris-borde); }
-  .moroso-item:last-child { border-bottom:none; }
-  .moroso-avatar { width:40px; height:40px; border-radius:50%; background:var(--rojo-suave); color:var(--rojo); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
-  .moroso-info { flex:1; min-width:0; }
-  .moroso-nombre { font-size:0.86rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .moroso-detalle { font-size:0.74rem; color:var(--gris-medio); }
-  .moroso-monto { font-size:0.9rem; font-weight:700; color:var(--rojo); white-space:nowrap; }
   .reporte-item { display:flex; align-items:center; gap:14px; padding:12px 16px; border:1px solid var(--gris-borde); border-radius:10px; background:var(--blanco); transition:border-color 0.2s, box-shadow 0.2s; margin-bottom:10px; cursor:pointer; }
   .reporte-item:hover { border-color:var(--azul-principal); box-shadow:0 2px 12px rgba(58,143,196,0.1); }
   .reporte-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -37,13 +25,29 @@
   .form-control { border:1px solid var(--gris-borde); border-radius:8px; padding:10px 13px; font-size:0.86rem; }
   .form-control:focus { border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
   .form-select { border:1px solid var(--gris-borde); border-radius:8px; padding:10px 13px; font-size:0.86rem; }
-  .btn-sh-primary { display:inline-flex; align-items:center; gap:7px; padding:9px 22px; border-radius:50px; background:var(--azul-principal); color:var(--blanco); font-size:0.85rem; font-weight:600; border:none; cursor:pointer; transition:background 0.2s; }
-  .btn-sh-primary:hover { background:var(--azul-medio); }
+  .btn-sh-primary { display:inline-flex; align-items:center; gap:7px; padding:9px 22px; border-radius:50px; background:var(--azul-principal); color:var(--blanco); font-size:0.85rem; font-weight:600; border:none; cursor:pointer; transition:background 0.2s; text-decoration:none; }
+  .btn-sh-primary:hover { background:var(--azul-medio); color:var(--blanco); }
+  .finanza-grupo-titulo { font-size:0.78rem; font-weight:700; color:var(--gris-medio); text-transform:uppercase; letter-spacing:0.6px; margin:22px 0 12px; display:flex; align-items:center; gap:8px; }
+  .finanza-grupo-titulo:first-of-type { margin-top:0; }
+  .estado-chip { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--gris-borde); border-radius:10px; background:var(--blanco); margin-bottom:8px; }
+  .estado-chip .dot { width:10px; height:10px; border-radius:50%; margin-right:10px; display:inline-block; }
+  .estado-chip .nombre { font-size:0.85rem; font-weight:600; color:var(--gris-texto); }
+  .estado-chip .valor { font-size:1.05rem; font-weight:800; }
+  .panel-error { background:#fff5f5; border:1px solid #f5c6cb; color:#842029; border-radius:10px; padding:12px 16px; font-size:0.86rem; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .panel-loading { text-align:center; padding:48px 0; color:var(--gris-medio); font-size:0.88rem; }
+  @media (max-width: 768px) {
+    .admin-section { padding: 20px 12px 130px; }
+    .mod-tabs--principal { display:none; }
+    .kpi-valor { font-size:1.15rem; }
+    .kpi-card { padding:12px; }
+    .kpi-icon { width:34px; height:34px; margin-bottom:6px; }
+    .kpi-icon i { font-size:1rem; }
+  }
 </style>
 
 <!-- PAGE HEADER -->
 <div class="page-header" style="background:linear-gradient(135deg, #1a3a5c 0%, var(--azul-medio) 55%, var(--azul-principal) 100%);">
-  <div class="admin-badge"><i class="bi bi-shield-lock me-1"></i>Acceso Administrativo</div>
+  <div class="admin-badge"><i class="bi bi-shield-lock me-1"></i>{{ auth.isAdmin() ? 'Administrador' : 'Agente de ventas' }}</div>
   <div class="header-icon"><i class="bi bi-speedometer2"></i></div>
   <h1>Panel Administrativo</h1>
   <p>Gestión interna de socios, cobros y servicios funerarios</p>
@@ -52,119 +56,8 @@
 <section class="admin-section">
   <div class="container-lg">
 
-    <!-- KPIs -->
-    <div class="seccion-titulo">
-      <h2><i class="bi bi-graph-up me-2" style="color:var(--azul-principal);"></i>Resumen General</h2>
-      <div class="linea-azul"></div>
-    </div>
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-verde w-100">
-          <div class="kpi-icon"><i class="bi bi-currency-dollar"></i></div>
-          <div class="kpi-valor">{{ kpis.ingresosMensuales | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
-          <div class="kpi-label">Ingresos mensuales</div>
-          <div class="kpi-delta delta-pos"><i class="bi bi-arrow-up-short"></i>+12% vs mes anterior</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-azul w-100">
-          <div class="kpi-icon"><i class="bi bi-file-earmark-check"></i></div>
-          <div class="kpi-valor">{{ kpis.contratosActivos }}</div>
-          <div class="kpi-label">Contratos activos</div>
-          <div class="kpi-delta delta-pos"><i class="bi bi-arrow-up-short"></i>+3 este mes</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-amarillo w-100">
-          <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
-          <div class="kpi-valor">{{ kpis.pagosPendientes }}</div>
-          <div class="kpi-label">Pagos pendientes</div>
-          <div class="kpi-delta delta-neg"><i class="bi bi-arrow-up-short"></i>+5 vs mes anterior</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-rojo w-100">
-          <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
-          <div class="kpi-valor">{{ kpis.sociosMorosos }}</div>
-          <div class="kpi-label">Socios morosos</div>
-          <div class="kpi-delta delta-neg"><i class="bi bi-arrow-up-short"></i>+2 este mes</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-morado w-100">
-          <div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div>
-          <div class="kpi-valor">{{ kpis.renovacionesPendientes }}</div>
-          <div class="kpi-label">Renovaciones pendientes</div>
-          <div class="kpi-delta delta-pos"><i class="bi bi-arrow-down-short"></i>-2 vs mes anterior</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-2 d-flex">
-        <div class="kpi-card kpi-naranja w-100">
-          <div class="kpi-icon"><i class="bi bi-tools"></i></div>
-          <div class="kpi-valor">{{ kpis.serviciosEnProceso }}</div>
-          <div class="kpi-label">Servicios en proceso</div>
-          <div class="kpi-delta delta-pos"><i class="bi bi-dash"></i>Sin cambios</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BARRAS PROGRESO -->
-    <div class="row g-4 mb-4">
-      <div class="col-12 col-lg-6">
-        <div class="seccion-titulo">
-          <h2><i class="bi bi-bar-chart-line me-2" style="color:var(--azul-principal);"></i>Cumplimiento Mensual</h2>
-          <div class="linea-azul"></div>
-        </div>
-        <div class="info-card">
-          <div class="progreso-wrap">
-            <div class="progreso-label"><span>Cobros realizados</span><span>214 / 251</span></div>
-            <div class="progreso-bar"><div class="progreso-fill" style="width:85%;background:var(--verde);"></div></div>
-          </div>
-          <div class="progreso-wrap">
-            <div class="progreso-label"><span>Meta de ingresos ($90,000)</span><span>$87,850 / $90,000</span></div>
-            <div class="progreso-bar"><div class="progreso-fill" style="width:98%;background:var(--azul-principal);"></div></div>
-          </div>
-          <div class="progreso-wrap">
-            <div class="progreso-label"><span>Recuperación cartera vencida</span><span>62%</span></div>
-            <div class="progreso-bar"><div class="progreso-fill" style="width:62%;background:var(--amarillo);"></div></div>
-          </div>
-          <div class="progreso-wrap">
-            <div class="progreso-label"><span>Renovaciones completadas</span><span>3 / 12</span></div>
-            <div class="progreso-bar"><div class="progreso-fill" style="width:25%;background:var(--morado);"></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-lg-6">
-        <div class="seccion-titulo">
-          <h2><i class="bi bi-clock-history me-2" style="color:var(--azul-principal);"></i>Últimos Registros</h2>
-          <div class="linea-azul"></div>
-        </div>
-        <div class="info-card">
-          @for (r of [
-            { nombre: 'María G. López', accion: 'Pago registrado', monto: '$580', tipo: 'verde', tiempo: 'Hace 12 min' },
-            { nombre: 'Carlos F. Torres', accion: 'Alta de socio', monto: '—', tipo: 'azul', tiempo: 'Hace 38 min' },
-            { nombre: 'Ana M. Ramos', accion: 'Renovación de contrato', monto: '$580', tipo: 'morado', tiempo: 'Hace 1h' },
-            { nombre: 'Luis H. Cruz', accion: 'Servicio iniciado', monto: '—', tipo: 'naranja', tiempo: 'Hace 2h' }
-          ]; track r.nombre) {
-            <div class="dato-fila">
-              <div class="df-label" style="font-size:0.8rem;">{{ r.nombre }}</div>
-              <div class="df-valor" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span [class]="'badge-' + r.tipo" style="font-size:0.72rem;">{{ r.accion }}</span>
-                @if (r.monto !== '—') { <span style="font-weight:700;font-size:0.84rem;">{{ r.monto }}</span> }
-                <span style="font-size:0.72rem;color:var(--gris-medio);">{{ r.tiempo }}</span>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- MÓDULOS TABS -->
-    <div class="seccion-titulo">
-      <h2><i class="bi bi-grid me-2" style="color:var(--azul-principal);"></i>Gestión</h2>
-      <div class="linea-azul"></div>
-    </div>
-    <div class="mod-tabs">
+    <!-- TABS WEB -->
+    <div class="mod-tabs mod-tabs--principal">
       @for (t of tabs; track t.key) {
         <button class="mod-tab" [class.activo]="tabActivo() === t.key" (click)="onTabChange(t.key)">
           <i [class]="'bi ' + t.icon"></i>{{ t.label }}
@@ -172,185 +65,209 @@
       }
     </div>
 
-    <!-- TAB: ALTA DE SOCIO -->
-    @if (tabActivo() === 'alta') {
-      <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-person-plus me-2" style="color:var(--azul-principal);"></i>Alta de Nuevo Socio</div>
-        <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:20px;">Complete el formulario para registrar un nuevo socio y generar su contrato inicial.</p>
-        <div class="row g-3">
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Nombre(s) *</label>
-            <input type="text" class="form-control" placeholder="Nombre completo"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Apellido Paterno *</label>
-            <input type="text" class="form-control"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Apellido Materno</label>
-            <input type="text" class="form-control"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-3">
-            <label class="form-label-sh">CURP</label>
-            <input type="text" class="form-control" maxlength="18" placeholder="XXXXXXXXXXX000000X00"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-3">
-            <label class="form-label-sh">Fecha de nacimiento *</label>
-            <input type="date" class="form-control"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-2">
-            <label class="form-label-sh">Sexo</label>
-            <select class="form-select">
-              <option value="">—</option>
-              <option value="M">Masculino</option>
-              <option value="F">Femenino</option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Plan Funerario *</label>
-            <select class="form-select">
-              <option value="">Seleccione plan...</option>
-              <option value="1">Plan Básico — $350/mes</option>
-              <option value="2">Plan Estándar — $580/mes</option>
-              <option value="3">Plan Completo — $890/mes</option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Teléfono</label>
-            <input type="tel" class="form-control" maxlength="10"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Correo</label>
-            <input type="email" class="form-control"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Usuario del portal *</label>
-            <input type="text" class="form-control"/>
-          </div>
-          <div class="col-12 col-sm-6 col-lg-4">
-            <label class="form-label-sh">Contraseña temporal *</label>
-            <input type="password" class="form-control"/>
-          </div>
-        </div>
-        <div class="mt-4 d-flex gap-3 flex-wrap">
-          <button class="btn-sh-primary"><i class="bi bi-person-check-fill"></i>Registrar Socio</button>
-          <button class="btn-sh-primary" style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);">
-            <i class="bi bi-x-lg"></i>Limpiar
+    <!-- ═══════════════════════ TAB: DASHBOARD ═══════════════════════ -->
+    @if (tabActivo() === 'dashboard') {
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-graph-up me-2" style="color:var(--azul-principal);"></i>Resumen General</h2>
+        <div class="linea-azul"></div>
+      </div>
+
+      @if (errorDashboard()) {
+        <div class="panel-error">
+          <span><i class="bi bi-exclamation-triangle me-2"></i>{{ errorDashboard() }}</span>
+          <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;" (click)="cargarDashboard()">
+            <i class="bi bi-arrow-clockwise"></i>Reintentar
           </button>
         </div>
-      </div>
-    }
+      }
 
-    <!-- TAB: COBROS -->
-    @if (tabActivo() === 'cobros') {
-      <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-credit-card me-2" style="color:var(--azul-principal);"></i>Registro de Pagos</div>
-        <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:20px;">Busque un socio y registre su pago mensual.</p>
-        <div class="row g-3">
-          <div class="col-12 col-md-6">
-            <label class="form-label-sh">Buscar socio (nombre o número de contrato)</label>
-            <input type="text" class="form-control" placeholder="Escriba para buscar..."/>
+      @if (loadingDashboard()) {
+        <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando indicadores...</div>
+      } @else if (dashboard(); as d) {
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3 d-flex">
+            <div class="kpi-card kpi-verde w-100">
+              <div class="kpi-icon"><i class="bi bi-currency-dollar"></i></div>
+              <div class="kpi-valor">{{ d.ingresosMensuales | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
+              <div class="kpi-label">Ingresos mensuales</div>
+              <div class="kpi-sub">Pagos registrados en el mes en curso</div>
+            </div>
           </div>
-          <div class="col-12 col-md-3">
-            <label class="form-label-sh">Monto pagado</label>
-            <input type="number" class="form-control" placeholder="$ 0.00"/>
+          <div class="col-6 col-lg-3 d-flex">
+            <div class="kpi-card kpi-azul w-100">
+              <div class="kpi-icon"><i class="bi bi-file-earmark-check"></i></div>
+              <div class="kpi-valor">{{ d.contratosActivos }}</div>
+              <div class="kpi-label">Contratos activos</div>
+              <div class="kpi-sub">Contratos con estado VIGENTE</div>
+            </div>
           </div>
-          <div class="col-12 col-md-3">
-            <label class="form-label-sh">Método de pago</label>
-            <select class="form-select">
-              <option>Efectivo</option>
-              <option>Transferencia</option>
-              <option>Mercado Pago</option>
-              <option>OXXO</option>
-            </select>
+          <div class="col-6 col-lg-3 d-flex">
+            <div class="kpi-card kpi-amarillo w-100">
+              <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
+              <div class="kpi-valor">{{ d.pagosPendientes }}</div>
+              <div class="kpi-label">Pagos pendientes</div>
+              <div class="kpi-sub">{{ d.montoPendiente | currency:'MXN':'symbol-narrow':'1.0-0' }} por cobrar</div>
+            </div>
           </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label-sh">Referencia / Folio</label>
-            <input type="text" class="form-control"/>
-          </div>
-          <div class="col-12">
-            <button class="btn-sh-primary"><i class="bi bi-check-circle"></i>Registrar Pago</button>
+          <div class="col-6 col-lg-3 d-flex">
+            <div class="kpi-card kpi-morado w-100">
+              <div class="kpi-icon"><i class="bi bi-arrow-repeat"></i></div>
+              <div class="kpi-valor">{{ d.renovaciones }}</div>
+              <div class="kpi-label">Renovaciones</div>
+              <div class="kpi-sub">Vencen en los próximos 30 días</div>
+            </div>
           </div>
         </div>
-      </div>
+      }
     }
 
-    <!-- TAB: MOROSOS -->
-    @if (tabActivo() === 'morosos') {
-      <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-exclamation-triangle me-2" style="color:var(--rojo);"></i>Cartera Vencida</div>
-        @for (m of [
-          { ini: 'JR', nombre: 'José Ramírez García', contrato: 'SHSM-0102', atraso: '2 meses', monto: '$1,160' },
-          { ini: 'MC', nombre: 'Martha Cruz López', contrato: 'SHSM-0187', atraso: '3 meses', monto: '$1,740' },
-          { ini: 'PH', nombre: 'Pedro Hernández Ruiz', contrato: 'SHSM-0234', atraso: '1 mes', monto: '$580' }
-        ]; track m.contrato) {
-          <div class="moroso-item">
-            <div class="moroso-avatar">{{ m.ini }}</div>
-            <div class="moroso-info">
-              <div class="moroso-nombre">{{ m.nombre }}</div>
-              <div class="moroso-detalle">Contrato {{ m.contrato }} · {{ m.atraso }} de atraso</div>
+    <!-- ═══════════════════════ TAB: FINANZAS ═══════════════════════ -->
+    @if (tabActivo() === 'finanzas') {
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-cash-stack me-2" style="color:var(--azul-principal);"></i>Finanzas</h2>
+        <div class="linea-azul"></div>
+      </div>
+
+      @if (errorFinanzas()) {
+        <div class="panel-error">
+          <span><i class="bi bi-exclamation-triangle me-2"></i>{{ errorFinanzas() }}</span>
+          <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;" (click)="cargarFinanzas()">
+            <i class="bi bi-arrow-clockwise"></i>Reintentar
+          </button>
+        </div>
+      }
+
+      @if (loadingFinanzas()) {
+        <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando indicadores...</div>
+      } @else if (finanzas(); as f) {
+
+        <!-- Morosidad -->
+        <div class="finanza-grupo-titulo"><i class="bi bi-exclamation-triangle" style="color:var(--rojo);"></i>Morosidad de clientes</div>
+        <div class="row g-3">
+          <div class="col-6 d-flex">
+            <div class="kpi-card kpi-rojo w-100">
+              <div class="kpi-icon"><i class="bi bi-person-exclamation"></i></div>
+              <div class="kpi-valor">{{ f.sociosMorosos }}</div>
+              <div class="kpi-label">Socios morosos</div>
+              <div class="kpi-sub">Contratos vigentes con cobros vencidos</div>
             </div>
-            <div class="moroso-monto">{{ m.monto }}</div>
-            <button class="btn-sh-primary ms-2" style="padding:6px 14px;font-size:0.78rem;">
-              <i class="bi bi-bell"></i>Notificar
-            </button>
           </div>
-        }
-      </div>
+          <div class="col-6 d-flex">
+            <div class="kpi-card kpi-rojo w-100">
+              <div class="kpi-icon"><i class="bi bi-cash"></i></div>
+              <div class="kpi-valor">{{ f.montoVencido | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
+              <div class="kpi-label">Cartera vencida</div>
+              <div class="kpi-sub">Monto total adeudado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gestión de servicios -->
+        <div class="finanza-grupo-titulo"><i class="bi bi-flower1" style="color:var(--naranja);"></i>Gestión de servicios funerarios</div>
+        <div class="row g-3">
+          <div class="col-4 d-flex">
+            <div class="kpi-card kpi-naranja w-100">
+              <div class="kpi-icon"><i class="bi bi-tools"></i></div>
+              <div class="kpi-valor">{{ f.serviciosEnProceso }}</div>
+              <div class="kpi-label">En proceso</div>
+            </div>
+          </div>
+          <div class="col-4 d-flex">
+            <div class="kpi-card kpi-azul w-100">
+              <div class="kpi-icon"><i class="bi bi-calendar-event"></i></div>
+              <div class="kpi-valor">{{ f.serviciosMes }}</div>
+              <div class="kpi-label">Este mes</div>
+            </div>
+          </div>
+          <div class="col-4 d-flex">
+            <div class="kpi-card kpi-verde w-100">
+              <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+              <div class="kpi-valor">{{ f.pagosHoy }}</div>
+              <div class="kpi-label">Pagos hoy</div>
+              <div class="kpi-sub">{{ f.ingresosHoy | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reportes -->
+        <div class="finanza-grupo-titulo"><i class="bi bi-file-earmark-bar-graph" style="color:var(--azul-principal);"></i>Reportes — contratos por estado</div>
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="estado-chip">
+              <span class="nombre"><span class="dot" style="background:var(--verde);"></span>Vigentes</span>
+              <span class="valor" style="color:var(--verde);">{{ f.contratosVigentes }}</span>
+            </div>
+            <div class="estado-chip">
+              <span class="nombre"><span class="dot" style="background:var(--amarillo);"></span>Suspendidos</span>
+              <span class="valor" style="color:var(--amarillo);">{{ f.contratosSuspendidos }}</span>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="estado-chip">
+              <span class="nombre"><span class="dot" style="background:var(--naranja);"></span>Vencidos</span>
+              <span class="valor" style="color:var(--naranja);">{{ f.contratosVencidos }}</span>
+            </div>
+            <div class="estado-chip">
+              <span class="nombre"><span class="dot" style="background:var(--rojo);"></span>Cancelados</span>
+              <span class="valor" style="color:var(--rojo);">{{ f.contratosCancelados }}</span>
+            </div>
+          </div>
+        </div>
+      }
     }
 
-    <!-- TAB: SERVICIOS -->
-    @if (tabActivo() === 'servicios') {
-      <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-tools me-2" style="color:var(--naranja);"></i>Servicios en Proceso</div>
-        @for (s of [
-          { ini: 'FL', nombre: 'Familia López Martínez', servicio: 'Velación + Traslado', estado: 'EN PROCESO', ini2: 'naranja' },
-          { ini: 'FC', nombre: 'Familia Cruz Sánchez', servicio: 'Inhumación', estado: 'PENDIENTE', ini2: 'amarillo' },
-          { ini: 'FG', nombre: 'Familia González Reyes', servicio: 'Trámites legales', estado: 'COMPLETADO', ini2: 'verde' }
-        ]; track s.nombre) {
-          <div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--gris-borde);">
-            <div style="width:40px;height:40px;border-radius:10px;background:var(--naranja-suave);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i class="bi bi-heart-pulse" style="color:var(--naranja);font-size:1.1rem;"></i>
-            </div>
+    <!-- ═══════════════════════ TAB: OPERACIONES ═══════════════════════ -->
+    @if (tabActivo() === 'operaciones') {
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-gear me-2" style="color:var(--azul-principal);"></i>Operaciones</h2>
+        <div class="linea-azul"></div>
+      </div>
+
+      <!-- Accesos directos -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/crear-contrato">
+            <div class="reporte-icon" style="background:var(--verde-suave);"><i class="bi bi-file-earmark-plus" style="color:var(--verde);"></i></div>
             <div class="flex-grow-1">
-              <div style="font-size:0.86rem;font-weight:600;">{{ s.nombre }}</div>
-              <div style="font-size:0.74rem;color:var(--gris-medio);">{{ s.servicio }}</div>
+              <div style="font-size:0.86rem;font-weight:600;">Crear contrato</div>
+              <div style="font-size:0.74rem;color:var(--gris-medio);">Nuevo contrato funerario</div>
             </div>
-            <span [class]="s.estado === 'COMPLETADO' ? 'badge-verde' : s.estado === 'EN PROCESO' ? 'badge-naranja' : 'badge-amarillo'" style="font-size:0.72rem;">{{ s.estado }}</span>
-          </div>
-        }
-      </div>
-    }
-
-    <!-- TAB: REPORTES -->
-    @if (tabActivo() === 'reportes') {
-      <div>
-        @for (r of [
-          { icon: 'bi-file-earmark-bar-graph', color: 'var(--azul-suave)', icolor: 'var(--azul-principal)', nombre: 'Reporte de Cobros Mensuales', desc: 'Detalle de todos los pagos del mes en curso' },
-          { icon: 'bi-file-earmark-person', color: 'var(--verde-suave)', icolor: 'var(--verde)', nombre: 'Reporte de Socios Activos', desc: 'Listado completo de socios con contrato vigente' },
-          { icon: 'bi-file-earmark-excel', color: 'var(--naranja-suave)', icolor: 'var(--naranja)', nombre: 'Cartera Vencida', desc: 'Socios con pagos en mora y montos adeudados' },
-          { icon: 'bi-file-earmark-text', color: 'var(--morado-suave)', icolor: 'var(--morado)', nombre: 'Contratos por Vencer', desc: 'Contratos próximos a vencimiento en 30 días' }
-        ]; track r.nombre) {
-          <div class="reporte-item">
-            <div class="reporte-icon" [style.background]="r.color">
-              <i [class]="'bi ' + r.icon" [style.color]="r.icolor"></i>
-            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/cobros">
+            <div class="reporte-icon" style="background:var(--amarillo-suave);"><i class="bi bi-credit-card" style="color:var(--amarillo);"></i></div>
             <div class="flex-grow-1">
-              <div style="font-size:0.86rem;font-weight:600;">{{ r.nombre }}</div>
-              <div style="font-size:0.74rem;color:var(--gris-medio);">{{ r.desc }}</div>
+              <div style="font-size:0.86rem;font-weight:600;">Cobros</div>
+              <div style="font-size:0.74rem;color:var(--gris-medio);">Registrar y consultar pagos</div>
             </div>
-            <div style="font-size:0.75rem;font-weight:600;color:var(--azul-principal);display:flex;align-items:center;gap:4px;">
-              <i class="bi bi-download"></i>Descargar
+          </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/beneficiarios">
+            <div class="reporte-icon" style="background:var(--azul-suave);"><i class="bi bi-people" style="color:var(--azul-principal);"></i></div>
+            <div class="flex-grow-1">
+              <div style="font-size:0.86rem;font-weight:600;">Beneficiarios</div>
+              <div style="font-size:0.74rem;color:var(--gris-medio);">Gestión de beneficiarios</div>
+            </div>
+          </a>
+        </div>
+        @if (auth.isAdmin()) {
+          <div class="col-6 col-md-4 col-lg-3">
+            <div class="reporte-item" style="margin-bottom:0;height:100%;opacity:0.65;cursor:default;">
+              <div class="reporte-icon" style="background:var(--morado-suave);"><i class="bi bi-star" style="color:var(--morado);"></i></div>
+              <div class="flex-grow-1">
+                <div style="font-size:0.86rem;font-weight:600;">Planes</div>
+                <div style="font-size:0.74rem;color:var(--gris-medio);">CRUD de planes (solo ADMIN)</div>
+              </div>
             </div>
           </div>
         }
       </div>
-    }
 
-    <!-- TAB: BAJA DE SOCIOS -->
-    @if (tabActivo() === 'baja') {
+      <!-- Gestión de usuarios -->
       <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-person-dash me-2" style="color:var(--rojo);"></i>Baja de Socios</div>
+        <div class="card-section-title"><i class="bi bi-person-dash me-2" style="color:var(--rojo);"></i>Gestión de usuarios</div>
         <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:20px;">Busque un socio por nombre o usuario y dé clic en <strong>Dar de Baja</strong> para desactivar su cuenta.</p>
 
         @if (bajaMsg()) {
@@ -359,7 +276,6 @@
           </div>
         }
 
-        <!-- Buscador -->
         <div class="row g-3 mb-3">
           <div class="col-12 col-md-6">
             <div style="position:relative;">
@@ -381,14 +297,12 @@
           </div>
         </div>
 
-        <!-- Spinner búsqueda -->
         @if (bajaBuscando()) {
           <div style="text-align:center;padding:24px 0;color:var(--gris-medio);font-size:0.85rem;">
             <span class="spinner-border spinner-border-sm me-2"></span>Buscando socios...
           </div>
         }
 
-        <!-- Lista -->
         @if (!bajaBuscando()) {
           @if (socios().length === 0) {
             <div style="text-align:center;padding:40px 0;color:var(--gris-medio);">
@@ -402,26 +316,24 @@
                   <tr style="border-bottom:2px solid var(--gris-borde);">
                     <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Socio</th>
                     <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Usuario</th>
-                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Correo</th>
                     <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Rol</th>
                     <th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (s of socios(); track s.id) {
-                    <tr style="border-bottom:1px solid var(--gris-borde);transition:background 0.15s;" [style.background]="confirmandoId() === s.id ? 'rgba(220,53,69,0.05)' : ''">
-                      <td style="padding:12px 12px;">
+                    <tr style="border-bottom:1px solid var(--gris-borde);" [style.background]="confirmandoId() === s.id ? 'rgba(220,53,69,0.05)' : ''">
+                      <td style="padding:12px;">
                         <div style="display:flex;align-items:center;gap:10px;">
                           <div style="width:36px;height:36px;border-radius:50%;background:var(--azul-suave);color:var(--azul-principal);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">{{ iniciales(s.nombreCompleto) }}</div>
                           <span style="font-weight:600;">{{ s.nombreCompleto }}</span>
                         </div>
                       </td>
-                      <td style="padding:12px 12px;color:var(--gris-medio);">{{ s.username }}</td>
-                      <td style="padding:12px 12px;color:var(--gris-medio);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.correo }}</td>
-                      <td style="padding:12px 12px;">
+                      <td style="padding:12px;color:var(--gris-medio);">{{ s.username }}</td>
+                      <td style="padding:12px;">
                         <span [class]="s.rol === 'ADMIN' ? 'badge-azul' : s.rol === 'AGENTE' ? 'badge-morado' : 'badge-verde'" style="font-size:0.72rem;">{{ s.rol }}</span>
                       </td>
-                      <td style="padding:12px 12px;text-align:center;">
+                      <td style="padding:12px;text-align:center;">
                         @if (confirmandoId() !== s.id) {
                           <button
                             class="btn-sh-primary"
@@ -458,5 +370,254 @@
       </div>
     }
 
+    <!-- ═══════════════════════ TAB: TARIFAS ═══════════════════════ -->
+    @if (tabActivo() === 'tarifas') {
+      <div class="seccion-titulo">
+        <h2><i class="bi bi-tag me-2" style="color:var(--azul-principal);"></i>Tarifas y Planes</h2>
+        <div class="linea-azul"></div>
+      </div>
+
+      <!-- Sub-tabs por tipo (visibles también en móvil, con scroll horizontal) -->
+      <div class="mod-tabs mod-tabs--sub" style="margin-bottom:20px;">
+        @for (t of tiposTarifa; track t.clave) {
+          <button class="mod-tab" [class.activo]="tipoTarifa() === t.clave" (click)="onTipoTarifaChange(t.clave)">
+            <i [class]="'bi ' + t.icono"></i>{{ t.nombre }}
+          </button>
+        }
+      </div>
+
+      @if (tarifaMsg()) {
+        <div [class]="'alert alert-' + tarifaMsgTipo() + ' py-2 px-3 mb-3'" style="font-size:0.85rem;border-radius:8px;">
+          <i [class]="tarifaMsgTipo() === 'success' ? 'bi bi-check-circle me-2' : 'bi bi-exclamation-circle me-2'"></i>{{ tarifaMsg() }}
+        </div>
+      }
+
+      @if (errorTarifas()) {
+        <div class="panel-error">
+          <span><i class="bi bi-exclamation-triangle me-2"></i>{{ errorTarifas() }}</span>
+          <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;" (click)="cargarTarifas()">
+            <i class="bi bi-arrow-clockwise"></i>Reintentar
+          </button>
+        </div>
+      }
+
+      @if (loadingTarifas()) {
+        <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando tarifas...</div>
+      } @else {
+
+        <!-- ── MUTUALISTA ──────────────────────────────── -->
+        @if (tipoTarifa() === 'MUTUALISTA') {
+          @for (p of planesTarifa(); track p.id) {
+            <div class="info-card" style="max-width:520px;">
+              <div class="card-section-title"><i class="bi bi-shield-heart me-2" style="color:var(--azul-principal);"></i>{{ p.nombre }}</div>
+              <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:18px;">{{ p.descripcion }}</p>
+
+              <label class="form-label-sh">Aportación anual (MXN)</label>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div style="position:relative;flex:1;min-width:180px;">
+                  <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
+                  <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01"
+                         [(ngModel)]="aportacionAnualInput" />
+                </div>
+                <button class="btn-sh-primary" [disabled]="guardandoMutualista() || !aportacionAnualInput" (click)="guardarMutualista()">
+                  @if (guardandoMutualista()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Guardar }
+                </button>
+              </div>
+              <p style="font-size:0.76rem;color:var(--gris-medio);margin-top:10px;">
+                <i class="bi bi-info-circle me-1"></i>La mensualidad se recalcula automáticamente (anual ÷ 12). El cliente la verá al crear su contrato.
+              </p>
+            </div>
+          }
+        }
+
+        <!-- ── HUMANOS / MASCOTAS ──────────────────────── -->
+        @if (tipoTarifa() === 'HUMANOS' || tipoTarifa() === 'MASCOTAS') {
+
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+            <button class="btn-sh-primary" (click)="abrirFormPlan()">
+              <i class="bi bi-plus-lg"></i>Nuevo plan
+            </button>
+          </div>
+
+          <!-- Formulario alta/edición -->
+          @if (planFormVisible()) {
+            <div class="info-card" style="margin-bottom:20px;">
+              <div class="card-section-title">
+                <i class="bi bi-pencil-square me-2" style="color:var(--azul-principal);"></i>
+                {{ planEditando() ? 'Editar plan' : 'Nuevo plan' }} — {{ tipoTarifa() === 'HUMANOS' ? 'Previsión de Humanos' : 'Previsión de Mascotas' }}
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label-sh">Nombre *</label>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.nombre" placeholder="Ej. Plan Especial"/>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label-sh">Descripción</label>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.descripcion"/>
+                </div>
+
+                @if (tipoTarifa() === 'HUMANOS') {
+                  <div class="col-6 col-md-3">
+                    <label class="form-label-sh">Precio total *</label>
+                    <input type="number" class="form-control" min="1" step="0.01" [(ngModel)]="planForm.precioTotal"/>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label-sh">Mensualidad *</label>
+                    <input type="number" class="form-control" min="1" step="0.01" [(ngModel)]="planForm.mensualidad"/>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label-sh">Duración (meses) *</label>
+                    <input type="number" class="form-control" min="1" [(ngModel)]="planForm.duracionMeses"/>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label-sh">Beneficiarios *</label>
+                    <input type="number" class="form-control" min="0" [(ngModel)]="planForm.numeroBeneficiarios"/>
+                  </div>
+                }
+
+                <!-- MASCOTAS: banner servicios fijos + precio + % extra con cálculo en vivo -->
+                @if (tipoTarifa() === 'MASCOTAS') {
+                  <!-- Banner de servicios incluidos (fijos, no editables) -->
+                  <div class="col-12">
+                    <div style="background:linear-gradient(135deg,#e8f4f2,#f0f8ff);border:1px solid #bfe0dc;border-radius:12px;padding:14px 16px;">
+                      <div style="font-size:0.8rem;font-weight:700;color:#197586;margin-bottom:8px;">
+                        <i class="bi bi-heart me-1"></i>Todo plan de mascotas incluye:
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;">
+                        <span style="font-size:0.8rem;color:#2c4a4e;"><i class="bi bi-check-circle-fill me-1" style="color:#2a8a79;"></i>Recolección en clínica o domicilio</span>
+                        <span style="font-size:0.8rem;color:#2c4a4e;"><i class="bi bi-check-circle-fill me-1" style="color:#2a8a79;"></i>Cremación</span>
+                        <span style="font-size:0.8rem;color:#2c4a4e;"><i class="bi bi-check-circle-fill me-1" style="color:#2a8a79;"></i>Entrega a familia de restos en urna</span>
+                        <span style="font-size:0.8rem;color:#2c4a4e;"><i class="bi bi-check-circle-fill me-1" style="color:#2a8a79;"></i>Constancia de cremación digital</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Precio base por mascota -->
+                  <div class="col-12 col-md-4">
+                    <label class="form-label-sh">Precio por mascota *</label>
+                    <div style="position:relative;">
+                      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
+                      <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01" [(ngModel)]="planForm.precioTotal"/>
+                    </div>
+                  </div>
+
+                  <!-- Número de mascotas -->
+                  <div class="col-6 col-md-4">
+                    <label class="form-label-sh">Núm. mascotas *</label>
+                    <input type="number" class="form-control" min="1" [(ngModel)]="cantidadMascotasInput"/>
+                  </div>
+
+                  <!-- % extra por mascota adicional -->
+                  <div class="col-6 col-md-4">
+                    <label class="form-label-sh">% extra por mascota adicional</label>
+                    <div style="position:relative;">
+                      <input type="number" class="form-control" style="padding-right:28px;" min="0" max="100" step="0.5" [(ngModel)]="porcentajeExtraInput"/>
+                      <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">%</span>
+                    </div>
+                  </div>
+
+                  <!-- Precio final en tiempo real -->
+                  <div class="col-12">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f7faf9;border:1px dashed var(--gris-borde);border-radius:10px;padding:12px 16px;flex-wrap:wrap;">
+                      <span style="font-size:0.82rem;color:var(--gris-texto);">
+                        <i class="bi bi-calculator me-1"></i>
+                        {{ cantidadMascotasInput }} mascota(s): 1ª a {{ planForm.precioTotal | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                        @if (cantidadMascotasInput > 1) {
+                          + {{ cantidadMascotasInput - 1 }} × {{ (planForm.precioTotal * (1 + porcentajeExtraInput / 100)) | currency:'MXN':'symbol-narrow':'1.0-0' }}
+                        }
+                      </span>
+                      <span style="font-size:1.25rem;font-weight:800;color:var(--azul-principal);">
+                        {{ precioMascotasFinal() | currency:'MXN':'symbol-narrow':'1.0-2' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Campos internos requeridos por el backend -->
+                  <input type="hidden" [(ngModel)]="planForm.mensualidad"/>
+                  <input type="hidden" [(ngModel)]="planForm.duracionMeses"/>
+                }
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                <button class="btn-sh-primary" [disabled]="guardandoPlan() || !planForm.nombre || planForm.precioTotal <= 0" (click)="guardarPlan()">
+                  @if (guardandoPlan()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Guardar plan }
+                </button>
+                <button class="btn-sh-primary" style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);" (click)="cerrarFormPlan()">
+                  <i class="bi bi-x-lg"></i>Cancelar
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Lista de planes -->
+          @if (planesTarifa().length === 0) {
+            <div style="text-align:center;padding:36px 0;color:var(--gris-medio);">
+              <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+              <span style="font-size:0.88rem;">No hay planes en esta categoría.</span>
+            </div>
+          } @else {
+            <div class="row g-3">
+              @for (p of planesTarifa(); track p.id) {
+                <div class="col-12 col-md-6 col-lg-4">
+                  <div class="kpi-card" style="display:flex;flex-direction:column;height:100%;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                      <span style="font-weight:700;font-size:0.95rem;">{{ p.nombre }}</span>
+                      <span [class]="p.activo ? 'badge-verde' : 'badge-rojo'" style="font-size:0.68rem;">{{ p.activo ? 'ACTIVO' : 'INACTIVO' }}</span>
+                    </div>
+                    <div style="font-size:1.3rem;font-weight:800;color:var(--azul-principal);">{{ p.precioTotal | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
+                    <div style="font-size:0.76rem;color:var(--gris-medio);margin-bottom:8px;">
+                      {{ p.mensualidad | currency:'MXN':'symbol-narrow':'1.0-0' }} / mes · {{ p.duracionMeses }} meses · {{ p.numeroBeneficiarios }} {{ tipoTarifa() === 'MASCOTAS' ? 'mascota(s)' : 'beneficiario(s)' }}
+                    </div>
+                    @if (p.articulosIncluidos.length) {
+                      <div style="font-size:0.72rem;color:var(--gris-medio);margin-bottom:12px;line-height:1.5;">
+                        @for (a of p.articulosIncluidos; track a.nombre) {
+                          <div><i class="bi bi-check2" style="color:var(--verde);"></i> {{ a.nombre }}</div>
+                        }
+                      </div>
+                    }
+                    <div style="display:flex;gap:6px;margin-top:auto;flex-wrap:wrap;">
+                      <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;" (click)="abrirFormPlan(p)">
+                        <i class="bi bi-pencil"></i>Editar
+                      </button>
+                      @if (p.activo) {
+                        <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;background:var(--rojo-suave);color:var(--rojo);border:1px solid var(--rojo);" (click)="desactivarPlan(p.id)">
+                          <i class="bi bi-x-circle"></i>Desactivar
+                        </button>
+                      } @else {
+                        <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;background:var(--verde-suave);color:var(--verde);border:1px solid var(--verde);" (click)="activarPlan(p.id)">
+                          <i class="bi bi-check-circle"></i>Activar
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      }
+    }
+
   </div>
 </section>
+
+<!-- TABS MÓVIL (barra inferior fija) -->
+@if (esMovil()) {
+  <nav aria-label="Secciones del panel"
+       style="display:flex; position:fixed; bottom:0; left:0; right:0; z-index:1055;
+              background:var(--blanco); border-top:1px solid var(--gris-borde);
+              padding:6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+              box-shadow:0 -2px 12px rgba(0,0,0,0.08);">
+    @for (t of tabs; track t.key) {
+      <button [class.activo]="tabActivo() === t.key" (click)="onTabChange(t.key)"
+              style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+                     padding:6px 2px; border:none; background:transparent; cursor:pointer;
+                     border-radius:8px; font-size:0.64rem; font-weight:600;"
+              [style.color]="tabActivo() === t.key ? 'var(--azul-principal)' : 'var(--gris-medio)'">
+        <i [class]="'bi ' + t.icon" style="font-size:1.15rem;"></i>
+        <span>{{ t.label }}</span>
+      </button>
+    }
+  </nav>
+}

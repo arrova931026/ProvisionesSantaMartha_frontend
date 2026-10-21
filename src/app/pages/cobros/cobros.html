@@ -262,7 +262,7 @@
           <div class="resumen-card r-azul">
             <div class="r-icon"><i class="bi bi-calendar3"></i></div>
             <div class="r-valor">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
-            <div class="r-label">Mensualidad actual</div>
+            <div class="r-label">Cuota actual</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
@@ -331,14 +331,14 @@
         <!-- Mensualidades -->
         <div class="col-12 col-lg-7 d-flex flex-column">
           <div class="seccion-titulo">
-            <h2><i class="bi bi-calendar-check me-2" style="color:var(--azul-principal);"></i>Mensualidades</h2>
+            <h2><i class="bi bi-calendar-check me-2" style="color:var(--azul-principal);"></i>Pagos programados</h2>
             <div class="linea-azul"></div>
           </div>
           <div class="mensualidades-card flex-grow-1 scroll-expandido" id="mensualidades-scrollable">
             @for (cobro of mensualidadesVisibles; track cobro.id) {
               <div class="mes-item" [id]="'mes-cobro-' + cobro.id">
                 <div class="mes-info">
-                  <div class="mes-nombre">Mensualidad #{{ cobro.numeroMensualidad }}</div>
+                  <div class="mes-nombre">Pago #{{ cobro.numeroMensualidad }}</div>
                   <div class="mes-fecha">
                     @if (cobro.estadoCobro === 'PAGADO') {
                       Pagado: {{ cobro.fechaPago ? (cobro.fechaPago | date:"dd 'de' MMMM 'de' yyyy":'':'es') : '&mdash;' }}
@@ -386,9 +386,9 @@
                   <i class="bi bi-calendar-check" style="font-size:1.4rem;color:var(--azul-principal);"></i>
                 </div>
                 <div>
-                  <div style="font-weight:700;font-size:.95rem;color:var(--gris-texto);">Próxima mensualidad en {{ diasHastaProximoPago }} días</div>
+                  <div style="font-weight:700;font-size:.95rem;color:var(--gris-texto);">Próximo pago en {{ diasHastaProximoPago }} días</div>
                   <div style="font-size:.82rem;color:var(--gris-medio);">
-                    Mensualidad #{{ proximoPago.numeroMensualidad }} &mdash;
+                    Pago #{{ proximoPago.numeroMensualidad }} &mdash;
                     vence el <strong>{{ proximoPago.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>
                     por <strong>{{ proximoPago.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</strong>.
                     Puede adelantar el pago ahora si lo desea.
@@ -429,7 +429,7 @@
                 <div class="mp-logo">mercado<span>pago</span></div>
                 <div class="mp-monto">{{ mensualidadActual | currency:'MXN':'symbol-narrow':'1.2-2' }}</div>
                 <div class="mp-concepto">
-                  Mensualidad #{{ proximoPago.numeroMensualidad }} — {{ contratoActivo()?.numeroContrato }}
+                  Pago #{{ proximoPago.numeroMensualidad }} — {{ contratoActivo()?.numeroContrato }}
                 </div>
                 <p>Paga de forma rápida y segura con tu cuenta Mercado Pago, tarjeta de crédito o débito.</p>
                 <button class="btn-mp" (click)="pagarConMP()" [disabled]="loadingMP()">
@@ -607,7 +607,7 @@
                         {{ cobro.fechaVencimiento | date:'dd/MM/yyyy' }}
                       }
                     </td>
-                    <td>Mensualidad #{{ cobro.numeroMensualidad }}</td>
+                    <td>Pago #{{ cobro.numeroMensualidad }}</td>
                     <td class="col-monto">{{ cobro.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}</td>
                     <td class="col-metodo">{{ cobro.metodoPago ?? '—' }}</td>
                     <td>
