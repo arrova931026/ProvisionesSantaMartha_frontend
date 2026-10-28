@@ -25,4 +25,12 @@ export class NotificacionService {
   marcarTodasLeidas() {
     return this.http.patch<void>(`${this.base}/marcar-leidas`, null);
   }
+
+  obtenerPreferenciaWhatsApp() {
+    return this.http.get<{ habilitada: boolean }>(`${this.base}/whatsapp-preferencia`);
+  }
+
+  actualizarPreferenciaWhatsApp(habilitada: boolean) {
+    return this.http.put<{ habilitada: boolean }>(`${this.base}/whatsapp-preferencia`, { habilitada });
+  }
 }

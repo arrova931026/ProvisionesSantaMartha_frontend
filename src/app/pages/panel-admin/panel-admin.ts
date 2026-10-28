@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
@@ -8,15 +8,16 @@ import { PanelService } from '../../core/services/panel.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { TarifaService } from '../../core/services/tarifa.service';
 import { UsuarioSocio } from '../../core/models/usuario.model';
-import { PanelDashboard, PanelFinanzas } from '../../core/models/panel.model';
+import { PanelDashboard, PanelFinanzas, ClienteResumen } from '../../core/models/panel.model';
 import { CatalogoArticulo, PlanTarifaRequest, TarifaPlan } from '../../core/models/tarifa.model';
+import { ContratoResponse } from '../../core/models/contrato.model';
 
 type Tab = 'operaciones' | 'finanzas' | 'dashboard' | 'tarifas';
 type TipoTarifa = 'MUTUALISTA' | 'HUMANOS' | 'MASCOTAS';
 
 @Component({
   selector: 'app-panel-admin',
-  imports: [CurrencyPipe, FormsModule, RouterLink],
+  imports: [CurrencyPipe, FormsModule],
   templateUrl: './panel-admin.html'
 })
 export class PanelAdminComponent implements OnInit {
@@ -24,6 +25,7 @@ export class PanelAdminComponent implements OnInit {
   private readonly panelService = inject(PanelService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly tarifaService = inject(TarifaService);
+  private readonly router = inject(Router);
 
   readonly tabActivo = signal<Tab>('dashboard');
   readonly tabs: { key: Tab; label: string; icon: string }[] = [
@@ -52,6 +54,27 @@ export class PanelAdminComponent implements OnInit {
   filtroNombre = '';
   readonly confirmandoId = signal<number | null>(null);
   private readonly busqueda$ = new Subject<string>();
+
+  // ── Operaciones: sub-vistas ──────────────────────────────────────────────
+  readonly vistaOperaciones = signal<'contrato' | 'cobros' | 'beneficiarios' | 'eliminar'>('contrato');
+
+  // Clientes (tabla compartida por crear contrato / cobros / beneficiarios / eliminar)
+  readonly clientes = signal<ClienteResumen[]>([]);
+  readonly loadingClientes = signal(false);
+  readonly errorClientes = signal('');
+  filtroCliente = '';
+  pageSizeClientes = 10;
+  paginaClientes = 0;
+
+  // Modal eliminar contratos
+  readonly modalEliminarAbierto = signal(false);
+  readonly clienteEliminar = signal<ClienteResumen | null>(null);
+  readonly contratosCliente = signal<ContratoResponse[]>([]);
+  readonly loadingContratosCliente = signal(false);
+  readonly eliminandoContrato = signal<number | null>(null);
+  readonly confirmandoContratoId = signal<number | null>(null);
+  readonly eliminarMsg = signal('');
+  readonly eliminarMsgTipo = signal<'success' | 'danger'>('success');
 
   // ── Tarifas ──────────────────────────────────────────────────────────────
   readonly tipoTarifa = signal<TipoTarifa>('MUTUALISTA');
@@ -91,6 +114,20 @@ export class PanelAdminComponent implements OnInit {
     return base + base * (1 + pct / 100) * (n - 1);
   }
 
+  /** Mensualidad de humanos calculada en vivo: precioTotal ÷ duración. */
+  mensualidadHumano(): number {
+    const total = this.planForm.precioTotal || 0;
+    const meses = Math.max(1, this.planForm.duracionMeses || 1);
+    return total / meses;
+  }
+
+  /** Cuota mensual de mascotas: precio final total ÷ duración en meses. */
+  cuotaMensualMascota(): number {
+    const total = this.precioMascotasFinal();
+    const meses = Math.max(1, this.planForm.duracionMeses || 1);
+    return total / meses;
+  }
+
   // ── Detección de móvil (≤768px) para mostrar la barra inferior ──────────
   readonly esMovil = signal(typeof window !== 'undefined' && window.innerWidth <= 768);
 
@@ -123,8 +160,114 @@ export class PanelAdminComponent implements OnInit {
     this.tabActivo.set(tab);
     if (tab === 'dashboard') this.cargarDashboard();
     if (tab === 'finanzas') this.cargarFinanzas();
-    if (tab === 'operaciones' && this.socios().length === 0) this.cargarSocios();
+    if (tab === 'operaciones') this.cargarClientes();
     if (tab === 'tarifas') this.cargarTarifas();
+  }
+
+  /** Regresa al inicio del portal (página padre). */
+  volverAtras() {
+    this.router.navigate(['/portal/inicio']);
+  }
+
+  // ═══════════════════════ Operaciones: clientes ══════════════════════════
+
+  cargarClientes() {
+    this.loadingClientes.set(true);
+    this.errorClientes.set('');
+    this.panelService.clientes(this.filtroCliente || undefined).subscribe({
+      next: data => {
+        this.clientes.set(data);
+        this.paginaClientes = 0;
+        this.loadingClientes.set(false);
+      },
+      error: () => {
+        this.errorClientes.set('No se pudieron cargar los clientes.');
+        this.loadingClientes.set(false);
+      }
+    });
+  }
+
+  clientesPaginados(): ClienteResumen[] {
+    const inicio = this.paginaClientes * this.pageSizeClientes;
+    return this.clientes().slice(inicio, inicio + this.pageSizeClientes);
+  }
+
+  totalPaginasClientes(): number {
+    return Math.max(1, Math.ceil(this.clientes().length / this.pageSizeClientes));
+  }
+
+  cambiarPaginaClientes(delta: number) {
+    const nueva = this.paginaClientes + delta;
+    if (nueva >= 0 && nueva < this.totalPaginasClientes()) this.paginaClientes = nueva;
+  }
+
+  cambiarPageSizeClientes(size: number) {
+    this.pageSizeClientes = size;
+    this.paginaClientes = 0;
+  }
+
+  irACrearContrato(cliente: ClienteResumen) {
+    this.router.navigate(['/portal/crear-contrato'], { queryParams: { personaId: cliente.personaId } });
+  }
+
+  irACobros(cliente: ClienteResumen) {
+    this.router.navigate(['/portal/cobros'], { queryParams: { personaId: cliente.personaId } });
+  }
+
+  irABeneficiarios(cliente: ClienteResumen) {
+    this.router.navigate(['/portal/beneficiarios'], { queryParams: { personaId: cliente.personaId } });
+  }
+
+  // ═══════════════════════ Operaciones: eliminar contratos ════════════════
+
+  abrirModalEliminar(cliente: ClienteResumen) {
+    this.clienteEliminar.set(cliente);
+    this.modalEliminarAbierto.set(true);
+    this.eliminarMsg.set('');
+    this.loadingContratosCliente.set(true);
+    this.contratosCliente.set([]);
+    this.panelService.contratosDeCliente(cliente.personaId).subscribe({
+      next: c => {
+        this.contratosCliente.set(c.filter(x => x.activo));
+        this.loadingContratosCliente.set(false);
+      },
+      error: () => this.loadingContratosCliente.set(false)
+    });
+  }
+
+  cerrarModalEliminar() {
+    this.modalEliminarAbierto.set(false);
+    this.clienteEliminar.set(null);
+    this.confirmandoContratoId.set(null);
+  }
+
+  /** Primer clic en Eliminar: pide confirmación. */
+  pedirConfirmacionContrato(contratoId: number) {
+    this.confirmandoContratoId.set(contratoId);
+  }
+
+  cancelarConfirmacionContrato() {
+    this.confirmandoContratoId.set(null);
+  }
+
+  confirmarEliminarContrato(contratoId: number) {
+    this.confirmandoContratoId.set(null);
+    this.eliminandoContrato.set(contratoId);
+    this.eliminarMsg.set('');
+    this.panelService.eliminarContrato(contratoId).subscribe({
+      next: () => {
+        this.eliminandoContrato.set(null);
+        this.eliminarMsg.set('Contrato eliminado.');
+        this.eliminarMsgTipo.set('success');
+        this.contratosCliente.update(lista => lista.filter(c => c.id !== contratoId));
+        this.cargarClientes();
+      },
+      error: () => {
+        this.eliminandoContrato.set(null);
+        this.eliminarMsg.set('No se pudo eliminar el contrato.');
+        this.eliminarMsgTipo.set('danger');
+      }
+    });
   }
 
   // ── Tarifas ──────────────────────────────────────────────────────────────
@@ -191,13 +334,19 @@ export class PanelAdminComponent implements OnInit {
       };
       this.cantidadMascotasInput = plan.numeroBeneficiarios || 1;
       this.porcentajeExtraInput = plan.porcentajeExtraMascota ?? 0;
+      // Precargar los servicios que ya tiene el plan
+      this.articulosSeleccionados = new Set(
+        plan.articulosIncluidos
+          .map(a => this.articulosCatalogo().find(cat => cat.nombre === a.nombre)?.id)
+          .filter((id): id is number => id !== undefined)
+      );
     } else {
       this.planEditando.set(null);
       this.planForm = this.nuevoPlanForm();
       this.cantidadMascotasInput = 1;
       this.porcentajeExtraInput = 0;
+      this.articulosSeleccionados.clear();
     }
-    this.articulosSeleccionados.clear();
     this.planFormVisible.set(true);
   }
 
@@ -219,9 +368,12 @@ export class PanelAdminComponent implements OnInit {
     if (tipo === 'MASCOTAS') {
       this.planForm.numeroBeneficiarios = this.cantidadMascotasInput;
       this.planForm.porcentajeExtraMascota = this.porcentajeExtraInput;
-      // En mascotas el precioTotal es por mascota; mensualidad = precio final, duración = 1
-      this.planForm.mensualidad = this.precioMascotasFinal();
-      this.planForm.duracionMeses = 1;
+      // En mascotas: precioTotal = precio por mascota; mensualidad = cuota mensual del total
+      this.planForm.mensualidad = this.cuotaMensualMascota();
+      // duracionMeses ya la eligió el admin en el formulario
+    } else if (tipo === 'HUMANOS') {
+      // Mensualidad derivada: precio total ÷ duración
+      this.planForm.mensualidad = this.mensualidadHumano();
     }
 
     this.guardandoPlan.set(true);

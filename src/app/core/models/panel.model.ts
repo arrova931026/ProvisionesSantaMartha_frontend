@@ -18,3 +18,13 @@ export interface PanelFinanzas {
   contratosVencidos: number;
   contratosCancelados: number;
 }
+
+export interface ClienteResumen {
+  personaId: number;
+  nombre: string;
+  correo: string;
+  contratosActivos: number;
+  beneficiariosRegistrados: number;
+  beneficiariosPermitidos: number;
+  beneficiariosDisponibles: number;
+}

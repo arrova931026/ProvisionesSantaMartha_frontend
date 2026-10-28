@@ -2,7 +2,7 @@
 
   <!-- HEADER -->
   <div class="wizard-header">
-    <a routerLink="/portal/mis-datos" class="wizard-back">
+    <a [routerLink]="rutaRegreso" class="wizard-back">
       <i class="bi bi-arrow-left"></i>
     </a>
     <div class="wizard-title">
@@ -46,12 +46,100 @@
       <p>Cargando información...</p>
     </div>
   } @else if (errorElegibilidad()) {
-    <div class="wizard-ineligible">
-      <i class="bi bi-x-circle-fill"></i>
-      <h2>No elegible</h2>
-      <p>{{ errorElegibilidad() }}</p>
-      <a routerLink="/portal/mis-datos" class="btn-volver">Volver a Mis Datos</a>
-    </div>
+    @if (esAdminParaOtro()) {
+      <!-- Admin: completar datos del cliente para poder contratar -->
+      <div class="wizard-card">
+        <div class="wc-header">
+          <i class="bi bi-person-lines-fill wc-icon"></i>
+          <div>
+            <h2>Completar datos del cliente</h2>
+            <p>{{ errorElegibilidad() }}</p>
+          </div>
+        </div>
+
+        @if (datosMsg()) {
+          <div class="wizard-alert danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ datosMsg() }}
+          </div>
+        }
+
+        <form (ngSubmit)="guardarDatosCliente()">
+        <div class="datos-grid">
+          <div class="datos-field">
+            <label>Fecha de nacimiento *</label>
+            <input type="date" [(ngModel)]="datosForm.fechaNacimiento"/>
+          </div>
+          <div class="datos-field">
+            <label>Sexo *</label>
+            <select [(ngModel)]="datosForm.sexo">
+              <option value="">— Seleccionar —</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro</option>
+            </select>
+          </div>
+          <div class="datos-field">
+            <label>Correo electrónico *</label>
+            <input type="email" [(ngModel)]="datosForm.correo"/>
+          </div>
+          <div class="datos-field">
+            <label>CURP *</label>
+            <input type="text" maxlength="18" [(ngModel)]="datosForm.curp" placeholder="18 caracteres"/>
+          </div>
+          <div class="datos-field">
+            <label>RFC *</label>
+            <input type="text" maxlength="13" [(ngModel)]="datosForm.rfc"/>
+          </div>
+          <div class="datos-field">
+            <label>Teléfono *</label>
+            <input type="text" maxlength="10" inputmode="numeric" [(ngModel)]="datosForm.telefono" placeholder="10 dígitos"/>
+          </div>
+          <div class="datos-field">
+            <label>Calle *</label>
+            <input type="text" [(ngModel)]="datosForm.calle"/>
+          </div>
+          <div class="datos-field">
+            <label>Núm. exterior</label>
+            <input type="text" [(ngModel)]="datosForm.numeroExt"/>
+          </div>
+          <div class="datos-field">
+            <label>Colonia *</label>
+            <input type="text" [(ngModel)]="datosForm.colonia"/>
+          </div>
+          <div class="datos-field">
+            <label>Municipio *</label>
+            <input type="text" [(ngModel)]="datosForm.municipio"/>
+          </div>
+          <div class="datos-field">
+            <label>Estado *</label>
+            <input type="text" [(ngModel)]="datosForm.estado"/>
+          </div>
+          <div class="datos-field">
+            <label>Código Postal *</label>
+            <input type="text" maxlength="5" inputmode="numeric" [(ngModel)]="datosForm.codigoPostal"/>
+          </div>
+        </div>
+
+        <div class="wizard-actions">
+          <a [routerLink]="rutaRegreso" class="btn-secundario">Cancelar</a>
+          <button type="submit" class="btn-primario" [disabled]="guardandoDatos()">
+            @if (guardandoDatos()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
+            } @else {
+              <i class="bi bi-check-lg me-1"></i>Guardar y continuar
+            }
+          </button>
+        </div>
+        </form>
+      </div>
+    } @else {
+      <div class="wizard-ineligible">
+        <i class="bi bi-x-circle-fill"></i>
+        <h2>No elegible</h2>
+        <p>{{ errorElegibilidad() }}</p>
+        <a [routerLink]="rutaRegreso" class="btn-volver">Volver</a>
+      </div>
+    }
   } @else if (successMsg()) {
     <div class="wizard-success">
       <i class="bi bi-check-circle-fill"></i>
@@ -116,7 +204,7 @@
         }
 
         <div class="wizard-actions">
-          <a routerLink="/portal/mis-datos" class="btn-secundario">Cancelar</a>
+          <a [routerLink]="rutaRegreso" class="btn-secundario">Cancelar</a>
           <button class="btn-primario" (click)="irPaso2()">
             Continuar <i class="bi bi-arrow-right ms-1"></i>
           </button>
@@ -984,6 +1072,28 @@
   transition: background .2s;
 }
 .btn-agregar-benef:hover { background: #f0f8ff; }
+
+/* ── Completar datos del cliente (admin) ─────────────────── */
+.datos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.datos-field { display: flex; flex-direction: column; gap: 4px; }
+.datos-field label { font-size: 0.78rem; font-weight: 600; color: #495057; }
+.datos-field input,
+.datos-field select {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color .2s;
+  background: #fff;
+}
+.datos-field input:focus,
+.datos-field select:focus { border-color: var(--azul-principal, #1e6fa3); }
 
 /* ── Actions ─────────────────────────────────────────────── */
 .wizard-actions {

@@ -8,10 +8,11 @@ import { AuthService } from '../../core/services/auth.service';
 import { CobroProgramado } from '../../core/models/cobro.model';
 import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-cobros',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, FormsModule],
   templateUrl: './cobros.html'
 })
 export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked {
@@ -23,6 +24,8 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
 
   readonly cobros = signal<CobroProgramado[]>([]);
   readonly contratoActivo = signal<ContratoResponse | null>(null);
+  /** Todos los contratos del cliente (para el selector multi-contrato). */
+  readonly contratos = signal<ContratoResponse[]>([]);
   readonly loading = signal(true);
   readonly errorMsg = signal('');
   readonly mostrarTodasMensualidades = signal(false);
@@ -137,7 +140,9 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   ngOnInit() {
-    const personaId = this.authService.currentUser()?.personaId;
+    // El panel admin puede abrir cobros de otro cliente con ?personaId=
+    const personaIdParam = this.route.snapshot.queryParamMap.get('personaId');
+    const personaId = personaIdParam ? +personaIdParam : this.authService.currentUser()?.personaId;
     if (!personaId) { this.loading.set(false); return; }
 
     // Detectar retorno desde MercadoPago con pago exitoso
@@ -148,6 +153,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
 
     this.contratoService.listarPorPersona(personaId).subscribe({
       next: contratos => {
+        this.contratos.set(contratos);
         const activo = contratos.find(c => c.activo) ?? contratos[0] ?? null;
         this.contratoActivo.set(activo);
         if (activo) {
@@ -170,6 +176,14 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
       },
       error: () => { this.loading.set(false); }
     });
+  }
+
+  /** Cambia el contrato mostrado y recarga sus cobros. */
+  seleccionarContrato(contratoId: number) {
+    const sel = this.contratos().find(c => c.id === contratoId);
+    if (!sel) return;
+    this.contratoActivo.set(sel);
+    this.cargarCobros(sel.id);
   }
 
   cargarCobros(contratoId: number) {

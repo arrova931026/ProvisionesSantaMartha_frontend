@@ -1,5 +1,13 @@
 <style>
   .admin-section { padding: 36px 16px 56px; }
+  .panel-back {
+    position: absolute; top: 16px; left: 16px; z-index: 5;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: var(--blanco); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; cursor: pointer; transition: background .2s;
+  }
+  .panel-back:hover { background: rgba(255,255,255,0.28); }
   .admin-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); border-radius:50px; padding:5px 14px; font-size:0.78rem; font-weight:600; color:var(--blanco); margin-bottom:12px; letter-spacing:0.5px; text-transform:uppercase; }
   .kpi-card { background:var(--blanco); border-radius:14px; border:1px solid var(--gris-borde); padding:16px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
   .kpi-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
@@ -35,6 +43,35 @@
   .estado-chip .valor { font-size:1.05rem; font-weight:800; }
   .panel-error { background:#fff5f5; border:1px solid #f5c6cb; color:#842029; border-radius:10px; padding:12px 16px; font-size:0.86rem; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
   .panel-loading { text-align:center; padding:48px 0; color:var(--gris-medio); font-size:0.88rem; }
+  .btn-eliminar-x {
+    border:none; background:var(--rojo-suave); color:var(--rojo);
+    width:34px; height:34px; border-radius:8px; font-size:1rem; font-weight:800;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:all .15s;
+  }
+  .btn-eliminar-x:hover { background:var(--rojo); color:var(--blanco); }
+  .alerta-beneficiarios {
+    display:inline-block; font-size:0.76rem; font-weight:700; color:var(--rojo);
+    padding:4px 12px; border-radius:50px; border:1px solid var(--rojo);
+    animation:alertaParpadeo 1.6s ease-in-out infinite;
+  }
+  @keyframes alertaParpadeo {
+    0%, 100% { background:transparent; color:var(--rojo); border-color:var(--rojo); }
+    50%      { background:var(--amarillo-suave); color:var(--amarillo); border-color:var(--amarillo); }
+  }
+  /* Modal eliminar contratos */
+  .modal-backdrop-panel { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1060; }
+  .modal-eliminar {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    background:var(--blanco); border-radius:14px; z-index:1061;
+    width:min(560px, 92vw); max-height:85vh; overflow-y:auto;
+    padding:22px 22px 26px; box-shadow:0 12px 40px rgba(0,0,0,.22);
+  }
+  .modal-eliminar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .modal-eliminar-header h3 { margin:0; font-size:1.05rem; font-weight:700; }
+  .modal-cerrar-x { border:none; background:none; font-size:1.15rem; color:var(--gris-medio); cursor:pointer; padding:4px 8px; border-radius:6px; }
+  .modal-cerrar-x:hover { background:var(--gris-fondo); color:var(--rojo); }
+  .contrato-elim-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--gris-borde); border-radius:10px; margin-bottom:10px; }
   @media (max-width: 768px) {
     .admin-section { padding: 20px 12px 130px; }
     .mod-tabs--principal { display:none; }
@@ -47,6 +84,9 @@
 
 <!-- PAGE HEADER -->
 <div class="page-header" style="background:linear-gradient(135deg, #1a3a5c 0%, var(--azul-medio) 55%, var(--azul-principal) 100%);">
+  <a class="panel-back" (click)="volverAtras()">
+    <i class="bi bi-arrow-left"></i>
+  </a>
   <div class="admin-badge"><i class="bi bi-shield-lock me-1"></i>{{ auth.isAdmin() ? 'Administrador' : 'Agente de ventas' }}</div>
   <div class="header-icon"><i class="bi bi-speedometer2"></i></div>
   <h1>Panel Administrativo</h1>
@@ -223,151 +263,250 @@
         <div class="linea-azul"></div>
       </div>
 
-      <!-- Accesos directos -->
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/crear-contrato">
-            <div class="reporte-icon" style="background:var(--verde-suave);"><i class="bi bi-file-earmark-plus" style="color:var(--verde);"></i></div>
-            <div class="flex-grow-1">
-              <div style="font-size:0.86rem;font-weight:600;">Crear contrato</div>
-              <div style="font-size:0.74rem;color:var(--gris-medio);">Nuevo contrato funerario</div>
-            </div>
-          </a>
-        </div>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/cobros">
-            <div class="reporte-icon" style="background:var(--amarillo-suave);"><i class="bi bi-credit-card" style="color:var(--amarillo);"></i></div>
-            <div class="flex-grow-1">
-              <div style="font-size:0.86rem;font-weight:600;">Cobros</div>
-              <div style="font-size:0.74rem;color:var(--gris-medio);">Registrar y consultar pagos</div>
-            </div>
-          </a>
-        </div>
-        <div class="col-6 col-md-4 col-lg-3">
-          <a class="reporte-item" style="text-decoration:none;margin-bottom:0;height:100%;" routerLink="/portal/beneficiarios">
-            <div class="reporte-icon" style="background:var(--azul-suave);"><i class="bi bi-people" style="color:var(--azul-principal);"></i></div>
-            <div class="flex-grow-1">
-              <div style="font-size:0.86rem;font-weight:600;">Beneficiarios</div>
-              <div style="font-size:0.74rem;color:var(--gris-medio);">Gestión de beneficiarios</div>
-            </div>
-          </a>
-        </div>
-        @if (auth.isAdmin()) {
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="reporte-item" style="margin-bottom:0;height:100%;opacity:0.65;cursor:default;">
-              <div class="reporte-icon" style="background:var(--morado-suave);"><i class="bi bi-star" style="color:var(--morado);"></i></div>
-              <div class="flex-grow-1">
-                <div style="font-size:0.86rem;font-weight:600;">Planes</div>
-                <div style="font-size:0.74rem;color:var(--gris-medio);">CRUD de planes (solo ADMIN)</div>
-              </div>
-            </div>
-          </div>
-        }
+      <!-- Sub-navegación de operaciones -->
+      <div class="mod-tabs mod-tabs--sub" style="margin-bottom:20px;">
+        <button class="mod-tab" [class.activo]="vistaOperaciones() === 'contrato'" (click)="vistaOperaciones.set('contrato')">
+          <i class="bi bi-file-earmark-plus"></i>Crear Contrato
+        </button>
+        <button class="mod-tab" [class.activo]="vistaOperaciones() === 'cobros'" (click)="vistaOperaciones.set('cobros')">
+          <i class="bi bi-credit-card"></i>Cobros
+        </button>
+        <button class="mod-tab" [class.activo]="vistaOperaciones() === 'beneficiarios'" (click)="vistaOperaciones.set('beneficiarios')">
+          <i class="bi bi-people"></i>Beneficiarios
+        </button>
+        <button class="mod-tab" [class.activo]="vistaOperaciones() === 'eliminar'" (click)="vistaOperaciones.set('eliminar')">
+          <i class="bi bi-trash"></i>Eliminar Contratos
+        </button>
       </div>
 
-      <!-- Gestión de usuarios -->
-      <div class="info-card">
-        <div class="card-section-title"><i class="bi bi-person-dash me-2" style="color:var(--rojo);"></i>Gestión de usuarios</div>
-        <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:20px;">Busque un socio por nombre o usuario y dé clic en <strong>Dar de Baja</strong> para desactivar su cuenta.</p>
-
-        @if (bajaMsg()) {
-          <div [class]="'alert alert-' + bajaMsgTipo() + ' py-2 px-3 mb-3'" style="font-size:0.85rem;border-radius:8px;">
-            <i [class]="bajaMsgTipo() === 'success' ? 'bi bi-check-circle me-2' : 'bi bi-exclamation-circle me-2'"></i>{{ bajaMsg() }}
-          </div>
-        }
-
-        <div class="row g-3 mb-3">
-          <div class="col-12 col-md-6">
-            <div style="position:relative;">
-              <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-size:0.9rem;"></i>
-              <input
-                type="text"
-                class="form-control"
-                style="padding-left:36px;"
-                placeholder="Filtrar por nombre, apellido o usuario..."
-                [(ngModel)]="filtroNombre"
-                (ngModelChange)="onFiltroChange()"
-              />
-            </div>
-          </div>
-          <div class="col-12 col-md-3 d-flex align-items-end">
-            <button class="btn-sh-primary" style="background:var(--gris-claro,#f4f6f8);color:var(--gris-texto);border:1px solid var(--gris-borde);" (click)="cargarSocios()">
-              <i class="bi bi-arrow-clockwise"></i>Actualizar
-            </button>
-          </div>
+      @if (errorClientes()) {
+        <div class="panel-error">
+          <span><i class="bi bi-exclamation-triangle me-2"></i>{{ errorClientes() }}</span>
+          <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;" (click)="cargarClientes()">
+            <i class="bi bi-arrow-clockwise"></i>Reintentar
+          </button>
         </div>
+      }
 
-        @if (bajaBuscando()) {
-          <div style="text-align:center;padding:24px 0;color:var(--gris-medio);font-size:0.85rem;">
-            <span class="spinner-border spinner-border-sm me-2"></span>Buscando socios...
-          </div>
-        }
+      <!-- Barra de filtro + tamaño de página -->
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="position:relative;flex:1;min-width:220px;max-width:380px;">
+          <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-size:0.88rem;"></i>
+          <input type="text" class="form-control" style="padding-left:34px;"
+                 placeholder="Buscar cliente por nombre o correo..."
+                 [(ngModel)]="filtroCliente" (ngModelChange)="cargarClientes()"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gris-medio);">
+          Mostrar
+          <select class="form-select" style="width:auto;padding:6px 10px;font-size:0.82rem;"
+                  [ngModel]="pageSizeClientes" (ngModelChange)="cambiarPageSizeClientes(+$event)">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="25">25</option>
+            <option [ngValue]="50">50</option>
+          </select>
+          registros
+        </div>
+      </div>
 
-        @if (!bajaBuscando()) {
-          @if (socios().length === 0) {
-            <div style="text-align:center;padding:40px 0;color:var(--gris-medio);">
-              <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
-              <span style="font-size:0.88rem;">No se encontraron socios registrados.</span>
-            </div>
-          } @else {
+      @if (loadingClientes()) {
+        <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando clientes...</div>
+      } @else {
+
+        <!-- ── 1. CREAR CONTRATO ─────────────────────────── -->
+        @if (vistaOperaciones() === 'contrato') {
+          <div class="info-card" style="padding:0;overflow:hidden;">
             <div style="overflow-x:auto;">
               <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
                 <thead>
-                  <tr style="border-bottom:2px solid var(--gris-borde);">
-                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Socio</th>
-                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Usuario</th>
-                    <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Rol</th>
-                    <th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--gris-texto);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.5px;">Acción</th>
+                  <tr style="border-bottom:2px solid var(--gris-borde);background:var(--gris-fondo);">
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Núm. Cliente</th>
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Nombre</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Contratos Activos</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (s of socios(); track s.id) {
-                    <tr style="border-bottom:1px solid var(--gris-borde);" [style.background]="confirmandoId() === s.id ? 'rgba(220,53,69,0.05)' : ''">
+                  @for (c of clientesPaginados(); track c.personaId) {
+                    <tr style="border-bottom:1px solid var(--gris-borde);">
+                      <td style="padding:12px;font-weight:600;color:var(--azul-principal);">#{{ c.personaId }}</td>
                       <td style="padding:12px;">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                          <div style="width:36px;height:36px;border-radius:50%;background:var(--azul-suave);color:var(--azul-principal);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">{{ iniciales(s.nombreCompleto) }}</div>
-                          <span style="font-weight:600;">{{ s.nombreCompleto }}</span>
-                        </div>
-                      </td>
-                      <td style="padding:12px;color:var(--gris-medio);">{{ s.username }}</td>
-                      <td style="padding:12px;">
-                        <span [class]="s.rol === 'ADMIN' ? 'badge-azul' : s.rol === 'AGENTE' ? 'badge-morado' : 'badge-verde'" style="font-size:0.72rem;">{{ s.rol }}</span>
+                        <div style="font-weight:600;">{{ c.nombre }}</div>
+                        <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
                       </td>
                       <td style="padding:12px;text-align:center;">
-                        @if (confirmandoId() !== s.id) {
-                          <button
-                            class="btn-sh-primary"
-                            style="background:var(--rojo-suave);color:var(--rojo);border:1px solid var(--rojo);padding:6px 14px;font-size:0.78rem;"
-                            [disabled]="loadingBaja()"
-                            (click)="solicitarBaja(s.id)">
-                            <i class="bi bi-person-x"></i>Dar de Baja
-                          </button>
-                        } @else {
-                          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-                            <button
-                              class="btn-sh-primary"
-                              style="background:var(--rojo);color:var(--blanco);padding:6px 14px;font-size:0.78rem;"
-                              [disabled]="loadingBaja()"
-                              (click)="confirmarBaja(s.id)">
-                              @if (loadingBaja()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Confirmar }
-                            </button>
-                            <button
-                              class="btn-sh-primary"
-                              style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);padding:6px 14px;font-size:0.78rem;"
-                              (click)="cancelarBaja()">
-                              <i class="bi bi-x-lg"></i>Cancelar
-                            </button>
-                          </div>
-                        }
+                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;" (click)="irACrearContrato(c)">
+                          <i class="bi bi-file-earmark-plus"></i>Crear Contrato
+                        </button>
                       </td>
                     </tr>
+                  } @empty {
+                    <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--gris-medio);">No se encontraron clientes.</td></tr>
                   }
                 </tbody>
               </table>
             </div>
-          }
+          </div>
         }
-      </div>
+
+        <!-- ── 2. COBROS ─────────────────────────────────── -->
+        @if (vistaOperaciones() === 'cobros') {
+          <div class="info-card" style="padding:0;overflow:hidden;">
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--gris-borde);background:var(--gris-fondo);">
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Núm. Cliente</th>
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Nombre</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Contratos Activos</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of clientesPaginados(); track c.personaId) {
+                    <tr style="border-bottom:1px solid var(--gris-borde);">
+                      <td style="padding:12px;font-weight:600;color:var(--azul-principal);">#{{ c.personaId }}</td>
+                      <td style="padding:12px;">
+                        <div style="font-weight:600;">{{ c.nombre }}</div>
+                        <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;background:var(--amarillo);" (click)="irACobros(c)">
+                          <i class="bi bi-credit-card"></i>Ver Cobros
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--gris-medio);">No se encontraron clientes.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- ── 3. BENEFICIARIOS ──────────────────────────── -->
+        @if (vistaOperaciones() === 'beneficiarios') {
+          <div class="info-card" style="padding:0;overflow:hidden;">
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--gris-borde);background:var(--gris-fondo);">
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Núm. Cliente</th>
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Nombre</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Contratos Activos</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Beneficiarios Disponibles</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of clientesPaginados(); track c.personaId) {
+                    <tr style="border-bottom:1px solid var(--gris-borde);">
+                      <td style="padding:12px;font-weight:600;color:var(--azul-principal);">#{{ c.personaId }}</td>
+                      <td style="padding:12px;">
+                        <div style="font-weight:600;">{{ c.nombre }}</div>
+                        <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        @if (c.contratosActivos === 0) {
+                          <span style="font-size:0.78rem;color:var(--gris-medio);">Sin contrato</span>
+                        } @else if (c.beneficiariosDisponibles > 0) {
+                          <span class="badge-verde">{{ c.beneficiariosDisponibles }} disponible(s)</span>
+                        } @else {
+                          <span class="alerta-beneficiarios">Beneficiarios agotados</span>
+                        }
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        @if (c.beneficiariosDisponibles > 0) {
+                          <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;background:var(--verde);" (click)="irABeneficiarios(c)">
+                            <i class="bi bi-person-plus"></i>Dar de Alta
+                          </button>
+                        } @else {
+                          <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;opacity:0.5;cursor:not-allowed;" disabled>
+                            <i class="bi bi-person-plus"></i>Dar de Alta
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" style="padding:32px;text-align:center;color:var(--gris-medio);">No se encontraron clientes.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- ── 4. ELIMINAR CONTRATOS ─────────────────────── -->
+        @if (vistaOperaciones() === 'eliminar') {
+          <div class="info-card" style="padding:0;overflow:hidden;">
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
+                <thead>
+                  <tr style="border-bottom:2px solid var(--gris-borde);background:var(--gris-fondo);">
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Núm. Cliente</th>
+                    <th style="padding:12px;text-align:left;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Nombre</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Cantidad de Contratos</th>
+                    <th style="padding:12px;text-align:center;font-weight:700;font-size:0.74rem;text-transform:uppercase;color:var(--gris-medio);">Eliminar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of clientesPaginados(); track c.personaId) {
+                    <tr style="border-bottom:1px solid var(--gris-borde);">
+                      <td style="padding:12px;font-weight:600;color:var(--azul-principal);">#{{ c.personaId }}</td>
+                      <td style="padding:12px;">
+                        <div style="font-weight:600;">{{ c.nombre }}</div>
+                        <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                      </td>
+                      <td style="padding:12px;text-align:center;">
+                        @if (c.contratosActivos > 0) {
+                          <button class="btn-eliminar-x" title="Eliminar contratos" (click)="abrirModalEliminar(c)">
+                            <i class="bi bi-x-lg"></i>
+                          </button>
+                        } @else {
+                          <span style="color:var(--gris-borde);font-size:1.1rem;">—</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--gris-medio);">No se encontraron clientes.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- Paginación -->
+        @if (clientes().length > 0) {
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:0.8rem;color:var(--gris-medio);flex-wrap:wrap;gap:8px;">
+            <span>Mostrando {{ clientesPaginados().length }} de {{ clientes().length }} cliente(s)</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn-sh-primary" style="padding:4px 12px;font-size:0.76rem;background:var(--blanco);color:var(--gris-texto);border:1px solid var(--gris-borde);"
+                      [disabled]="paginaClientes === 0" (click)="cambiarPaginaClientes(-1)">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <span style="padding:0 6px;">Página {{ paginaClientes + 1 }} de {{ totalPaginasClientes() }}</span>
+              <button class="btn-sh-primary" style="padding:4px 12px;font-size:0.76rem;background:var(--blanco);color:var(--gris-texto);border:1px solid var(--gris-borde);"
+                      [disabled]="paginaClientes >= totalPaginasClientes() - 1" (click)="cambiarPaginaClientes(1)">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        }
+      }
     }
 
     <!-- ═══════════════════════ TAB: TARIFAS ═══════════════════════ -->
@@ -413,16 +552,16 @@
               <p style="font-size:0.85rem;color:var(--gris-medio);margin-bottom:18px;">{{ p.descripcion }}</p>
 
               <label class="form-label-sh">Aportación anual (MXN)</label>
-              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <form (ngSubmit)="guardarMutualista()" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                 <div style="position:relative;flex:1;min-width:180px;">
                   <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
                   <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01"
-                         [(ngModel)]="aportacionAnualInput" />
+                         [(ngModel)]="aportacionAnualInput" name="aportacionAnual" />
                 </div>
-                <button class="btn-sh-primary" [disabled]="guardandoMutualista() || !aportacionAnualInput" (click)="guardarMutualista()">
+                <button type="submit" class="btn-sh-primary" [disabled]="guardandoMutualista() || !aportacionAnualInput">
                   @if (guardandoMutualista()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Guardar }
                 </button>
-              </div>
+              </form>
               <p style="font-size:0.76rem;color:var(--gris-medio);margin-top:10px;">
                 <i class="bi bi-info-circle me-1"></i>La mensualidad se recalcula automáticamente (anual ÷ 12). El cliente la verá al crear su contrato.
               </p>
@@ -447,32 +586,58 @@
                 {{ planEditando() ? 'Editar plan' : 'Nuevo plan' }} — {{ tipoTarifa() === 'HUMANOS' ? 'Previsión de Humanos' : 'Previsión de Mascotas' }}
               </div>
 
+              <form (ngSubmit)="guardarPlan()">
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <label class="form-label-sh">Nombre *</label>
-                  <input type="text" class="form-control" [(ngModel)]="planForm.nombre" placeholder="Ej. Plan Especial"/>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.nombre" name="planNombre" placeholder="Ej. Plan Especial"/>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label-sh">Descripción</label>
-                  <input type="text" class="form-control" [(ngModel)]="planForm.descripcion"/>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.descripcion" name="planDescripcion"/>
                 </div>
 
                 @if (tipoTarifa() === 'HUMANOS') {
-                  <div class="col-6 col-md-3">
+                  <div class="col-6 col-md-4">
                     <label class="form-label-sh">Precio total *</label>
-                    <input type="number" class="form-control" min="1" step="0.01" [(ngModel)]="planForm.precioTotal"/>
+                    <div style="position:relative;">
+                      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
+                      <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01" [(ngModel)]="planForm.precioTotal"/>
+                    </div>
                   </div>
-                  <div class="col-6 col-md-3">
-                    <label class="form-label-sh">Mensualidad *</label>
-                    <input type="number" class="form-control" min="1" step="0.01" [(ngModel)]="planForm.mensualidad"/>
-                  </div>
-                  <div class="col-6 col-md-3">
+                  <div class="col-6 col-md-4">
                     <label class="form-label-sh">Duración (meses) *</label>
-                    <input type="number" class="form-control" min="1" [(ngModel)]="planForm.duracionMeses"/>
+                    <input type="number" class="form-control" min="1" [(ngModel)]="planForm.duracionMeses" name="planDuracion"/>
                   </div>
-                  <div class="col-6 col-md-3">
+                  <div class="col-6 col-md-4">
                     <label class="form-label-sh">Beneficiarios *</label>
-                    <input type="number" class="form-control" min="0" [(ngModel)]="planForm.numeroBeneficiarios"/>
+                    <input type="number" class="form-control" min="0" [(ngModel)]="planForm.numeroBeneficiarios" name="planBeneficiarios"/>
+                  </div>
+                  <!-- Mensualidad calculada en vivo -->
+                  <div class="col-12">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f7faf9;border:1px dashed var(--gris-borde);border-radius:10px;padding:12px 16px;flex-wrap:wrap;">
+                      <span style="font-size:0.82rem;color:var(--gris-texto);">
+                        <i class="bi bi-calculator me-1"></i>
+                        {{ planForm.precioTotal | currency:'MXN':'symbol-narrow':'1.0-0' }} ÷ {{ planForm.duracionMeses }} meses
+                      </span>
+                      <span style="font-size:1.15rem;font-weight:800;color:var(--azul-principal);">
+                        {{ mensualidadHumano() | currency:'MXN':'symbol-narrow':'1.0-2' }} / mes
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Servicios incluidos -->
+                  <div class="col-12">
+                    <label class="form-label-sh" style="margin-bottom:10px;">Servicios incluidos</label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
+                      @for (a of articulosCatalogo(); track a.id) {
+                        <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--gris-borde);border-radius:8px;font-size:0.83rem;cursor:pointer;background:var(--blanco);">
+                          <input type="checkbox"
+                                 [checked]="articulosSeleccionados.has(a.id)"
+                                 (change)="toggleArticulo(a.id)"/>
+                          <span>{{ a.nombre }}</span>
+                        </label>
+                      }
+                    </div>
                   </div>
                 }
 
@@ -498,26 +663,32 @@
                     <label class="form-label-sh">Precio por mascota *</label>
                     <div style="position:relative;">
                       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
-                      <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01" [(ngModel)]="planForm.precioTotal"/>
+                      <input type="number" class="form-control" style="padding-left:26px;" min="1" step="0.01" [(ngModel)]="planForm.precioTotal" name="planPrecioMascota"/>
                     </div>
                   </div>
 
                   <!-- Número de mascotas -->
                   <div class="col-6 col-md-4">
                     <label class="form-label-sh">Núm. mascotas *</label>
-                    <input type="number" class="form-control" min="1" [(ngModel)]="cantidadMascotasInput"/>
+                    <input type="number" class="form-control" min="1" [(ngModel)]="cantidadMascotasInput" name="cantidadMascotas"/>
                   </div>
 
                   <!-- % extra por mascota adicional -->
                   <div class="col-6 col-md-4">
                     <label class="form-label-sh">% extra por mascota adicional</label>
                     <div style="position:relative;">
-                      <input type="number" class="form-control" style="padding-right:28px;" min="0" max="100" step="0.5" [(ngModel)]="porcentajeExtraInput"/>
+                      <input type="number" class="form-control" style="padding-right:28px;" min="0" max="100" step="0.5" [(ngModel)]="porcentajeExtraInput" name="porcentajeExtra"/>
                       <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">%</span>
                     </div>
                   </div>
 
-                  <!-- Precio final en tiempo real -->
+                  <!-- Duración en meses para dividir el total -->
+                  <div class="col-6 col-md-4">
+                    <label class="form-label-sh">Duración (meses) *</label>
+                    <input type="number" class="form-control" min="1" [(ngModel)]="planForm.duracionMeses" name="planDuracion"/>
+                  </div>
+
+                  <!-- Precio final + cuota mensual en tiempo real -->
                   <div class="col-12">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f7faf9;border:1px dashed var(--gris-borde);border-radius:10px;padding:12px 16px;flex-wrap:wrap;">
                       <span style="font-size:0.82rem;color:var(--gris-texto);">
@@ -527,26 +698,31 @@
                           + {{ cantidadMascotasInput - 1 }} × {{ (planForm.precioTotal * (1 + porcentajeExtraInput / 100)) | currency:'MXN':'symbol-narrow':'1.0-0' }}
                         }
                       </span>
-                      <span style="font-size:1.25rem;font-weight:800;color:var(--azul-principal);">
-                        {{ precioMascotasFinal() | currency:'MXN':'symbol-narrow':'1.0-2' }}
-                      </span>
+                      <div style="text-align:right;">
+                        <div style="font-size:1.25rem;font-weight:800;color:var(--azul-principal);">
+                          {{ cuotaMensualMascota() | currency:'MXN':'symbol-narrow':'1.0-2' }} / mes
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--gris-medio);">
+                          × {{ planForm.duracionMeses }} meses = {{ precioMascotasFinal() | currency:'MXN':'symbol-narrow':'1.0-2' }} total
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Campos internos requeridos por el backend -->
-                  <input type="hidden" [(ngModel)]="planForm.mensualidad"/>
-                  <input type="hidden" [(ngModel)]="planForm.duracionMeses"/>
+                  <!-- Campo interno requerido por el backend -->
+                  <input type="hidden" [(ngModel)]="planForm.mensualidad" name="planMensualidad"/>
                 }
               </div>
 
               <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-                <button class="btn-sh-primary" [disabled]="guardandoPlan() || !planForm.nombre || planForm.precioTotal <= 0" (click)="guardarPlan()">
+                <button type="submit" class="btn-sh-primary" [disabled]="guardandoPlan() || !planForm.nombre || planForm.precioTotal <= 0">
                   @if (guardandoPlan()) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-check-lg"></i>Guardar plan }
                 </button>
-                <button class="btn-sh-primary" style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);" (click)="cerrarFormPlan()">
+                <button type="button" class="btn-sh-primary" style="background:var(--blanco);color:var(--gris-medio);border:1px solid var(--gris-borde);" (click)="cerrarFormPlan()">
                   <i class="bi bi-x-lg"></i>Cancelar
                 </button>
               </div>
+              </form>
             </div>
           }
 
@@ -601,6 +777,75 @@
 
   </div>
 </section>
+
+<!-- ═══════════ MODAL: ELIMINAR CONTRATOS ═══════════ -->
+@if (modalEliminarAbierto()) {
+  <div class="modal-backdrop-panel" (click)="cerrarModalEliminar()"></div>
+  <div class="modal-eliminar">
+    <div class="modal-eliminar-header">
+      <h3>Eliminar contratos — {{ clienteEliminar()?.nombre }}</h3>
+      <button class="modal-cerrar-x" (click)="cerrarModalEliminar()" aria-label="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    @if (eliminarMsg()) {
+      <div [class]="'alert alert-' + eliminarMsgTipo() + ' py-2 px-3 mb-3'" style="font-size:0.84rem;border-radius:8px;">
+        {{ eliminarMsg() }}
+      </div>
+    }
+
+    @if (loadingContratosCliente()) {
+      <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando contratos...</div>
+    } @else if (contratosCliente().length === 0) {
+      <p style="text-align:center;color:var(--gris-medio);font-size:0.88rem;padding:20px 0;">
+        Este cliente no tiene contratos vigentes.
+      </p>
+    } @else {
+      @for (c of contratosCliente(); track c.id) {
+        <div class="contrato-elim-item">
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;">{{ c.numeroContrato }}</div>
+            <div style="font-size:0.76rem;color:var(--gris-medio);">
+              {{ c.planNombre }} · {{ c.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.0-0' }}/mes
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            @if (confirmandoContratoId() === c.id) {
+              <!-- Confirmación: ¿Está seguro? NO rojo / SÍ verde -->
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <span style="font-size:0.78rem;color:var(--gris-texto);font-weight:600;">¿Está seguro?</span>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;background:var(--rojo);"
+                          (click)="cancelarConfirmacionContrato()">
+                    No
+                  </button>
+                  <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;background:var(--verde);"
+                          [disabled]="eliminandoContrato() === c.id" (click)="confirmarEliminarContrato(c.id)">
+                    @if (eliminandoContrato() === c.id) {
+                      <span class="spinner-border spinner-border-sm"></span>
+                    } @else {
+                      Sí
+                    }
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;background:var(--azul-principal);"
+                      (click)="cerrarModalEliminar()">
+                Cancelar
+              </button>
+              <button class="btn-sh-primary" style="padding:6px 16px;font-size:0.78rem;background:var(--rojo);"
+                      (click)="pedirConfirmacionContrato(c.id)">
+                <i class="bi bi-trash"></i>Eliminar
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+}
 
 <!-- TABS MÓVIL (barra inferior fija) -->
 @if (esMovil()) {

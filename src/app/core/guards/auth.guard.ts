@@ -6,6 +6,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  // Sesión válida: hay usuario Y un token (el servicio ya intentó refrescarlo al arrancar)
   if (auth.isAuthenticated()) {
     return true;
   }

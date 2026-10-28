@@ -296,6 +296,19 @@
           <div class="seccion-titulo">
             <h2><i class="bi bi-file-earmark-check me-2" style="color:var(--azul-principal);"></i>Estado del Contrato</h2>
             <div class="linea-azul"></div>
+            @if (contratos().length > 1) {
+              <div style="margin-top:10px;">
+                <label style="font-size:0.74rem;font-weight:600;color:var(--gris-medio);display:block;margin-bottom:4px;">
+                  <i class="bi bi-files me-1"></i>Tiene {{ contratos().length }} contratos — seleccione uno:
+                </label>
+                <select [ngModel]="contratoActivo()?.id" (ngModelChange)="seleccionarContrato(+$event)"
+                        style="width:100%;border:1px solid var(--gris-borde);border-radius:8px;padding:8px 12px;font-size:0.86rem;background:var(--blanco);">
+                  @for (c of contratos(); track c.id) {
+                    <option [value]="c.id">{{ c.numeroContrato }} — {{ c.planNombre }} ({{ c.estadoNombre ?? c.estadoClave }})</option>
+                  }
+                </select>
+              </div>
+            }
           </div>
           <div class="contrato-card">
             <div class="mb-3">

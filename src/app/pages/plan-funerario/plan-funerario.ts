@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,7 +13,7 @@ import { CobroProgramado } from '../../core/models/cobro.model';
 
 @Component({
   selector: 'app-plan-funerario',
-  imports: [CurrencyPipe, DatePipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, FormsModule],
   templateUrl: './plan-funerario.html'
 })
 export class PlanFunerarioComponent implements OnInit {
@@ -22,6 +23,8 @@ export class PlanFunerarioComponent implements OnInit {
   private readonly cobroService = inject(CobroService);
 
   readonly contrato = signal<ContratoResponse | null>(null);
+  /** Todos los contratos del cliente (para el selector multi-contrato). */
+  readonly contratos = signal<ContratoResponse[]>([]);
   readonly beneficiarios = signal<BeneficiarioResponse[]>([]);
   readonly cobros = signal<CobroProgramado[]>([]);
   readonly loading = signal(true);
@@ -104,7 +107,8 @@ export class PlanFunerarioComponent implements OnInit {
     this.contratoService.listarPorPersona(user.personaId).pipe(
       catchError(() => of<ContratoResponse[]>([])),
       switchMap((contratos: ContratoResponse[]) => {
-        const activo = contratos.find(c => c.estadoClave === 'VIGENTE' || c.estadoClave === 'PENDIENTE' || c.activo) ?? null;
+        this.contratos.set(contratos);
+        const activo = contratos.find(c => c.estadoClave === 'VIGENTE' || c.estadoClave === 'PENDIENTE' || c.activo) ?? contratos[0] ?? null;
         this.contrato.set(activo);
         if (!activo) return of({ benefs: [] as BeneficiarioResponse[], cobros: [] as CobroProgramado[] });
         return forkJoin({
@@ -119,6 +123,20 @@ export class PlanFunerarioComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  /** Cambia el contrato mostrado y recarga beneficiarios + cobros. */
+  seleccionarContrato(contratoId: number) {
+    const sel = this.contratos().find(c => c.id === contratoId);
+    if (!sel) return;
+    this.contrato.set(sel);
+    forkJoin({
+      benefs: this.contratoService.listarBeneficiarios(sel.id).pipe(catchError(() => of<BeneficiarioResponse[]>([]))),
+      cobros: this.cobroService.listarPorContrato(sel.id).pipe(catchError(() => of<CobroProgramado[]>([])))
+    }).subscribe(({ benefs, cobros }) => {
+      this.beneficiarios.set(benefs);
+      this.cobros.set(cobros);
     });
   }
 

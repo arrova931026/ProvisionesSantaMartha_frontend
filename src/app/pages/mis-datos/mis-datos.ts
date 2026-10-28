@@ -1,5 +1,5 @@
 ﻿import { Component, inject, signal, computed, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -21,7 +21,7 @@ type OcrStep =
 
 @Component({
   selector: 'app-mis-datos',
-  imports: [ReactiveFormsModule, RouterLink, DecimalPipe],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, DecimalPipe],
   templateUrl: './mis-datos.html'
 })
 export class MisDatosComponent implements OnInit, OnDestroy {
@@ -41,6 +41,8 @@ export class MisDatosComponent implements OnInit, OnDestroy {
 
   readonly persona = signal<PersonaResponse | null>(null);
   readonly contrato = signal<ContratoResponse | null>(null);
+  /** Todos los contratos del cliente (para el selector multi-contrato). */
+  readonly contratos = signal<ContratoResponse[]>([]);
   readonly beneficiarios = signal<Beneficiario[]>([]);
   readonly loading = signal(true);
   readonly campoEditando = signal<string | null>(null);
@@ -63,6 +65,19 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   /** true si no tiene contrato y tiene edad válida (< 65 años) */
   readonly puedeCrearContrato = computed(() => {
     if (this.contrato()) return false;
+    const p = this.persona();
+    if (!p?.fechaNacimiento) return false;
+    if (this.camposContratoFaltantes().length > 0) return false;
+    const born = new Date(p.fechaNacimiento);
+    const now = new Date();
+    let age = now.getFullYear() - born.getFullYear();
+    const m = now.getMonth() - born.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < born.getDate())) age--;
+    return age < 65;
+  });
+
+  /** true si los datos están completos y la edad es válida — permite contratos adicionales */
+  readonly puedeCrearNuevoContrato = computed(() => {
     const p = this.persona();
     if (!p?.fechaNacimiento) return false;
     if (this.camposContratoFaltantes().length > 0) return false;
@@ -168,7 +183,9 @@ export class MisDatosComponent implements OnInit, OnDestroy {
     }).pipe(
       switchMap(({ persona, contratos }) => {
         this.persona.set(persona);
-        const activo = (contratos as ContratoResponse[]).find(c => c.estadoClave === 'VIGENTE' || c.activo) ?? null;
+        const lista = contratos as ContratoResponse[];
+        this.contratos.set(lista);
+        const activo = lista.find(c => c.estadoClave === 'VIGENTE' || c.activo) ?? lista[0] ?? null;
         this.contrato.set(activo);
         if (activo) {
           return this.beneficiarioService.listarPorContrato(activo.id).pipe(catchError(() => of([])));
@@ -189,6 +206,15 @@ export class MisDatosComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.detenerCamara();
     this.ocrDetenerCamara();
+  }
+
+  /** Cambia el contrato mostrado en "Mi Contrato" y recarga sus beneficiarios. */
+  seleccionarContrato(contratoId: number) {
+    const sel = this.contratos().find(c => c.id === contratoId);
+    if (!sel) return;
+    this.contrato.set(sel);
+    this.beneficiarioService.listarPorContrato(sel.id).pipe(catchError(() => of([])))
+      .subscribe(benefs => this.beneficiarios.set(benefs as Beneficiario[]));
   }
 
   private cargarFoto() {

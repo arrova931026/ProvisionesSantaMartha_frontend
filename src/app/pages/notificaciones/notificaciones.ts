@@ -1,5 +1,7 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { CobroService } from '../../core/services/cobro.service';
 import { ContratoService } from '../../core/services/contrato.service';
@@ -25,20 +27,27 @@ export class NotificacionesComponent implements OnInit {
   readonly loading = signal(true);
   readonly filtroActivo = signal<Filtro>('TODOS');
   readonly errorMsg = signal('');
+  readonly whatsappHabilitada = signal(false);
+  readonly guardandoPreferenciaWhatsApp = signal(false);
+  readonly mensajePreferenciaWhatsApp = signal('');
   readonly currentUser = this.auth.currentUser;
 
   // ── Cobros-derived alerts ──────────────────────────────────────────────────
   readonly cobrosVencidos = signal<CobroProgramado[]>([]);
-  readonly proximoPago   = signal<CobroProgramado | null>(null);
+  /** Un próximo pago por cada contrato vigente sin cobros vencidos. */
+  readonly proximosPagos  = signal<CobroProgramado[]>([]);
   readonly montoMensual  = signal<number>(0);
+  /** Mapa contratoId → numeroContrato, para etiquetar alertas de cada contrato. */
+  readonly contratoNumeros = signal<Record<number, string>>({});
+  readonly hayMultiplesContratos = computed(() => Object.keys(this.contratoNumeros()).length > 1);
   readonly tieneVencidos = computed(() => this.cobrosVencidos().length > 0);
   readonly tieneProximosAVencer = computed(() => {
-    const p = this.proximoPago();
-    if (!p) return false;
-    const hoy  = new Date();
-    const venc = new Date(p.fechaVencimiento + 'T00:00:00');
-    const diff = (venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24);
-    return diff >= 0 && diff <= 3;
+    const hoy = new Date();
+    return this.proximosPagos().some(p => {
+      const venc = new Date(p.fechaVencimiento + 'T00:00:00');
+      const diff = (venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24);
+      return diff >= 0 && diff <= 3;
+    });
   });
   readonly noLeidas = computed(() => this.notificaciones().filter(n => !n.leida).length);
 
@@ -64,34 +73,78 @@ export class NotificacionesComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.notificacionService.obtenerPreferenciaWhatsApp().subscribe({
+      next: preferencia => this.whatsappHabilitada.set(preferencia.habilitada),
+      error: () => this.mensajePreferenciaWhatsApp.set('No se pudo consultar la preferencia de WhatsApp.')
+    });
+
     // ── Notificaciones del backend ────────────────────────────────────────────
     this.notificacionService.listar().subscribe({
       next: data => { this.notificaciones.set(Array.isArray(data) ? data : (data as any).content ?? []); this.loading.set(false); },
       error: () => { this.errorMsg.set('Error al cargar notificaciones.'); this.loading.set(false); }
     });
 
-    // ── Alertas de cobros del contrato activo ─────────────────────────────────
+    // ── Alertas de cobros de TODOS los contratos vigentes del cliente ────────
     const personaId = this.auth.currentUser()?.personaId;
     if (!personaId) return;
 
     this.contratoService.listarPorPersona(personaId).subscribe({
       next: contratos => {
-        const activo = contratos.find(c => c.activo) ?? contratos[0];
-        if (!activo) return;
-        this.montoMensual.set(activo.mensualidadPactada ?? 0);
-        this.cobroService.listarPorContrato(activo.id).subscribe({
-          next: cobros => {
-            const hoy = new Date();
-            const vencidos = cobros.filter(c =>
+        const vigentes = contratos.filter(c => c.activo || c.estadoClave === 'VIGENTE');
+        if (vigentes.length === 0) return;
+        this.montoMensual.set(vigentes[0].mensualidadPactada ?? 0);
+        const numeros: Record<number, string> = {};
+        for (const c of vigentes) numeros[c.id] = c.numeroContrato ?? `#${c.id}`;
+        this.contratoNumeros.set(numeros);
+
+        forkJoin(
+          vigentes.map(c =>
+            this.cobroService.listarPorContrato(c.id).pipe(catchError(() => of([] as CobroProgramado[])))
+          )
+        ).subscribe(listas => {
+          const hoy = new Date();
+          const vencidos: CobroProgramado[] = [];
+          const proximos: CobroProgramado[] = [];
+
+          listas.forEach((cobros, i) => {
+            const contratoId = vigentes[i].id;
+            const propios = cobros.map(c => ({ ...c, contratoId: c.contratoId ?? contratoId }));
+
+            const vencidosDelContrato = propios.filter(c =>
               c.estadoCobro !== 'PAGADO' && new Date(c.fechaVencimiento) < hoy
             );
-            this.cobrosVencidos.set(vencidos);
-            const siguiente = cobros.find(c =>
-              c.estadoCobro === 'PENDIENTE' && new Date(c.fechaVencimiento) >= hoy
-            );
-            this.proximoPago.set(siguiente ?? null);
-          }
+            vencidos.push(...vencidosDelContrato);
+
+            // Próximo pago del contrato solo si ese contrato no tiene vencidos
+            if (vencidosDelContrato.length === 0) {
+              const prox = propios
+                .filter(c => c.estadoCobro === 'PENDIENTE' && new Date(c.fechaVencimiento) >= hoy)
+                .sort((a, b) => a.fechaVencimiento.localeCompare(b.fechaVencimiento))[0];
+              if (prox) proximos.push(prox);
+            }
+          });
+
+          vencidos.sort((a, b) => a.fechaVencimiento.localeCompare(b.fechaVencimiento));
+          proximos.sort((a, b) => a.fechaVencimiento.localeCompare(b.fechaVencimiento));
+          this.cobrosVencidos.set(vencidos);
+          this.proximosPagos.set(proximos);
         });
+      }
+    });
+  }
+
+  cambiarPreferenciaWhatsApp(event: Event) {
+    const habilitada = (event.target as HTMLInputElement).checked;
+    this.guardandoPreferenciaWhatsApp.set(true);
+    this.mensajePreferenciaWhatsApp.set('');
+    this.notificacionService.actualizarPreferenciaWhatsApp(habilitada).subscribe({
+      next: respuesta => {
+        this.whatsappHabilitada.set(respuesta.habilitada);
+        this.guardandoPreferenciaWhatsApp.set(false);
+      },
+      error: () => {
+        this.guardandoPreferenciaWhatsApp.set(false);
+        this.mensajePreferenciaWhatsApp.set('No se pudo guardar el consentimiento. Inténtelo nuevamente.');
       }
     });
   }

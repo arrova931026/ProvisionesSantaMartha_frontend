@@ -1,8 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Beneficiario } from '../../core/models/beneficiario.model';
 import { BeneficiarioRequest, ContratoResponse } from '../../core/models/contrato.model';
@@ -18,7 +18,7 @@ interface Parentesco {
 
 @Component({
   selector: 'app-beneficiarios',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './beneficiarios.html'
 })
 export class BeneficiariosComponent implements OnInit {
@@ -33,6 +33,8 @@ export class BeneficiariosComponent implements OnInit {
   readonly beneficiarios = signal<Beneficiario[]>([]);
   readonly parentescos   = signal<Parentesco[]>([]);
   readonly contrato      = signal<ContratoResponse | null>(null);
+  /** Todos los contratos vigentes del cliente (para el selector multi-plan). */
+  readonly contratos     = signal<ContratoResponse[]>([]);
   readonly loading       = signal(true);
   readonly errorMsg      = signal('');
   readonly successMsg    = signal('');
@@ -80,22 +82,36 @@ export class BeneficiariosComponent implements OnInit {
     forkJoin({
       contratos:   this.contratoService.listarPorPersona(pid).pipe(catchError(() => of([]))),
       parentescos: this.http.get<Parentesco[]>(`${environment.apiUrl}/catalogos/parentescos`).pipe(catchError(() => of([])))
-    }).pipe(
-      switchMap(({ contratos, parentescos }) => {
+    }).subscribe({
+      next: ({ contratos, parentescos }) => {
         this.parentescos.set(parentescos as Parentesco[]);
-        const activo = (contratos as ContratoResponse[]).find(c => c.estadoClave === 'VIGENTE' || c.activo) ?? null;
-        if (activo) {
-          this.contrato.set(activo);
-          this.contratoId = activo.id;
-          this.maxBeneficiarios.set(activo.planNumeroBeneficiarios ?? 0);
-          return this.beneficiarioService.listarPorContrato(activo.id).pipe(catchError(() => of([])));
-        }
-        return of([]);
-      })
-    ).subscribe({
-      next:  (benefs) => { this.beneficiarios.set(benefs as Beneficiario[]); this.loading.set(false); },
-      error: ()       => this.loading.set(false)
+        const vigentes = (contratos as ContratoResponse[]).filter(c => c.estadoClave === 'VIGENTE' || c.activo);
+        this.contratos.set(vigentes);
+        const inicial = vigentes[0] ?? null;
+        if (inicial) this.aplicarContrato(inicial);
+        else this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
+  }
+
+  /** Cambia el contrato/plan seleccionado y recarga sus beneficiarios. */
+  seleccionarContrato(contratoId: number) {
+    const sel = this.contratos().find(c => c.id === contratoId);
+    if (!sel || sel.id === this.contrato()?.id) return;
+    this.aplicarContrato(sel);
+  }
+
+  private aplicarContrato(c: ContratoResponse) {
+    this.loading.set(true);
+    this.contrato.set(c);
+    this.contratoId = c.id;
+    this.maxBeneficiarios.set(c.planNumeroBeneficiarios ?? 0);
+    this.beneficiarioService.listarPorContrato(c.id).pipe(catchError(() => of([])))
+      .subscribe({
+        next:  (benefs) => { this.beneficiarios.set(benefs as Beneficiario[]); this.loading.set(false); },
+        error: ()       => this.loading.set(false)
+      });
   }
 
   abrirEditar(b: Beneficiario) {

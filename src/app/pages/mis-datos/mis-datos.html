@@ -51,6 +51,17 @@
   .btn-sh-primary:hover { background:var(--azul-medio); color:var(--blanco); }
   .btn-sh-outline { background:var(--blanco); color:var(--azul-principal); border:1px solid var(--azul-principal); border-radius:50px; padding:7px 16px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.2s; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
   .btn-sh-outline:hover { background:var(--azul-suave); }
+  .btn-nuevo-contrato {
+    display:inline-flex; align-items:center; gap:6px; margin-top:10px;
+    background:rgba(255,255,255,0.14);
+    color:var(--blanco); font-weight:600; font-size:0.8rem;
+    padding:7px 18px; border-radius:50px; text-decoration:none;
+    border:1px solid rgba(255,255,255,0.45);
+    backdrop-filter:blur(2px);
+    transition:background 0.2s, border-color 0.2s;
+  }
+  .btn-nuevo-contrato:hover { background:rgba(255,255,255,0.24); border-color:rgba(255,255,255,0.7); color:var(--blanco); }
+  .btn-nuevo-contrato i { font-size:0.85rem; }
   .form-label-sh { font-size:0.8rem; font-weight:600; color:var(--gris-texto); margin-bottom:4px; display:block; }
   .form-control-sh { width:100%; border:1px solid var(--gris-borde); border-radius:8px; padding:10px 14px; font-size:0.9rem; background:var(--blanco); transition:border-color 0.2s,box-shadow 0.2s; }
   .form-control-sh:focus { outline:none; border-color:var(--azul-principal); box-shadow:0 0 0 3px rgba(58,143,196,0.15); }
@@ -301,6 +312,13 @@
              style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.9);text-decoration:underline;text-underline-offset:3px;white-space:nowrap;">
             <i class="bi bi-eye"></i>Ver mi plan funerario
           </a>
+          @if (puedeCrearNuevoContrato()) {
+            <div>
+              <a routerLink="/portal/crear-contrato" class="btn-nuevo-contrato">
+                <i class="bi bi-plus"></i> Crear nuevo contrato
+              </a>
+            </div>
+          }
         </div>
         <span class="badge-activo-c">
           <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i>
@@ -707,6 +725,23 @@
             <div class="seccion-titulo">
               <h2><i class="bi bi-file-earmark-text" style="color:var(--azul-principal)"></i> Mi Contrato</h2>
               <div class="linea-azul"></div>
+              @if (contratos().length > 1) {
+                <div style="margin-top:10px;">
+                  <label style="font-size:0.74rem;font-weight:600;color:var(--gris-medio);display:block;margin-bottom:4px;">
+                    <i class="bi bi-files me-1"></i>Tiene {{ contratos().length }} contratos — seleccione uno:
+                  </label>
+                  <select class="form-control-sh"
+                          [ngModel]="contrato()?.id"
+                          (ngModelChange)="seleccionarContrato(+$event)"
+                          style="font-size:0.86rem;padding:8px 12px;">
+                    @for (c of contratos(); track c.id) {
+                      <option [value]="c.id">
+                        {{ c.numeroContrato }} — {{ c.planNombre }} ({{ c.estadoNombre ?? c.estadoClave }})
+                      </option>
+                    }
+                  </select>
+                </div>
+              }
             </div>
             <div class="info-card">
               <div class="dato-fila">

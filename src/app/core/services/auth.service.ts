@@ -22,6 +22,39 @@ export class AuthService {
   readonly isAgente = computed(() => this._currentUser()?.role === 'AGENTE');
   readonly isAdminOrAgente = computed(() => this._currentUser()?.role === 'ADMIN' || this._currentUser()?.role === 'AGENTE');
 
+  constructor() {
+    // Al abrir la app tras tiempo inactivo: si el access token expiró pero hay
+    // refresh token, renovar silenciosamente. Si no se puede, limpiar sesión.
+    const token = this.getToken();
+    if (this._currentUser() && token && this.isTokenExpired(token)) {
+      if (this.getRefreshToken()) {
+        this.tryRefresh().subscribe({
+          error: () => this.limpiarSesion()
+        });
+      } else {
+        this.limpiarSesion();
+      }
+    }
+  }
+
+  /** Decodifica el JWT y verifica si ya expiró. */
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return !payload.exp || (payload.exp * 1000) < Date.now();
+    } catch {
+      return true; // token malformado → tratar como expirado
+    }
+  }
+
+  /** Limpia localStorage y el estado sin navegar (usado al recuperar sesión). */
+  private limpiarSesion() {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    this._currentUser.set(null);
+  }
+
   login(credentials: LoginRequest) {
     return this.http
       .post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials)

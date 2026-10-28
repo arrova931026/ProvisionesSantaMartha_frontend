@@ -120,6 +120,21 @@
       </button>
     </div>
 
+    <!-- ── SELECTOR DE PLAN (multi-contrato) ── -->
+    @if (contratos().length > 1) {
+      <div class="info-card mb-3" style="padding:14px 18px;">
+        <label style="font-size:0.76rem;font-weight:700;color:var(--gris-medio);display:block;margin-bottom:6px;">
+          <i class="bi bi-files me-1" style="color:var(--azul-principal);"></i>
+          Tiene {{ contratos().length }} planes activos — seleccione cuál gestionar:
+        </label>
+        <select class="form-ctrl" [ngModel]="contrato()?.id" (ngModelChange)="seleccionarContrato(+$event)">
+          @for (c of contratos(); track c.id) {
+            <option [value]="c.id">{{ c.numeroContrato }} — {{ c.planNombre }}</option>
+          }
+        </select>
+      </div>
+    }
+
     <!-- ── ALERTA LÍMITE ── -->
     @if (maxBeneficiarios() > 0) {
       @if (limitAlcanzado()) {

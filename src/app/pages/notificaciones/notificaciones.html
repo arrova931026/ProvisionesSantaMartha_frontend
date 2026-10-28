@@ -221,7 +221,7 @@
           </div>
 
         <!-- Empty -->
-        } @else if (filtradas().length === 0 && cobrosVencidos().length === 0 && !proximoPago()) {
+        } @else if (filtradas().length === 0 && cobrosVencidos().length === 0 && proximosPagos().length === 0) {
           <div class="empty-notif">
             <i class="bi bi-bell-slash"></i>
             <p>No hay notificaciones en esta categoría.</p>
@@ -239,6 +239,9 @@
                   <div class="cva-titulo">
                     <i class="bi bi-x-circle-fill me-1"></i>
                     ¡Pago #{{ c.numeroMensualidad }} VENCIDO!
+                    @if (hayMultiplesContratos()) {
+                      <span style="font-size:0.72rem;font-weight:600;opacity:0.85;"> · Contrato {{ contratoNumeros()[c.contratoId] }}</span>
+                    }
                   </div>
                   <div class="cva-desc">
                     Su pago venció el <strong>{{ c.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>.
@@ -254,29 +257,34 @@
             }
           }
 
-          <!-- ── PRÓXIMO PAGO ── -->
-          @if (proximoPago() && cobrosVencidos().length === 0 && (filtroActivo() === 'TODOS' || filtroActivo() === 'PAGO')) {
-            <div class="cobro-proximo-alert">
-              <i class="bi bi-calendar-check-fill cpa-icono"></i>
-              <div style="flex:1;min-width:0;">
-                <div class="cpa-titulo">
-                  Próximo pago: Cuota #{{ proximoPago()!.numeroMensualidad }}
+          <!-- ── PRÓXIMOS PAGOS (uno por contrato sin vencidos) ── -->
+          @if (filtroActivo() === 'TODOS' || filtroActivo() === 'PAGO') {
+            @for (p of proximosPagos(); track p.contratoId) {
+              <div class="cobro-proximo-alert">
+                <i class="bi bi-calendar-check-fill cpa-icono"></i>
+                <div style="flex:1;min-width:0;">
+                  <div class="cpa-titulo">
+                    Próximo pago: Cuota #{{ p.numeroMensualidad }}
+                    @if (hayMultiplesContratos()) {
+                      <span style="font-size:0.72rem;font-weight:600;"> · Contrato {{ contratoNumeros()[p.contratoId] }}</span>
+                    }
+                  </div>
+                  <div class="cpa-desc">
+                    Vence el <strong>{{ p.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>
+                    &nbsp;&mdash;&nbsp;
+                    <strong style="color:var(--azul-principal)">${{ p.monto | number:'1.2-2' }} MXN</strong>
+                  </div>
                 </div>
-                <div class="cpa-desc">
-                  Vence el <strong>{{ proximoPago()!.fechaVencimiento | date:"dd 'de' MMMM 'de' yyyy":'':'es' }}</strong>
-                  &nbsp;&mdash;&nbsp;
-                  <strong style="color:var(--azul-principal)">${{ proximoPago()!.monto | number:'1.2-2' }} MXN</strong>
-                </div>
+                <a routerLink="/portal/cobros" style="font-size:.8rem;font-weight:600;color:var(--azul-principal);text-decoration:none;white-space:nowrap;">
+                  Pagar <i class="bi bi-arrow-right"></i>
+                </a>
               </div>
-              <a routerLink="/portal/cobros" style="font-size:.8rem;font-weight:600;color:var(--azul-principal);text-decoration:none;white-space:nowrap;">
-                Pagar <i class="bi bi-arrow-right"></i>
-              </a>
-            </div>
+            }
           }
 
           <!-- Notificaciones del backend -->
           @if (filtradas().length === 0) {
-            @if (cobrosVencidos().length === 0 && !proximoPago()) {
+            @if (cobrosVencidos().length === 0 && proximosPagos().length === 0) {
               <div class="empty-notif"><i class="bi bi-bell-slash"></i><p>No hay notificaciones en esta categoría.</p></div>
             }
           } @else {
@@ -287,7 +295,7 @@
                 </div>
                 <div class="notif-body">
                   <div class="notif-titulo">{{ n.titulo }}</div>
-                  <div class="notif-desc">{{ n.mensaje }}</div>
+                  <div class="notif-desc">{{ n.cuerpo || n.mensaje }}</div>
                   <div class="notif-meta">
                     <span class="notif-tag" [class]="tagClase(n.tipo, n.titulo)">
                       <i class="bi bi-tag me-1"></i>{{ tagLabel(n.tipo) }}
@@ -321,40 +329,24 @@
           </div>
           <div class="pref-fila">
             <div class="pref-info">
-              <div class="pf-titulo">Pago próximo</div>
-              <div class="pf-desc">Aviso 10 días antes del vencimiento</div>
+              <div class="pf-titulo">Recordatorios de pago</div>
+              <div class="pf-desc">Avisos de cuotas próximas y vencidas al teléfono principal de su perfil.</div>
             </div>
             <div class="form-check form-switch mb-0">
-              <input class="form-check-input" type="checkbox" checked readonly/>
+              <input class="form-check-input" type="checkbox" role="switch"
+                     [checked]="whatsappHabilitada()"
+                     [disabled]="guardandoPreferenciaWhatsApp()"
+                     (change)="cambiarPreferenciaWhatsApp($event)"
+                     aria-label="Aceptar recordatorios de pago por WhatsApp"/>
             </div>
           </div>
-          <div class="pref-fila">
-            <div class="pref-info">
-              <div class="pf-titulo">Pago vencido</div>
-              <div class="pf-desc">Aviso inmediato al vencer el plazo</div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input class="form-check-input" type="checkbox" checked readonly/>
-            </div>
-          </div>
-          <div class="pref-fila">
-            <div class="pref-info">
-              <div class="pf-titulo">Promociones</div>
-              <div class="pf-desc">Ofertas y beneficios exclusivos</div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input class="form-check-input" type="checkbox" checked readonly/>
-            </div>
-          </div>
-          <div class="pref-fila">
-            <div class="pref-info">
-              <div class="pf-titulo">Cambios de cobertura</div>
-              <div class="pf-desc">Actualizaciones a los servicios del plan</div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input class="form-check-input" type="checkbox" checked readonly/>
-            </div>
-          </div>
+          @if (guardandoPreferenciaWhatsApp()) {
+            <div class="pf-desc mt-2">Guardando preferencia...</div>
+          }
+          @if (mensajePreferenciaWhatsApp()) {
+            <div class="text-danger mt-2" style="font-size:0.76rem;">{{ mensajePreferenciaWhatsApp() }}</div>
+          }
+          <p class="pf-desc mt-2 mb-0">Puede retirar su consentimiento apagando esta opción. Se requiere consentimiento previo para recibir mensajes.</p>
           <div class="mt-3">
             <a href="https://api.whatsapp.com/send?phone=5217821574801" target="_blank" rel="noopener noreferrer"
                class="btn-sh-outline w-100 justify-content-center">

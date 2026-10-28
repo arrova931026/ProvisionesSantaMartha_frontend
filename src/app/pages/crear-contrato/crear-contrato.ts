@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormGroup } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators, FormArray, FormGroup } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -43,12 +43,13 @@ interface DocTipo {
 
 @Component({
   selector: 'app-crear-contrato',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink],
   templateUrl: './crear-contrato.html'
 })
 export class CrearContratoComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly personaService = inject(PersonaService);
   private readonly contratoService = inject(ContratoService);
   private readonly documentoService = inject(DocumentoService);
@@ -62,6 +63,26 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   readonly successMsg = signal('');
   readonly persona = signal<PersonaResponse | null>(null);
   readonly errorElegibilidad = signal('');
+
+  // ── Completar datos del cliente (solo cuando el admin crea para otro) ──
+  readonly esAdminParaOtro = signal(false);
+  readonly formDatosVisibles = signal(false);
+  readonly guardandoDatos = signal(false);
+  readonly datosMsg = signal('');
+  datosForm = {
+    curp: '',
+    rfc: '',
+    fechaNacimiento: '',
+    sexo: '',
+    correo: '',
+    telefono: '',
+    calle: '',
+    numeroExt: '',
+    colonia: '',
+    municipio: '',
+    estado: '',
+    codigoPostal: ''
+  };
 
   // ── Paso 1: documentos ──
   readonly docs = signal<DocTipo[]>([
@@ -145,11 +166,18 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     return `Yo ${nombre} con CURP ${curp} estoy de acuerdo con la contratación de los servicios mutualistas de Sociedad Humanista Santa Martha SA de CV y que todos los datos que proporciono son veraderos`;
   });
 
-  ngOnInit() {
-    const user = this.auth.currentUser();
-    if (!user?.personaId) { this.router.navigate(['/portal/mis-datos']); return; }
+  // ── Detección de móvil (≤768px) para mostrar la barra inferior ──────────
+  /** Ruta de regreso: al panel admin si viene con ?personaId=, si no a mis-datos */
+  get rutaRegreso(): string {
+    return this.route.snapshot.queryParamMap.get('personaId') ? '/portal/admin' : '/portal/mis-datos';
+  }
 
-    const pid = user.personaId;
+  ngOnInit() {
+    // Si viene del panel admin con ?personaId=, usa ese cliente; si no, el usuario logueado
+    const personaIdParam = this.route.snapshot.queryParamMap.get('personaId');
+    const pid = personaIdParam ? +personaIdParam : this.auth.currentUser()?.personaId;
+    if (!pid) { this.router.navigate(['/portal/mis-datos']); return; }
+    this.esAdminParaOtro.set(!!personaIdParam && (this.auth.isAdmin() || this.auth.isAgente()));
 
     forkJoin({
       persona: this.personaService.obtener(pid),
@@ -170,28 +198,29 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
         // Solo permitir Cónyuge e Hijo(a) como parentescos válidos
         this.parentescos.set(parentescos.filter(p => ['CONYUGE', 'HIJO'].includes(p.clave)));
 
-        if (!persona.fechaNacimiento) {
-          this.errorElegibilidad.set('Su fecha de nacimiento no está registrada. Complétela en Mis Datos antes de continuar.');
-        }
-
-        // Verificar campos obligatorios para crear contrato
-        if (!this.errorElegibilidad()) {
-          const faltantes: string[] = [];
-          if (!persona.curp?.trim())     faltantes.push('CURP');
-          if (!persona.rfc?.trim())      faltantes.push('RFC');
-          if (!persona.calle?.trim())    faltantes.push('domicilio');
-          if (!persona.telefono?.trim()) faltantes.push('teléfono');
-          if (faltantes.length > 0) {
-            this.errorElegibilidad.set(
-              `Complete los siguientes datos en "Mis Datos" antes de continuar: ${faltantes.join(', ')}.`
-            );
-          }
+        // Verificar campos obligatorios para crear contrato (mismos que exige el backend)
+        const faltantes: string[] = [];
+        if (!persona.fechaNacimiento)        faltantes.push('fecha de nacimiento');
+        if (!persona.sexo?.trim())           faltantes.push('sexo');
+        if (!persona.curp?.trim())           faltantes.push('CURP');
+        if (!persona.rfc?.trim())            faltantes.push('RFC');
+        if (!persona.correo?.trim())         faltantes.push('correo');
+        if (!persona.telefono?.trim())       faltantes.push('teléfono');
+        if (!persona.calle?.trim())          faltantes.push('calle');
+        if (!persona.colonia?.trim())        faltantes.push('colonia');
+        if (!persona.municipio?.trim())      faltantes.push('municipio');
+        if (!persona.estado?.trim())         faltantes.push('estado');
+        if (!persona.codigoPostal?.trim())   faltantes.push('código postal');
+        if (faltantes.length > 0) {
+          this.errorElegibilidad.set(
+            `Datos incompletos: ${faltantes.join(', ')}.`
+          );
         }
 
         // Marcar documentos ya subidos
-        const faltantes = new Set(pendientes.faltantes ?? []);
+        const docsFaltantes = new Set(pendientes.faltantes ?? []);
         this.docs.update(list =>
-          list.map(d => ({ ...d, subido: !faltantes.has(d.clave) }))
+          list.map(d => ({ ...d, subido: !docsFaltantes.has(d.clave) }))
         );
 
         this.loading.set(false);
@@ -201,6 +230,105 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   }
 
   // ─── Paso 1 helpers ───────────────────────────────────────────────────────
+
+  /** Abre el formulario para completar los datos faltantes del cliente (admin). */
+  abrirFormDatos() {
+    const p = this.persona();
+    if (!p) return;
+    this.datosForm = {
+      curp:         p.curp ?? '',
+      rfc:          p.rfc ?? '',
+      fechaNacimiento: p.fechaNacimiento ?? '',
+      sexo:         p.sexo ?? '',
+      correo:       p.correo ?? '',
+      telefono:     p.telefono ?? '',
+      calle:        p.calle ?? '',
+      numeroExt:    p.numeroExt ?? '',
+      colonia:      p.colonia ?? '',
+      municipio:    p.municipio ?? '',
+      estado:       p.estado ?? '',
+      codigoPostal: p.codigoPostal ?? ''
+    };
+    this.datosMsg.set('');
+    this.formDatosVisibles.set(true);
+  }
+
+  cerrarFormDatos() {
+    this.formDatosVisibles.set(false);
+  }
+
+  /** Guarda los datos del cliente y re-evalúa la elegibilidad. */
+  guardarDatosCliente() {
+    const p = this.persona();
+    if (!p) return;
+
+    const f = this.datosForm;
+
+    // Validar todos los campos obligatorios (mismos que exige el backend al contratar)
+    const faltantes: string[] = [];
+    if (!f.curp?.trim())           faltantes.push('CURP');
+    if (!f.rfc?.trim())            faltantes.push('RFC');
+    if (!f.fechaNacimiento?.trim()) faltantes.push('fecha de nacimiento');
+    if (!f.sexo?.trim())           faltantes.push('sexo');
+    if (!f.correo?.trim())         faltantes.push('correo');
+    if (!f.telefono?.trim())       faltantes.push('teléfono');
+    if (!f.calle?.trim())          faltantes.push('calle');
+    if (!f.colonia?.trim())        faltantes.push('colonia');
+    if (!f.municipio?.trim())      faltantes.push('municipio');
+    if (!f.estado?.trim())         faltantes.push('estado');
+    if (!f.codigoPostal?.trim())   faltantes.push('código postal');
+
+    if (faltantes.length > 0) {
+      this.datosMsg.set(`Complete los campos obligatorios: ${faltantes.join(', ')}.`);
+      return;
+    }
+
+    if (!/^\d{10}$/.test(f.telefono)) {
+      this.datosMsg.set('El teléfono debe tener exactamente 10 dígitos.');
+      return;
+    }
+    if (f.curp.length !== 18) {
+      this.datosMsg.set('La CURP debe tener 18 caracteres.');
+      return;
+    }
+    if (!/^\d{5}$/.test(f.codigoPostal)) {
+      this.datosMsg.set('El código postal debe tener 5 dígitos.');
+      return;
+    }
+
+    this.guardandoDatos.set(true);
+    this.datosMsg.set('');
+
+    this.personaService.actualizar(p.id, {
+      nombre:       p.nombre,
+      apPaterno:    p.apPaterno,
+      apMaterno:    p.apMaterno,
+      fechaNacimiento: f.fechaNacimiento,
+      sexo:         f.sexo,
+      correo:       f.correo,
+      curp:         f.curp,
+      rfc:          f.rfc,
+      telefono:     f.telefono,
+      calle:        f.calle,
+      numeroExt:    f.numeroExt || undefined,
+      colonia:      f.colonia,
+      municipio:    f.municipio,
+      estado:       f.estado,
+      codigoPostal: f.codigoPostal
+    }).subscribe({
+      next: actualizada => {
+        this.persona.set(actualizada);
+        this.guardandoDatos.set(false);
+        this.formDatosVisibles.set(false);
+        this.errorElegibilidad.set('');
+        this.errorMsg.set('');
+      },
+      error: (err) => {
+        this.guardandoDatos.set(false);
+        this.datosMsg.set(err?.error?.mensaje ?? err?.error?.message ?? 'Error al guardar los datos.');
+      }
+    });
+  }
 
   abrirModalDoc(clave: string, etiqueta: string) {
     this.modalDocClave.set(clave);
@@ -711,6 +839,10 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   }
 
   precioPlan(plan: Plan): number {
+    if (plan.tipoPlan === 'MASCOTAS') {
+      // El monto total a liquidar = cuota mensual × duración del contrato
+      return plan.mensualidad * plan.duracionMeses;
+    }
     if (plan.tipoPlan !== 'MUTUALISTA') return plan.precioTotal;
     const frecuencia = this.frecuenciaPago() ?? 'ANUAL';
     return this.cuotaPorFrecuencia(frecuencia) * CrearContratoComponent.CUOTAS_POR_ANIO[frecuencia];
