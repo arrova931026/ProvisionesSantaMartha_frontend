@@ -36,7 +36,7 @@
     <div class="wsb-line" [class.done]="paso() > 3"></div>
     <div class="wsb-step" [class.active]="paso() >= 4">
       <div class="wsb-circle">4</div>
-      <span>Beneficiarios</span>
+      <span>{{ esMutualistaMascotas() ? 'Resumen' : 'Beneficiarios' }}</span>
     </div>
   </div>
 
@@ -319,7 +319,7 @@
           @for (tipo of tiposPlan; track tipo.clave) {
             <button type="button" class="plan-tab" [class.activa]="tipoPlanActivo() === tipo.clave"
                     (click)="seleccionarTipoPlan(tipo.clave)">
-              @if (tipo.clave === 'MASCOTAS') {
+              @if (esTipoMascotas(tipo.clave)) {
                 <span class="pet-paw-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
               } @else {
                 <i class="bi {{ tipo.icono }}" aria-hidden="true"></i>
@@ -334,7 +334,7 @@
             <button type="button" class="mobile-plan-tab" [class.activa]="tipoPlanActivo() === tipo.clave"
                     [attr.aria-current]="tipoPlanActivo() === tipo.clave ? 'step' : null"
                     (click)="seleccionarTipoPlan(tipo.clave)">
-              @if (tipo.clave === 'MASCOTAS') {
+              @if (esTipoMascotas(tipo.clave)) {
                 <span class="pet-paw-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
               } @else {
                 <i class="bi {{ tipo.icono }}" aria-hidden="true"></i>
@@ -345,12 +345,12 @@
         </div>
 
         <section class="plan-category-panel" [class.category-humanos]="tipoPlanActivo() === 'HUMANOS'"
-                 [class.category-mascotas]="tipoPlanActivo() === 'MASCOTAS'"
+                 [class.category-mascotas]="esTipoMascotas(tipoPlanActivo())"
                  (touchstart)="iniciarDeslizamientoPlan($event)"
                  (touchend)="terminarDeslizamientoPlan($event)">
           <div class="plan-category-heading">
-            <div class="plan-category-icon" [class.mascotas-logo]="tipoPlanActivo() === 'MASCOTAS'">
-              @if (tipoPlanActivo() === 'MASCOTAS') {
+            <div class="plan-category-icon" [class.mascotas-logo]="esTipoMascotas(tipoPlanActivo())">
+              @if (esTipoMascotas(tipoPlanActivo())) {
                 <span class="pet-paw-logo pet-paw-logo-large" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
               } @else {
                 <i class="bi {{ tiposPlan.find(t => t.clave === tipoPlanActivo())?.icono }}" aria-hidden="true"></i>
@@ -444,10 +444,15 @@
                   @if (esPlanSeleccionado(plan)) {
                   <span class="plan-check"><i class="bi bi-check-circle-fill"></i></span>
                 }
-                <span class="plan-card-eyebrow">{{ tipoPlanActivo() === 'MASCOTAS' ? 'Cremación para mascotas' : (tipoPlanActivo() === 'MUTUALISTA' ? 'Protección mutualista' : 'Previsión funeraria') }}</span>
+                <span class="plan-card-eyebrow">{{ esTipoMascotas(tipoPlanActivo()) ? 'Cremación para mascotas' : (tipoPlanActivo() === 'MUTUALISTA' ? 'Protección mutualista' : 'Previsión funeraria') }}</span>
                 <span class="plan-nombre">{{ plan.nombre.replace('Mascotas - ', '') }}</span>
                 @if (plan.descripcion) {
                   <span class="plan-desc">{{ plan.descripcion }}</span>
+                }
+                @if (plan.tipoPlan === 'MUTUALISTA_MASCOTAS') {
+                  <span class="plan-detalle">{{ formatMoney(plan.precioTotal) }} total · {{ plan.duracionMeses }} meses</span>
+                  <span class="plan-detalle">{{ formatMoney(plan.mensualidad) }} / mes</span>
+                  <span class="plan-desc">{{ condicionesMascotas }}</span>
                 }
                 <span class="plan-precio">
                   <span class="plan-precio-label">{{ tipoPlanActivo() === 'MUTUALISTA' ? 'Aportación anual' : 'Inversión total' }}</span>
@@ -460,11 +465,11 @@
                     <span class="plan-detalle"><i class="bi bi-calendar3"></i>{{ plan.duracionMeses }} meses</span>
                     <span class="plan-detalle"><i class="bi bi-people"></i>{{ plan.numeroBeneficiarios }} beneficiario(s)</span>
                     <span class="plan-detalle"><i class="bi bi-cash"></i>{{ formatMoney(plan.mensualidad) }} / mes</span>
-                  } @else {
+                  } @else if (plan.tipoPlan === 'MASCOTAS') {
                     <span class="plan-detalle"><i class="bi bi-heart"></i>Recolección, cremación, urna y constancia</span>
                   }
                 }
-                @if (plan.articulosIncluidos.length && plan.tipoPlan !== 'MUTUALISTA') {
+                @if (plan.articulosIncluidos.length && plan.tipoPlan !== 'MUTUALISTA' && plan.tipoPlan !== 'MUTUALISTA_MASCOTAS') {
                   <span class="included-group-title">Servicios incluidos</span>
                   @for (servicio of plan.articulosIncluidos; track servicio.nombre) {
                     <span class="included-service"><i class="bi bi-check2"></i>{{ servicio.nombre }}</span>
@@ -474,6 +479,40 @@
             }
           </div>
         </section>
+
+        @if (esMutualistaMascotas()) {
+          <form [formGroup]="mascotaForm">
+            <h3>Datos de la mascota</h3>
+            <div class="benef-row">
+              <div class="benef-field">
+                <label for="mascotaNombre">Nombre *</label>
+                <input id="mascotaNombre" formControlName="nombre" required>
+              </div>
+              <div class="benef-field">
+                <label for="mascotaEspecie">Especie *</label>
+                <input id="mascotaEspecie" formControlName="especie" required>
+              </div>
+              <div class="benef-field">
+                <label for="mascotaRaza">Raza *</label>
+                <input id="mascotaRaza" formControlName="raza" required>
+              </div>
+            </div>
+            <div class="benef-row">
+              <div class="benef-field">
+                <label for="mascotaPeso">Peso (kg) *</label>
+                <input id="mascotaPeso" type="number" formControlName="peso" min="0" step="any" required>
+              </div>
+              <div class="benef-field">
+                <label for="mascotaColor">Color y características *</label>
+                <input id="mascotaColor" formControlName="colorCaracteristicas" required>
+              </div>
+            </div>
+            @if (mascotaForm.touched && mascotaForm.invalid) {
+              <p class="wizard-alert danger" role="alert">Todos los datos son obligatorios. El peso debe ser mayor que cero.</p>
+            }
+            <p>Inicio: {{ fechaInicio() }} · Fin estimado: {{ fechaFinEstimada() }}</p>
+          </form>
+        }
 
         <div class="wizard-actions">
           <button class="btn-secundario" (click)="paso.set(2)">
@@ -494,16 +533,26 @@
         <div class="wc-header">
           <i class="bi bi-people wc-icon"></i>
           <div>
-            <h2>Beneficiarios</h2>
-            <p>
+            <h2>{{ esMutualistaMascotas() ? 'Resumen del contrato' : 'Beneficiarios' }}</h2>
+            @if (!esMutualistaMascotas()) {
+              <p>
               El plan <strong>{{ planSeleccionado()!.nombre }}</strong> permite
               <strong>{{ maxBeneficiarios() }}</strong> beneficiario(s).
               Solo el teléfono es opcional.
-            </p>
+              </p>
+            }
           </div>
         </div>
 
-        @if (maxBeneficiarios() === 0) {
+        @if (esMutualistaMascotas()) {
+          <h3>{{ planSeleccionado()!.nombre }}</h3>
+          <p>{{ formatMoney(planSeleccionado()!.precioTotal) }} total · {{ planSeleccionado()!.duracionMeses }} meses · Cobro mensual: {{ formatMoney(planSeleccionado()!.mensualidad) }}</p>
+          <p>Inicio: {{ fechaInicio() }} · Fin estimado: {{ fechaFinEstimada() }}</p>
+          <p><strong>{{ mascotaForm.getRawValue().nombre }}</strong> · {{ mascotaForm.getRawValue().especie }} · {{ mascotaForm.getRawValue().raza }} · {{ mascotaForm.getRawValue().peso }} kg</p>
+          <p>{{ mascotaForm.getRawValue().colorCaracteristicas }}</p>
+          <p>{{ condicionesMascotas }}</p>
+          <p>{{ leyendaConsentimiento() }}</p>
+        } @else if (maxBeneficiarios() === 0) {
           <div class="no-beneficiaries-note">
             <i class="bi bi-paw"></i>
             <span>Este servicio para mascotas no requiere beneficiarios humanos.</span>
@@ -970,7 +1019,7 @@
   gap: 16px;
   margin-bottom: 24px;
 }
-.plan-tabs { display: flex; justify-content: center; gap: 8px; border-bottom: 1px solid #e4e9ec; margin: 0 0 22px; }
+.plan-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; border-bottom: 1px solid #e4e9ec; margin: 0 0 22px; }
 .plan-tab {
   display: inline-flex; align-items: center; gap: 9px; padding: 12px 18px;
   color: #64727d; background: transparent; border: 0; border-bottom: 2px solid transparent;
@@ -1474,7 +1523,7 @@
 .video-validacion-msg.advertencia { background:#fff8e1; border:1px solid #ffc107; color:#856404; }
 @media (max-width: 640px) {
   .plan-tabs { display: none; }
-  .plan-mobile-position { display: flex; justify-content: center; gap: 6px; margin: 0 0 16px; }
+  .plan-mobile-position { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0 0 16px; }
   .plan-category-heading { display: none; }
   .plan-category-panel { touch-action: pan-y; }
   .planes-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }

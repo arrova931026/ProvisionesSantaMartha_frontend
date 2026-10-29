@@ -351,6 +351,11 @@
           </div>
         </div>
 
+        @if (esMascotas()) {
+          <div class="col-12 col-lg-6">
+            <app-mascota-contrato [contrato]="contrato()" />
+          </div>
+        } @else {
         <!-- Beneficiarios -->
         <div class="col-12 col-lg-6 d-flex flex-column">
           <div class="seccion-titulo">
@@ -405,10 +410,11 @@
             </div>
           </div>
         </div>
+        }
       </div>
 
       <!-- ── SERVICIOS INCLUIDOS ── -->
-      @if (mostrarServicios()) {
+      @if (mostrarServicios() && !esMascotas()) {
         <div class="seccion-titulo">
           <h2><i class="bi bi-check2-circle me-2" style="color:var(--azul-principal)"></i>Servicios Incluidos</h2>
           <div class="linea-azul"></div>

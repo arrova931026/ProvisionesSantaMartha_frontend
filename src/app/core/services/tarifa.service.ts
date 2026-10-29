@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CatalogoArticulo, PlanTarifaRequest, TarifaPlan } from '../models/tarifa.model';
+import { CatalogoArticulo, PlanTarifaRequest, TarifaPlan, TipoPlan } from '../models/tarifa.model';
 
 @Injectable({ providedIn: 'root' })
 export class TarifaService {
@@ -14,11 +14,11 @@ export class TarifaService {
       `${this.base}/mutualista`, { aportacionAnual });
   }
 
-  listarPlanes(tipo: 'HUMANOS' | 'MASCOTAS' | 'MUTUALISTA'): Observable<TarifaPlan[]> {
+  listarPlanes(tipo: TipoPlan): Observable<TarifaPlan[]> {
     return this.http.get<TarifaPlan[]>(`${this.base}/planes`, { params: { tipo } });
   }
 
-  crearPlan(tipo: 'HUMANOS' | 'MASCOTAS', req: PlanTarifaRequest): Observable<TarifaPlan> {
+  crearPlan(tipo: Exclude<TipoPlan, 'MUTUALISTA'>, req: PlanTarifaRequest): Observable<TarifaPlan> {
     return this.http.post<TarifaPlan>(`${this.base}/planes`, req, { params: { tipo } });
   }
 

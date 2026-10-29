@@ -11,6 +11,7 @@ import { DocumentoService } from '../../core/services/documento.service';
 import { PersonaResponse } from '../../core/models/persona.model';
 import { DocumentosPendientesResponse } from '../../core/models/documento.model';
 import { environment } from '../../../environments/environment';
+import { TipoPlan, CONDICIONES_MUTUALISTA_MASCOTAS } from '../../core/models/tarifa.model';
 
 interface Plan {
   id: number;
@@ -21,10 +22,12 @@ interface Plan {
   mensualidad: number;
   duracionMeses: number;
   numeroBeneficiarios: number;
+  aportacionDiaria?: number;
+  condiciones?: string;
   articulosIncluidos: { nombre: string; descripcion?: string; modalidad?: 'CREMACION' | 'INHUMACION' | null }[];
 }
 
-type PlanTipo = 'MUTUALISTA' | 'HUMANOS' | 'MASCOTAS';
+type PlanTipo = TipoPlan;
 type FrecuenciaPago = 'SEMANAL' | 'QUINCENAL' | 'MENSUAL' | 'ANUAL';
 
 interface Parentesco {
@@ -133,6 +136,7 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   readonly tiposPlan: { clave: PlanTipo; nombre: string; nombreMovil: string; subtitulo: string; icono: string }[] = [
     { clave: 'MUTUALISTA', nombre: 'Mutualista', nombreMovil: 'Mutualista', subtitulo: 'Aportación solidaria', icono: 'bi-heart-pulse' },
     { clave: 'HUMANOS', nombre: 'Previsión de Humanos', nombreMovil: 'Previsión', subtitulo: 'Protección para tu familia', icono: 'bi-people' },
+    { clave: 'MUTUALISTA_MASCOTAS', nombre: 'Mutualista de Mascotas', nombreMovil: 'Mutualista mascotas', subtitulo: 'Protección anual para tu mascota', icono: 'bi-heart' },
     { clave: 'MASCOTAS', nombre: 'Previsión de Mascotas', nombreMovil: 'Mascotas', subtitulo: 'Cuidado para tu compañero', icono: 'bi-paw' }
   ];
   readonly planesVisibles = computed(() => this.planes().filter(plan => plan.tipoPlan === this.tipoPlanActivo()));
@@ -143,7 +147,42 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   readonly benefForm = this.fb.group({ beneficiarios: this.fb.array([]) });
   get benefArray(): FormArray { return this.benefForm.get('beneficiarios') as FormArray; }
 
-  readonly maxBeneficiarios = computed(() => this.planSeleccionado()?.numeroBeneficiarios ?? 0);
+  readonly esMutualistaMascotas = computed(() => this.planSeleccionado()?.tipoPlan === 'MUTUALISTA_MASCOTAS');
+  readonly maxBeneficiarios = computed(() => this.esMutualistaMascotas() ? 0 : this.planSeleccionado()?.numeroBeneficiarios ?? 0);
+  readonly condicionesMascotas = CONDICIONES_MUTUALISTA_MASCOTAS;
+  readonly mascotaForm = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required, Validators.pattern(/\S/)]],
+    especie: ['', [Validators.required, Validators.pattern(/\S/)]],
+    raza: ['', [Validators.required, Validators.pattern(/\S/)]],
+    peso: [0, [Validators.required, Validators.min(Number.MIN_VALUE), Validators.pattern(/^\d+(\.\d+)?$/)]],
+    colorCaracteristicas: ['', [Validators.required, Validators.pattern(/\S/)]]
+  });
+  readonly fechaInicio = signal(this.fechaLocal(new Date()));
+  readonly fechaFinEstimada = computed(() => {
+    const [anio, mes, dia] = this.fechaInicio().split('-').map(Number);
+    const meses = this.planSeleccionado()?.duracionMeses ?? 12;
+    const mesFin = new Date(anio, mes - 1 + meses, 1);
+    const ultimoDia = new Date(mesFin.getFullYear(), mesFin.getMonth() + 1, 0).getDate();
+    const fin = new Date(mesFin.getFullYear(), mesFin.getMonth(), Math.min(dia, ultimoDia));
+    return this.fechaLocal(fin);
+  });
+
+  esTipoMascotas(tipo: PlanTipo): boolean {
+    return tipo === 'MASCOTAS' || tipo === 'MUTUALISTA_MASCOTAS';
+  }
+
+  private fechaLocal(fecha: Date): string {
+    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+  }
+
+  private validarMascota(): boolean {
+    this.mascotaForm.markAllAsTouched();
+    if (this.mascotaForm.invalid || !Number.isFinite(this.mascotaForm.getRawValue().peso)) {
+      this.errorMsg.set('Complete todos los datos de la mascota e indique un peso mayor que cero en kg.');
+      return false;
+    }
+    return true;
+  }
 
   // ── Paso 2: Video de consentimiento ───────────────────────────────────────
   readonly videoEstado = signal<'listo' | 'grabando' | 'detenido'>('listo');
@@ -797,7 +836,10 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
   seleccionarTipoPlan(tipo: PlanTipo) {
     const cambioTipo = this.tipoPlanActivo() !== tipo;
     this.tipoPlanActivo.set(tipo);
-    if (this.planSeleccionado()?.tipoPlan !== tipo) this.planSeleccionado.set(null);
+    if (this.planSeleccionado()?.tipoPlan !== tipo) {
+      this.planSeleccionado.set(null);
+      this.benefArray.clear();
+    }
     if (cambioTipo) this.frecuenciaPago.set(null);
   }
 
@@ -929,11 +971,12 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       this.errorMsg.set('Seleccione un plan funerario antes de continuar.');
       return;
     }
-    if (this.planSeleccionado()?.tipoPlan !== 'MASCOTAS' && !this.todosDocsSubidos()) {
+    if (!this.esTipoMascotas(plan.tipoPlan) && !this.todosDocsSubidos()) {
       this.errorMsg.set('Complete los documentos del titular para planes humanos o mutualistas.');
       this.paso.set(1);
       return;
     }
+    if (this.esMutualistaMascotas() && !this.validarMascota()) return;
     while (this.benefArray.length < this.maxBeneficiarios()) {
       this.agregarBeneficiarioForm();
     }
@@ -1064,7 +1107,11 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       this.errorMsg.set('Seleccione un plan antes de continuar.');
       return;
     }
-    if (planElegido.tipoPlan !== 'MASCOTAS') {
+    if (this.esMutualistaMascotas() && !this.validarMascota()) {
+      this.paso.set(3);
+      return;
+    }
+    if (!this.esTipoMascotas(planElegido.tipoPlan)) {
       const fechaNacimiento = this.persona()?.fechaNacimiento;
       if (!fechaNacimiento) {
         this.errorMsg.set('Registre su fecha de nacimiento en Mis Datos antes de contratar este plan.');
@@ -1080,7 +1127,7 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
         return;
       }
     }
-    const errBenef = this._validarBeneficiarios();
+    const errBenef = this.esMutualistaMascotas() ? null : this._validarBeneficiarios();
     if (errBenef) {
       this.errorMsg.set(errBenef);
       setTimeout(() => {
@@ -1091,7 +1138,7 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
     }
     const plan = this.planSeleccionado()!;
     const pid = this.persona()!.id;
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = this.fechaInicio();
 
     this.guardando.set(true);
     this.contratoService.crear({
@@ -1100,9 +1147,11 @@ export class CrearContratoComponent implements OnInit, OnDestroy {
       fechaInicio: hoy,
       precioContratado: this.precioPlan(plan),
       mensualidadPactada: this.montoCuota(plan),
-      frecuenciaPago: plan.tipoPlan === 'MUTUALISTA' ? this.frecuenciaPago() ?? 'ANUAL' : 'MENSUAL'
+      frecuenciaPago: plan.tipoPlan === 'MUTUALISTA' ? this.frecuenciaPago() ?? 'ANUAL' : 'MENSUAL',
+      ...(this.esMutualistaMascotas() ? { mascota: this.mascotaForm.getRawValue() } : {})
     }).pipe(
       switchMap(contrato => {
+        if (plan.tipoPlan === 'MUTUALISTA_MASCOTAS') return of({ contrato, benefs: [] });
         const validos = this.benefArray.controls
           .filter((g: any) => g.get('nombre')?.value?.trim())
           .map((g: any) => g.value);

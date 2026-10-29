@@ -86,8 +86,8 @@
 <!-- HEADER -->
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-people"></i></div>
-  <h1>Beneficiarios</h1>
-  <p>Gestione los beneficiarios registrados en su contrato de previsión funeraria</p>
+  <h1>{{ esMascotas() ? 'Mascota' : 'Beneficiarios' }}</h1>
+  @if (!esMascotas()) { <p>Gestione los beneficiarios registrados en su contrato de previsión funeraria</p> }
 </div>
 
 <section class="benef-section">
@@ -107,7 +107,7 @@
     <!-- ── TÍTULO + BOTÓN ── -->
     <div class="seccion-titulo d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
       <div>
-        <h2><i class="bi bi-people" style="color:var(--azul-principal)"></i> Beneficiarios Registrados</h2>
+        <h2><i class="bi bi-heart" style="color:var(--azul-principal)"></i> {{ esMascotas() ? 'Mascota registrada' : 'Beneficiarios Registrados' }}</h2>
         <div class="linea-azul"></div>
         @if (maxBeneficiarios() > 0) {
           <p style="font-size:0.78rem;color:var(--gris-medio);margin:6px 0 0;">
@@ -115,9 +115,11 @@
           </p>
         }
       </div>
+      @if (!esMascotas()) {
       <button class="btn-agregar" (click)="abrirModal()" [disabled]="limitAlcanzado()" [title]="limitAlcanzado() ? 'Límite del plan alcanzado' : 'Agregar beneficiario'">
         <i class="bi bi-person-plus"></i> Agregar Beneficiario
       </button>
+      }
     </div>
 
     <!-- ── SELECTOR DE PLAN (multi-contrato) ── -->
@@ -162,6 +164,8 @@
       </div>
 
     <!-- ── SIN BENEFICIARIOS ── -->
+    } @else if (esMascotas()) {
+      <app-mascota-contrato [contrato]="contrato()" />
     } @else if (beneficiarios().length === 0) {
       <div class="info-card text-center py-5">
         <i class="bi bi-people" style="font-size:2.5rem;color:var(--gris-borde);"></i>

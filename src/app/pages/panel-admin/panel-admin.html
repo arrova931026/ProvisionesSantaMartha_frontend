@@ -71,6 +71,10 @@
   .modal-eliminar-header h3 { margin:0; font-size:1.05rem; font-weight:700; }
   .modal-cerrar-x { border:none; background:none; font-size:1.15rem; color:var(--gris-medio); cursor:pointer; padding:4px 8px; border-radius:6px; }
   .modal-cerrar-x:hover { background:var(--gris-fondo); color:var(--rojo); }
+  .badge-contratos-btn { cursor:pointer; font-family:inherit; }
+  .badge-contratos-btn:hover { background-color:var(--azul-principal); color:#fff; }
+  .contrato-existente-item { width:100%; text-align:left; background:var(--blanco); cursor:pointer; font-family:inherit; }
+  .contrato-existente-item.seleccionado { border-color:var(--azul-principal); background:var(--azul-suave); box-shadow:0 0 0 1px var(--azul-principal); }
   .contrato-elim-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--gris-borde); border-radius:10px; margin-bottom:10px; }
   @media (max-width: 768px) {
     .admin-section { padding: 20px 12px 130px; }
@@ -294,12 +298,12 @@
           <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-size:0.88rem;"></i>
           <input type="text" class="form-control" style="padding-left:34px;"
                  placeholder="Buscar cliente por nombre o correo..."
-                 [(ngModel)]="filtroCliente" (ngModelChange)="cargarClientes()"/>
+                 [ngModel]="filtroCliente()" (ngModelChange)="filtrarClientes($event)"/>
         </div>
         <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gris-medio);">
           Mostrar
           <select class="form-select" style="width:auto;padding:6px 10px;font-size:0.82rem;"
-                  [ngModel]="pageSizeClientes" (ngModelChange)="cambiarPageSizeClientes(+$event)">
+                  [ngModel]="pageSizeClientes()" (ngModelChange)="cambiarPageSizeClientes(+$event)">
             <option [ngValue]="5">5</option>
             <option [ngValue]="10">10</option>
             <option [ngValue]="25">25</option>
@@ -309,7 +313,7 @@
         </div>
       </div>
 
-      @if (loadingClientes()) {
+      @if (loadingClientes() && clientes().length === 0) {
         <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando clientes...</div>
       } @else {
 
@@ -335,7 +339,11 @@
                         <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
                       </td>
                       <td style="padding:12px;text-align:center;">
-                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        @if (c.contratosActivos > 0) {
+                          <button type="button" class="badge-azul badge-contratos-btn" title="Ver contratos existentes" (click)="abrirModalContratos(c)">{{ c.contratosActivos }}</button>
+                        } @else {
+                          <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        }
                       </td>
                       <td style="padding:12px;text-align:center;">
                         <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;" (click)="irACrearContrato(c)">
@@ -374,7 +382,11 @@
                         <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
                       </td>
                       <td style="padding:12px;text-align:center;">
-                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        @if (c.contratosActivos > 0) {
+                          <button type="button" class="badge-azul badge-contratos-btn" title="Ver contratos existentes" (click)="abrirModalContratos(c)">{{ c.contratosActivos }}</button>
+                        } @else {
+                          <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        }
                       </td>
                       <td style="padding:12px;text-align:center;">
                         <button class="btn-sh-primary" style="padding:6px 14px;font-size:0.78rem;background:var(--amarillo);" (click)="irACobros(c)">
@@ -414,7 +426,11 @@
                         <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
                       </td>
                       <td style="padding:12px;text-align:center;">
-                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        @if (c.contratosActivos > 0) {
+                          <button type="button" class="badge-azul badge-contratos-btn" title="Ver contratos existentes" (click)="abrirModalContratos(c)">{{ c.contratosActivos }}</button>
+                        } @else {
+                          <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        }
                       </td>
                       <td style="padding:12px;text-align:center;">
                         @if (c.contratosActivos === 0) {
@@ -468,7 +484,11 @@
                         <div style="font-size:0.74rem;color:var(--gris-medio);">{{ c.correo }}</div>
                       </td>
                       <td style="padding:12px;text-align:center;">
-                        <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        @if (c.contratosActivos > 0) {
+                          <button type="button" class="badge-azul badge-contratos-btn" title="Ver contratos existentes" (click)="abrirModalContratos(c)">{{ c.contratosActivos }}</button>
+                        } @else {
+                          <span class="badge-azul">{{ c.contratosActivos }}</span>
+                        }
                       </td>
                       <td style="padding:12px;text-align:center;">
                         @if (c.contratosActivos > 0) {
@@ -492,15 +512,15 @@
         <!-- Paginación -->
         @if (clientes().length > 0) {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:0.8rem;color:var(--gris-medio);flex-wrap:wrap;gap:8px;">
-            <span>Mostrando {{ clientesPaginados().length }} de {{ clientes().length }} cliente(s)</span>
+            <span>Mostrando {{ clientesPaginados().length }} de {{ clientesFiltrados().length }} cliente(s)</span>
             <div style="display:flex;gap:6px;align-items:center;">
               <button class="btn-sh-primary" style="padding:4px 12px;font-size:0.76rem;background:var(--blanco);color:var(--gris-texto);border:1px solid var(--gris-borde);"
-                      [disabled]="paginaClientes === 0" (click)="cambiarPaginaClientes(-1)">
+                      [disabled]="paginaClientes() === 0" (click)="cambiarPaginaClientes(-1)">
                 <i class="bi bi-chevron-left"></i>
               </button>
-              <span style="padding:0 6px;">Página {{ paginaClientes + 1 }} de {{ totalPaginasClientes() }}</span>
+              <span style="padding:0 6px;">Página {{ paginaClientes() + 1 }} de {{ totalPaginasClientes() }}</span>
               <button class="btn-sh-primary" style="padding:4px 12px;font-size:0.76rem;background:var(--blanco);color:var(--gris-texto);border:1px solid var(--gris-borde);"
-                      [disabled]="paginaClientes >= totalPaginasClientes() - 1" (click)="cambiarPaginaClientes(1)">
+                      [disabled]="paginaClientes() >= totalPaginasClientes() - 1" (click)="cambiarPaginaClientes(1)">
                 <i class="bi bi-chevron-right"></i>
               </button>
             </div>
@@ -570,7 +590,7 @@
         }
 
         <!-- ── HUMANOS / MASCOTAS ──────────────────────── -->
-        @if (tipoTarifa() === 'HUMANOS' || tipoTarifa() === 'MASCOTAS') {
+        @if (tipoTarifa() !== 'MUTUALISTA') {
 
           <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
             <button class="btn-sh-primary" (click)="abrirFormPlan()">
@@ -583,19 +603,47 @@
             <div class="info-card" style="margin-bottom:20px;">
               <div class="card-section-title">
                 <i class="bi bi-pencil-square me-2" style="color:var(--azul-principal);"></i>
-                {{ planEditando() ? 'Editar plan' : 'Nuevo plan' }} — {{ tipoTarifa() === 'HUMANOS' ? 'Previsión de Humanos' : 'Previsión de Mascotas' }}
+                {{ planEditando() ? 'Editar plan' : 'Nuevo plan' }} — {{ tipoTarifa() === 'HUMANOS' ? 'Previsión de Humanos' : (tipoTarifa() === 'MUTUALISTA_MASCOTAS' ? 'Mutualista de Mascotas' : 'Previsión de Mascotas') }}
               </div>
 
               <form (ngSubmit)="guardarPlan()">
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <label class="form-label-sh">Nombre *</label>
-                  <input type="text" class="form-control" [(ngModel)]="planForm.nombre" name="planNombre" placeholder="Ej. Plan Especial"/>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.nombre" name="planNombre" placeholder="Ej. Plan Especial"
+                         [disabled]="esMutualistaMascotasBasico(planEditando())"/>
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label-sh">Descripción</label>
-                  <input type="text" class="form-control" [(ngModel)]="planForm.descripcion" name="planDescripcion"/>
+                  <input type="text" class="form-control" [(ngModel)]="planForm.descripcion" name="planDescripcion"
+                         [disabled]="esMutualistaMascotasBasico(planEditando())"/>
                 </div>
+
+                @if (tipoTarifa() === 'MUTUALISTA_MASCOTAS') {
+                  <div class="col-12">
+                    <p class="form-label-sh">Sin beneficiarios humanos</p>
+                    <p>{{ condicionesMascotas }}</p>
+                  </div>
+                  @if (planEditando() && !esMutualistaMascotasBasico(planEditando())) {
+                    <div class="col-6 col-md-4">
+                      <label class="form-label-sh">Precio total *</label>
+                      <div style="position:relative;">
+                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gris-medio);font-weight:600;">$</span>
+                        <input type="number" class="form-control" style="padding-left:26px;" min="0.01" step="0.01"
+                               [(ngModel)]="planForm.precioTotal" name="planPrecioMutualistaMascotas"/>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                      <label class="form-label-sh">Duración (meses) *</label>
+                      <input type="number" class="form-control" min="1" step="1"
+                             [(ngModel)]="planForm.duracionMeses" name="planDuracionMutualistaMascotas"/>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label-sh">Mensualidad calculada</label>
+                      <p class="form-control">{{ mensualidadMutualistaMascotas() | currency:'MXN':'symbol-narrow':'1.2-2' }}</p>
+                    </div>
+                  }
+                }
 
                 @if (tipoTarifa() === 'HUMANOS') {
                   <div class="col-6 col-md-4">
@@ -743,8 +791,15 @@
                     </div>
                     <div style="font-size:1.3rem;font-weight:800;color:var(--azul-principal);">{{ p.precioTotal | currency:'MXN':'symbol-narrow':'1.0-0' }}</div>
                     <div style="font-size:0.76rem;color:var(--gris-medio);margin-bottom:8px;">
-                      {{ p.mensualidad | currency:'MXN':'symbol-narrow':'1.0-0' }} / mes · {{ p.duracionMeses }} meses · {{ p.numeroBeneficiarios }} {{ tipoTarifa() === 'MASCOTAS' ? 'mascota(s)' : 'beneficiario(s)' }}
+                      {{ p.mensualidad | currency:'MXN':'symbol-narrow':(tipoTarifa() === 'MUTUALISTA_MASCOTAS' ? '1.2-2' : '1.0-0') }} / mes · {{ p.duracionMeses }} meses
+                      @if (tipoTarifa() === 'MUTUALISTA_MASCOTAS') {
+                        <p>Sin beneficiarios humanos</p>
+                        <p>{{ condicionesMascotas }}</p>
+                      } @else {
+                        · {{ p.numeroBeneficiarios }} {{ tipoTarifa() === 'MASCOTAS' ? 'mascota(s)' : 'beneficiario(s)' }}
+                      }
                     </div>
+                    @if (p.descripcion) { <p>{{ p.descripcion }}</p> }
                     @if (p.articulosIncluidos.length) {
                       <div style="font-size:0.72rem;color:var(--gris-medio);margin-bottom:12px;line-height:1.5;">
                         @for (a of p.articulosIncluidos; track a.nombre) {
@@ -753,9 +808,13 @@
                       </div>
                     }
                     <div style="display:flex;gap:6px;margin-top:auto;flex-wrap:wrap;">
-                      <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;" (click)="abrirFormPlan(p)">
-                        <i class="bi bi-pencil"></i>Editar
-                      </button>
+                      @if (tipoTarifa() === 'MUTUALISTA_MASCOTAS' && esMutualistaMascotasBasico(p)) {
+                        <span class="badge bg-secondary align-self-center">Plan predeterminado</span>
+                      } @else {
+                        <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;" (click)="abrirFormPlan(p)">
+                          <i class="bi bi-pencil"></i>Editar
+                        </button>
+                      }
                       @if (p.activo) {
                         <button class="btn-sh-primary" style="padding:5px 12px;font-size:0.74rem;background:var(--rojo-suave);color:var(--rojo);border:1px solid var(--rojo);" (click)="desactivarPlan(p.id)">
                           <i class="bi bi-x-circle"></i>Desactivar
@@ -842,6 +901,43 @@
             }
           </div>
         </div>
+      }
+    }
+  </div>
+}
+
+<!-- ═══════════ MODAL: CONTRATOS EXISTENTES ═══════════ -->
+@if (modalContratosAbierto()) {
+  <div class="modal-backdrop-panel" (click)="cerrarModalContratos()"></div>
+  <div class="modal-eliminar" role="dialog" aria-modal="true" aria-label="Contratos Existentes">
+    <div class="modal-eliminar-header">
+      <h3>Contratos Existentes — {{ clienteContratos()?.nombre }}</h3>
+      <button class="modal-cerrar-x" (click)="cerrarModalContratos()" aria-label="Cerrar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    @if (loadingContratosExistentes()) {
+      <div class="panel-loading"><span class="spinner-border spinner-border-sm me-2"></span>Cargando contratos...</div>
+    } @else if (contratosExistentes().length === 0) {
+      <p style="text-align:center;color:var(--gris-medio);font-size:0.88rem;padding:20px 0;">
+        Este cliente no tiene contratos activos.
+      </p>
+    } @else {
+      @for (c of contratosExistentes(); track c.id) {
+        <button type="button" class="contrato-elim-item contrato-existente-item"
+                [class.seleccionado]="contratoSeleccionadoId() === c.id"
+                (click)="seleccionarContrato(c.id)">
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;">{{ c.numeroContrato }}</div>
+            <div style="font-size:0.76rem;color:var(--gris-medio);">
+              {{ c.planNombre }} · {{ c.mensualidadPactada | currency:'MXN':'symbol-narrow':'1.0-0' }}/mes
+            </div>
+          </div>
+          @if (contratoSeleccionadoId() === c.id) {
+            <i class="bi bi-check-circle-fill" style="color:var(--azul-principal);font-size:1.1rem;"></i>
+          }
+        </button>
       }
     }
   </div>

@@ -1,26 +1,36 @@
-import { Component, inject, signal, OnInit, computed, AfterViewChecked, AfterViewInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, AfterViewChecked, AfterViewInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import JsBarcode from 'jsbarcode';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CobroService } from '../../core/services/cobro.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CobroProgramado } from '../../core/models/cobro.model';
-import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago, esContratoMutualistaMascotas } from '../../core/models/contrato.model';
+import { MascotaContratoComponent } from '../../shared/mascota-contrato/mascota-contrato';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-cobros',
-  imports: [CurrencyPipe, DatePipe, FormsModule],
+  imports: [CurrencyPipe, DatePipe, FormsModule, MascotaContratoComponent],
   templateUrl: './cobros.html'
 })
 export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked {
   readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
+  readonly esMascotas = computed(() => esContratoMutualistaMascotas(this.contratoActivo()));
   private readonly cobroService = inject(CobroService);
   private readonly contratoService = inject(ContratoService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** true cuando un admin/agente consulta los cobros de un cliente: no se permiten pagos. */
+  readonly soloLectura = signal(false);
+  /** Nombre del cliente consultado (titular del contrato) en modo solo lectura. */
+  readonly clienteConsultado = computed(() => this.contratoActivo()?.titularNombre ?? '');
 
   readonly cobros = signal<CobroProgramado[]>([]);
   readonly contratoActivo = signal<ContratoResponse | null>(null);
@@ -140,16 +150,36 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   ngOnInit() {
-    // El panel admin puede abrir cobros de otro cliente con ?personaId=
-    const personaIdParam = this.route.snapshot.queryParamMap.get('personaId');
-    const personaId = personaIdParam ? +personaIdParam : this.authService.currentUser()?.personaId;
-    if (!personaId) { this.loading.set(false); return; }
+    // Se suscribe a los query params para recargar si cambia el cliente sin destruir el componente.
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => this.inicializar(params));
+  }
 
-    // Detectar retorno desde MercadoPago con pago exitoso
-    const qpago      = this.route.snapshot.queryParamMap.get('pago');
-    const cobroIdStr = this.route.snapshot.queryParamMap.get('cobro');
-    const paymentId  = this.route.snapshot.queryParamMap.get('collection_id');
-    if (qpago === 'exitoso') this.pagoExitoso.set(true);
+  private inicializar(params: ParamMap) {
+    const propioId = this.authService.currentUser()?.personaId ?? null;
+    const personaIdParam = Number(params.get('personaId'));
+    // Solo admin/agente pueden consultar los cobros de otro cliente (?personaId=), en modo solo lectura.
+    const consultaCliente = this.authService.isAdminOrAgente()
+      && Number.isInteger(personaIdParam) && personaIdParam > 0 && personaIdParam !== propioId;
+    const personaId = consultaCliente ? personaIdParam : propioId;
+
+    this.soloLectura.set(consultaCliente);
+    this.cobros.set([]);
+    this.contratos.set([]);
+    this.contratoActivo.set(null);
+    this.errorMsg.set('');
+    this.modalComprobanteAbierto.set(false);
+    this._barcodeRendered = false;
+
+    if (!personaId) { this.loading.set(false); return; }
+    this.loading.set(true);
+
+    // Detectar retorno desde MercadoPago con pago exitoso (solo en los cobros propios)
+    const qpago      = consultaCliente ? null : params.get('pago');
+    const cobroIdStr = params.get('cobro');
+    const paymentId  = params.get('collection_id');
+    this.pagoExitoso.set(qpago === 'exitoso');
 
     this.contratoService.listarPorPersona(personaId).subscribe({
       next: contratos => {
@@ -176,6 +206,10 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
       },
       error: () => { this.loading.set(false); }
     });
+  }
+
+  volverAlPanel() {
+    this.router.navigate(['/portal/admin']);
   }
 
   /** Cambia el contrato mostrado y recarga sus cobros. */
@@ -235,6 +269,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   pagarConMP() {
+    if (this.soloLectura()) return;
     const cobro = this.proximoPago;
     if (!cobro) return;
     this.loadingMP.set(true);
@@ -503,6 +538,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   // ── Modal Comprobante ──────────────────────────────────────────────────────
 
   abrirModalComprobante() {
+    if (this.soloLectura()) return;
     this.modoModalComp.set('opciones');
     this.compImgData.set(null);
     this.compPreviewUrl.set(null);
@@ -801,7 +837,7 @@ export class CobrosComponent implements OnInit, AfterViewInit, AfterViewChecked 
   }
 
   async enviarComprobanteWhatsApp() {
-    if (!this._compFinalBlob) return;
+    if (this.soloLectura() || !this._compFinalBlob) return;
     this.enviandoComp.set(true);
     const isPdf = this._compFinalBlob.type === 'application/pdf';
     const fileName = isPdf ? 'comprobante.pdf' : 'comprobante.jpg';

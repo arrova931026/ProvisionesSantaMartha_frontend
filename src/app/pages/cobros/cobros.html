@@ -185,11 +185,32 @@
 <div class="page-header">
   <div class="header-icon"><i class="bi bi-credit-card"></i></div>
   <h1>Cobros y Pagos</h1>
-  <p>Consulte, gestione y realice sus pagos desde un solo lugar</p>
+  @if (soloLectura()) {
+    <p>Consulta del estado de pago de los contratos del cliente</p>
+  } @else {
+    <p>Consulte, gestione y realice sus pagos desde un solo lugar</p>
+  }
 </div>
 
 <section class="cobros-section">
   <div class="container-lg">
+
+    @if (soloLectura()) {
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 py-3 px-4"
+           style="background:var(--azul-suave);border:1px solid #85c1e9;border-radius:12px;font-size:.88rem;">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-eye" style="font-size:1.3rem;color:var(--azul-principal);flex-shrink:0;"></i>
+          <div>
+            <strong style="color:var(--azul-principal);">Modo solo lectura</strong>
+            @if (clienteConsultado()) { &mdash; Cliente: <strong>{{ clienteConsultado() }}</strong> }<br>
+            <span style="color:var(--gris-medio);">Está consultando los cobros de un cliente. No es posible realizar pagos desde esta vista.</span>
+          </div>
+        </div>
+        <button type="button" class="btn-sh-outline" (click)="volverAlPanel()">
+          <i class="bi bi-arrow-left"></i> Volver al panel
+        </button>
+      </div>
+    }
 
     <!-- Banner: regreso desde MercadoPago -->
     @if (pagoExitoso()) {
@@ -215,9 +236,15 @@
       <div class="info-card mb-4">
         <div class="card-section-title"><i class="bi bi-info-circle" style="color:var(--azul-principal);"></i> Sin contrato activo</div>
         <p style="font-size:.88rem;color:var(--gris-medio);margin:0;">
-          Su perfil aún no tiene un contrato registrado. Contacte a su agente para iniciar su plan.
+          @if (soloLectura()) {
+            Este cliente no tiene contratos activos registrados.
+          } @else {
+            Su perfil aún no tiene un contrato registrado. Contacte a su agente para iniciar su plan.
+          }
         </p>
       </div>
+
+      @if (!soloLectura()) {
 
       <!-- MÉTODOS DE PAGO (informativos) -->
       <div class="seccion-titulo">
@@ -253,6 +280,8 @@
           </div>
         </div>
       </div>
+
+      }
 
     } @else {
 
@@ -329,6 +358,9 @@
               <div class="dato-label">Plan contratado</div>
               <div class="dato-valor">{{ contratoActivo()?.planNombre }}</div>
             </div>
+            @if (esMascotas()) {
+              <app-mascota-contrato [contrato]="contratoActivo()" />
+            }
 
             @if (proximoPago) {
               <div class="contrato-dato">
@@ -370,6 +402,7 @@
         </div>
       </div>
 
+      @if (!soloLectura()) {
       <!-- ── REALIZAR PAGO ── -->
       <div class="mb-4">
         <div class="seccion-titulo">
@@ -589,6 +622,7 @@
           </div><!-- /.pago-section-card -->
         }<!-- /@else tiene proximoPago -->
       </div><!-- /.mb-4 Realizar Pago -->
+      }
 
       <!-- ── HISTORIAL DE COBROS ── -->
       <div class="mb-4" id="seccion-historial">

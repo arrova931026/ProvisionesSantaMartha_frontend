@@ -1,3 +1,11 @@
+export interface MascotaContrato {
+  nombre: string;
+  especie: string;
+  raza: string;
+  peso: number;
+  colorCaracteristicas: string;
+}
+
 export interface ContratoResponse {
   id: number;
   numeroContrato: string;
@@ -17,9 +25,13 @@ export interface ContratoResponse {
   notas?: string;
   activo?: boolean;
   createdAt?: string;
+  tipoPlan?: string;
+  mascota?: MascotaContrato;
+  aportacionDiaria?: number;
 }
 
 export interface ContratoRequest {
+  mascota?: MascotaContrato;
   personaId: number;
   planId: number;
   fechaInicio: string;
@@ -29,6 +41,10 @@ export interface ContratoRequest {
   sucursalId?: number;
   empleadoVendedorId?: number;
   notas?: string;
+}
+
+export function esContratoMutualistaMascotas(contrato?: ContratoResponse | null): boolean {
+  return contrato?.tipoPlan === 'MUTUALISTA_MASCOTAS' || !!contrato?.mascota || contrato?.aportacionDiaria === 1;
 }
 
 export function etiquetaFrecuenciaPago(frecuencia?: ContratoResponse['frecuenciaPago']): string {

@@ -7,17 +7,19 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { CobroService } from '../../core/services/cobro.service';
-import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago, esContratoMutualistaMascotas } from '../../core/models/contrato.model';
+import { MascotaContratoComponent } from '../../shared/mascota-contrato/mascota-contrato';
 import { BeneficiarioResponse } from '../../core/models/beneficiario.model';
 import { CobroProgramado } from '../../core/models/cobro.model';
 
 @Component({
   selector: 'app-plan-funerario',
-  imports: [CurrencyPipe, DatePipe, RouterLink, FormsModule],
+  imports: [CurrencyPipe, DatePipe, RouterLink, FormsModule, MascotaContratoComponent],
   templateUrl: './plan-funerario.html'
 })
 export class PlanFunerarioComponent implements OnInit {
   readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
+  readonly esMascotas = computed(() => esContratoMutualistaMascotas(this.contrato()));
   private readonly auth = inject(AuthService);
   private readonly contratoService = inject(ContratoService);
   private readonly cobroService = inject(CobroService);
@@ -112,7 +114,7 @@ export class PlanFunerarioComponent implements OnInit {
         this.contrato.set(activo);
         if (!activo) return of({ benefs: [] as BeneficiarioResponse[], cobros: [] as CobroProgramado[] });
         return forkJoin({
-          benefs: this.contratoService.listarBeneficiarios(activo.id).pipe(catchError(() => of<BeneficiarioResponse[]>([]))),
+          benefs: esContratoMutualistaMascotas(activo) ? of([]) : this.contratoService.listarBeneficiarios(activo.id).pipe(catchError(() => of<BeneficiarioResponse[]>([]))),
           cobros: this.cobroService.listarPorContrato(activo.id).pipe(catchError(() => of<CobroProgramado[]>([])))
         });
       })
@@ -132,7 +134,7 @@ export class PlanFunerarioComponent implements OnInit {
     if (!sel) return;
     this.contrato.set(sel);
     forkJoin({
-      benefs: this.contratoService.listarBeneficiarios(sel.id).pipe(catchError(() => of<BeneficiarioResponse[]>([]))),
+      benefs: esContratoMutualistaMascotas(sel) ? of([]) : this.contratoService.listarBeneficiarios(sel.id).pipe(catchError(() => of<BeneficiarioResponse[]>([]))),
       cobros: this.cobroService.listarPorContrato(sel.id).pipe(catchError(() => of<CobroProgramado[]>([])))
     }).subscribe(({ benefs, cobros }) => {
       this.beneficiarios.set(benefs);

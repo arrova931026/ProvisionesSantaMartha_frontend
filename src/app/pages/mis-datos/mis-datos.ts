@@ -7,7 +7,8 @@ import { PersonaService } from '../../core/services/persona.service';
 import { ContratoService } from '../../core/services/contrato.service';
 import { BeneficiarioService } from '../../core/services/beneficiario.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models/persona.model';
-import { ContratoResponse, etiquetaFrecuenciaPago } from '../../core/models/contrato.model';
+import { ContratoResponse, etiquetaFrecuenciaPago, esContratoMutualistaMascotas } from '../../core/models/contrato.model';
+import { MascotaContratoComponent } from '../../shared/mascota-contrato/mascota-contrato';
 import { Beneficiario } from '../../core/models/beneficiario.model';
 import { AuthService } from '../../core/services/auth.service';
 import { forkJoin, of } from 'rxjs';
@@ -21,11 +22,12 @@ type OcrStep =
 
 @Component({
   selector: 'app-mis-datos',
-  imports: [ReactiveFormsModule, FormsModule, RouterLink, DecimalPipe],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, DecimalPipe, MascotaContratoComponent],
   templateUrl: './mis-datos.html'
 })
 export class MisDatosComponent implements OnInit, OnDestroy {
   readonly etiquetaFrecuenciaPago = etiquetaFrecuenciaPago;
+  readonly esMascotas = computed(() => esContratoMutualistaMascotas(this.contrato()));
   private readonly personaService = inject(PersonaService);
   private readonly contratoService = inject(ContratoService);
   private readonly beneficiarioService = inject(BeneficiarioService);

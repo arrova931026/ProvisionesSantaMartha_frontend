@@ -806,6 +806,9 @@
           </div>
 
           <!-- ⑤ BENEFICIARIOS -->
+          @if (esMascotas()) {
+            <app-mascota-contrato [contrato]="contrato()" />
+          } @else {
           <div>
             <div class="seccion-titulo d-flex align-items-center justify-content-between flex-wrap gap-2">
               <div>
@@ -879,6 +882,7 @@
               }
             </div>
           </div>
+          }
 
         </div>
       </div>

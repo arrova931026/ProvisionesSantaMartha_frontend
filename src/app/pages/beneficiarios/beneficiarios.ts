@@ -5,7 +5,8 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Beneficiario } from '../../core/models/beneficiario.model';
-import { BeneficiarioRequest, ContratoResponse } from '../../core/models/contrato.model';
+import { BeneficiarioRequest, ContratoResponse, esContratoMutualistaMascotas } from '../../core/models/contrato.model';
+import { MascotaContratoComponent } from '../../shared/mascota-contrato/mascota-contrato';
 import { ContratoService } from '../../core/services/contrato.service';
 import { BeneficiarioService } from '../../core/services/beneficiario.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -18,7 +19,7 @@ interface Parentesco {
 
 @Component({
   selector: 'app-beneficiarios',
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, FormsModule, MascotaContratoComponent],
   templateUrl: './beneficiarios.html'
 })
 export class BeneficiariosComponent implements OnInit {
@@ -45,8 +46,9 @@ export class BeneficiariosComponent implements OnInit {
   readonly guardandoEdicion    = signal(false);
   readonly eliminando          = signal(false);
   readonly maxBeneficiarios = signal<number>(0);
+  readonly esMascotas = computed(() => esContratoMutualistaMascotas(this.contrato()));
   readonly limitAlcanzado   = computed(() =>
-    this.maxBeneficiarios() > 0 && this.beneficiarios().length >= this.maxBeneficiarios()
+    this.esMascotas() || (this.maxBeneficiarios() > 0 && this.beneficiarios().length >= this.maxBeneficiarios())
   );
   private contratoId: number | null = null;
   private beneficiarioEditandoId: number | null = null;
@@ -106,6 +108,14 @@ export class BeneficiariosComponent implements OnInit {
     this.loading.set(true);
     this.contrato.set(c);
     this.contratoId = c.id;
+    this.mostrarModal.set(false);
+    this.mostrarModalEditar.set(false);
+    if (esContratoMutualistaMascotas(c)) {
+      this.maxBeneficiarios.set(0);
+      this.beneficiarios.set([]);
+      this.loading.set(false);
+      return;
+    }
     this.maxBeneficiarios.set(c.planNumeroBeneficiarios ?? 0);
     this.beneficiarioService.listarPorContrato(c.id).pipe(catchError(() => of([])))
       .subscribe({
